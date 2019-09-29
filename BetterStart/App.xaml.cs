@@ -98,11 +98,6 @@ namespace BetterStart
                 InterceptKeys.UnhookWindowsHookEx(_hookID);
         }
 
-        private Keys LastPressed { get; set; }
-        private bool WinDown { get; set; }
-        private bool WinDownPlusSomethingElse { get; set; }
-
-        
         public static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0)
@@ -137,8 +132,11 @@ namespace BetterStart
                     kb.LWinDown = false;
                     return InterceptKeys.CallNextHookEx(_hookID, nCode, wParam, lParam);
                 }
+
+
                 var keyState = new KeyState() { Key = key, IsDown = wParam.ToString() == "256" };
-                Messenger.Default.Send<KeyState>(keyState, MessengerID.KeyPressed);
+                if(kb.SW.ElapsedMilliseconds > 200)
+                    Messenger.Default.Send<KeyState>(keyState, MessengerID.KeyPressed);
 
                 
                 kb.CheckForCombo();
