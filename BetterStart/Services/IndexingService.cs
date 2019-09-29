@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Serilog;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ namespace BetterStart.Indexing
         {
             RunSearch();
         }
-        private List<string> SearchDirectories { get; set; } = new List<string>() { "C:/Temp/" };
+        private List<string> SearchDirectories { get; set; } = new List<string>() { "C:/Program Files/" };
 
         private ConcurrentBag<string> UnorderedFiles { get; set; } = new ConcurrentBag<string>();
         public void RunSearch()
@@ -32,15 +33,41 @@ namespace BetterStart.Indexing
 
         public void ProcessDirectory(string targetDirectory)
         {
-            // Process the list of files found in the directory.
-            string[] fileEntries = Directory.GetFiles(targetDirectory);
-            foreach (string fileName in fileEntries)
-                ProcessFile(fileName);
 
-            // Recurse into subdirectories of this directory.
-            string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
-            foreach (string subdirectory in subdirectoryEntries)
-                ProcessDirectory(subdirectory);
+            try
+            {
+
+
+                try
+                {
+                    // Process the list of files found in the directory.
+                    string[] fileEntries = Directory.GetFiles(targetDirectory);
+                    foreach (string fileName in fileEntries)
+                        ProcessFile(fileName);
+                }
+                catch (Exception)
+                {
+                    Log.Debug($"Could not search {targetDirectory}");
+                }
+                // Recurse into subdirectories of this directory.
+                string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+                foreach (string subdirectory in subdirectoryEntries)
+                    try
+                    {
+                        ProcessDirectory(subdirectory);
+                    }
+                    catch (Exception)
+                    {
+                        Log.Debug($"Could not search {subdirectory}");
+                    }
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
         }
 
         // Insert logic for processing found files here.

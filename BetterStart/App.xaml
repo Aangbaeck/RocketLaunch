@@ -6,9 +6,10 @@
   xmlns:helper1="clr-namespace:BetterStart.Helper"
   xmlns:ignore="http://www.galasoft.ch/ignore"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-  xmlns:rsConvertersWpf="clr-namespace:RSConvertersWPF;assembly=RSConvertersWPF"
   xmlns:views="clr-namespace:BetterStart.Views"
-  StartupUri="Views/MainV.xaml"
+    Exit="Application_Exit"
+    xmlns:rsConvertersWpf1="clr-namespace:ConvertersWPF;assembly=ConvertersWPF"
+    StartupUri="Views/MainV.xaml"
   mc:Ignorable="d ignore">
 
   <Application.Resources>
@@ -43,29 +44,8 @@
 
       <!--  Global View Model Locator for MVVM-Light  -->
       <views:ViewModelLocator x:Key="Locator" d:IsDataSource="True" />
-      <rsConvertersWpf:VisualToImageSourceConverter x:Key="ConvertMaterialDesignIconToIcon" />
-      <rsConvertersWpf:BoolToBrushConverter
-        x:Key="ConnectedColorConverter"
-        FalseValue="Crimson"
-        TrueValue="ForestGreen" />
-      <rsConvertersWpf:BoolToObjectConverter
-        x:Key="IconMaximizeConverter"
-        FalseValue="WindowMaximize"
-        TrueValue="WindowRestore" />
-      <rsConvertersWpf:BoolToStringConverter
-        x:Key="StringMaximizeConverter"
-        FalseValue="Maximize"
-        TrueValue="Restore" />
-      <rsConvertersWpf:BoolToBrushConverter
-        x:Key="ExampleConverter"
-        FalseValue="Aqua"
-        TrueValue="DodgerBlue" />
-
-
-      <rsConvertersWpf:BoolToVisibilityConverter
-        x:Key="CollapsedConverter"
-        FalseValue="Collapsed"
-        TrueValue="Visible" />
+      <rsConvertersWpf1:VisualToImageSourceConverter x:Key="ConvertMaterialDesignIconToIcon" />
+     
     </ResourceDictionary>
   </Application.Resources>
 

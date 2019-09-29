@@ -17,6 +17,8 @@ using BetterStart.Model;
 using Serilog;
 using Serilog.Formatting.Json;
 using Path = System.IO.Path;
+using static BetterStart.App;
+using BetterStart.Services;
 
 namespace BetterStart.Views
 {
@@ -31,7 +33,7 @@ namespace BetterStart.Views
             Log.Information("STARTING APPLICATION...");
             InitializeComponent();
             Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
-            Messenger.Default.Register<bool>(this, MessengerID.WindowKeyPressed, HideShowWindow);
+            Messenger.Default.Register<KeyState>(this, MessengerID.KeyPressed, HideShowWindow);
             Closing += (s, e) =>
             {
                 Log.Information("CLOSING APPLICATION...");
@@ -53,14 +55,16 @@ namespace BetterStart.Views
             };
 
         }
-        
-        private void HideShowWindow(bool obj)
-        {
-            if(this.WindowState == WindowState.Minimized)
-                this.WindowState = WindowState.Normal;
-            else
-                this.WindowState = WindowState.Minimized;
 
+        private void HideShowWindow(KeyState state)
+        {
+            if (state.Key == System.Windows.Forms.Keys.LWin && !state.IsDown)
+            {
+                if (this.WindowState == WindowState.Minimized)
+                    this.WindowState = WindowState.Normal;
+                else
+                    this.WindowState = WindowState.Minimized;
+            }
         }
 
         public SettingsService S { get; set; }
@@ -132,7 +136,7 @@ namespace BetterStart.Views
             Log.Error(e.Exception, "Some UI Error!");
         }
 
-        
+
 
         //These mouse methods is used for normal window behavour and still it's a borderless stylable window
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -151,8 +155,8 @@ namespace BetterStart.Views
             //}
             //else
             //{
-                _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
-                this.DragMove();
+            _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
+            this.DragMove();
             //}
         }
         private void OnMouseMove(object sender, MouseEventArgs e)
@@ -190,7 +194,6 @@ namespace BetterStart.Views
             _mRestoreForDragMove = false;
         }
         private bool _mRestoreForDragMove;
-        private Window _localWindow;
 
         private void WindowStateChanged(object sender, SizeChangedEventArgs e)
         {
@@ -199,5 +202,11 @@ namespace BetterStart.Views
         }
 
         public WindowState LastWindowState { get; set; }
+        private void Window_Deactivated(object sender, EventArgs e)
+        {
+            Window window = (Window)sender;
+            window.Topmost = true;
+        }
+
     }
 }

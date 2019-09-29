@@ -13,6 +13,7 @@ using BetterStart.Indexing;
 using CommonServiceLocator;
 using GalaSoft.MvvmLight.Ioc;
 using BetterStart.Model;
+using BetterStart.Services;
 
 namespace BetterStart.Views
 {
@@ -31,10 +32,11 @@ namespace BetterStart.Views
             SimpleIoc.Default.Register<DataService>();
             SimpleIoc.Default.Register<SettingsService>();
             SimpleIoc.Default.Register<MainVM>();
-            SimpleIoc.Default.Register<SecondVM>();
             SimpleIoc.Default.Register<IndexingService>();
+            SimpleIoc.Default.Register<KeyBoardHandlerService>();
 
             ServiceLocator.Current.GetInstance<IndexingService>();
+            ServiceLocator.Current.GetInstance<KeyBoardHandlerService>();
         }
 
         /// <summary>
@@ -44,7 +46,6 @@ namespace BetterStart.Views
             "CA1822:MarkMembersAsStatic",
             Justification = "This non-static member is needed for data binding purposes.")]
         public MainVM MainVM => ServiceLocator.Current.GetInstance<MainVM>();
-        public SecondVM SecondVM => ServiceLocator.Current.GetInstance<SecondVM>();
 
         /// <summary>
         /// Cleans up all the resources.
