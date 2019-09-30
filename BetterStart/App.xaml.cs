@@ -119,7 +119,7 @@ namespace BetterStart
                     if (key == Keys.LWin)
                         kb.LWinDown = false;
                 }
-                Log.Debug($"{key.ToString()} IsDown: {kb.LastState.IsDown} LWinDown: {kb.LWinDown} AllowDown:{kb.AllowThroughWinDown} AllowUp:{kb.AllowThroughWinUp}" );
+                //Log.Debug($"{key.ToString()} IsDown: {kb.LastState.IsDown} LWinDown: {kb.LWinDown} AllowDown:{kb.AllowThroughWinDown} AllowUp:{kb.AllowThroughWinUp}" );
                 if (kb.AllowThroughWinDown && key == Keys.LWin)
                 {
                     kb.AllowThroughWinDown = false;

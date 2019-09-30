@@ -31,26 +31,26 @@ namespace BetterStart.Services
         public Stopwatch SW { get; set; } = new Stopwatch();
         public void Trigger()
         {
-            Log.Debug($"Send virtual LWin+{LastState}");
+            //Log.Debug($"Send virtual LWin+{LastState}");
             AllowThroughWinDown = true;
             AllowThroughWinUp = true;
             var tempKey = LastState.Key;
-            Log.Debug("Send Down LWIN");
+            //Log.Debug("Send Down LWIN");
             InputSimulator.Keyboard.KeyDown(VirtualKeyCode.LWIN);
-            Log.Debug($"Send Down {tempKey}");
+            //Log.Debug($"Send Down {tempKey}");
             InputSimulator.Keyboard.KeyDown((VirtualKeyCode)tempKey);
-            Log.Debug("Send Up LWIN");
+            //Log.Debug("Send Up LWIN");
             InputSimulator.Keyboard.KeyUp(VirtualKeyCode.LWIN);
-            Log.Debug($"Send Up {tempKey}");
+            //Log.Debug($"Send Up {tempKey}");
             InputSimulator.Keyboard.KeyUp(((VirtualKeyCode)tempKey));
         }
 
         public void CheckForCombo()
         {
-            Log.Debug("Checking combo");
+            //Log.Debug("Checking combo");
             if (LWinDown && LastState.Key != Keys.LWin && LastState.IsDown && SW.ElapsedMilliseconds > 200)
             {
-                Log.Debug($"Trigger combo {LastState.Key}");
+                //Log.Debug($"Trigger combo {LastState.Key}");
                 SW.Restart();
                 Trigger();
             }

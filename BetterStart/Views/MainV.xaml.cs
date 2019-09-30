@@ -126,6 +126,9 @@ namespace BetterStart.Views
             {
                 Log.Error("Could not read window positions setting.");
             }
+
+            SearchTextBox.Focusable = true;
+            Keyboard.Focus(SearchTextBox);
         }
 
         /// <summary>
@@ -204,6 +207,7 @@ namespace BetterStart.Views
         public WindowState LastWindowState { get; set; }
         private void Window_Deactivated(object sender, EventArgs e)
         {
+            this.WindowState = WindowState.Minimized;
             Window window = (Window)sender;
             window.Topmost = true;
         }
