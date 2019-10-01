@@ -14,7 +14,7 @@ namespace BetterStart.Model
     {
         public string WindowsToOpenAtStart { get; set; }
 
-        public int ReindexingTime { get; set; } = 10000;
+        public int ReindexingTime { get; set; } = 1000000;
         public DateTime LastIndexed { get; set; } = DateTime.MinValue;
         public void SaveSettings()
         {

@@ -57,12 +57,13 @@ namespace BetterStart.Views
             set
             {
                 _searchString = value;
+                
                 SearchSuggestions.Clear();
                 var list = Indexing.Search(value);
                 for (var index = 0; index < Math.Min(list.Count, 10); index++)
                 {
                     var result = list[index];
-                    SearchSuggestions.Add(new ItemInfo() {Path = result});
+                    SearchSuggestions.Add(new ItemInfo() { Path = result.Name });
                 }
             }
         }
@@ -82,7 +83,7 @@ namespace BetterStart.Views
 
         private static readonly PaletteHelper _paletteHelper = new PaletteHelper();
         private bool _debugMode = true;
-        private string _nrOfPaths;
+        
         private string _searchString;
 
         private static void ApplyBase(bool isDark)
