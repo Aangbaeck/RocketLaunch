@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BetterStart.Properties {
+namespace RocketLaunch.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]

@@ -9,10 +9,10 @@ namespace BetterStart.Views
     {
         private string _propertyName;
 
-        public SecondVM(DataService d)
+        public SecondVM()
         {
-            D = d;
-            D.PropertyChanged += DataUpdatedInDataService;
+            
+        
         }
 
         private void DataUpdatedInDataService(object sender, PropertyChangedEventArgs e)
@@ -20,7 +20,7 @@ namespace BetterStart.Views
             PropertyName = e.PropertyName;
         }
 
-        public DataService D { get; set; }
+        
 
         public string PropertyName
         {

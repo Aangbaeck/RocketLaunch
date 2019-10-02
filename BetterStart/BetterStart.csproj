@@ -7,8 +7,8 @@
     <ProjectGuid>{49D339D3-4BDC-4E87-8410-FBE127A48C15}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>BetterStart</RootNamespace>
-    <AssemblyName>RS Base.Net</AssemblyName>
+    <RootNamespace>RocketLaunch</RootNamespace>
+    <AssemblyName>RocketLaunch</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -67,13 +67,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Helper\Bson.cs" />
     <Compile Include="Helper\Common.cs" />
     <Compile Include="Helper\DeepCopyByExpressionTrees.cs" />
     <Compile Include="Helper\ObservableDictionary.cs" />
     <Compile Include="Helper\SvgViewboxAttachedProperties.cs" />
     <Compile Include="Helper\WindowPlacement.cs" />
     <Compile Include="Helper\ZipUnzip.cs" />
-    <Compile Include="Indexing\ItemInfo.cs" />
     <Compile Include="Indexing\SuffixTree\CharComparer.cs" />
     <Compile Include="Indexing\SuffixTree\ITrie.cs" />
     <Compile Include="Indexing\SuffixTree\SearchType.cs" />
@@ -86,8 +86,7 @@
     <Compile Include="Services\SuffixTree.cs" />
     <Compile Include="InterceptKeys.cs" />
     <Compile Include="MessengerID.cs" />
-    <Compile Include="Model\DataService.cs" />
-    <Compile Include="Model\SettingsService.cs" />
+    <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Views\SettingsV.xaml.cs">
       <DependentUpon>SettingsV.xaml</DependentUpon>
     </Compile>
@@ -151,6 +150,13 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\rocket.png" />
+    <Resource Include="Assets\folder.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\questionmark.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Assets\folder.ico" />
     <Content Include="Assets\rocket.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -188,6 +194,9 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json">
       <Version>12.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json.Bson">
+      <Version>1.0.2</Version>
     </PackageReference>
     <PackageReference Include="protobuf-net">
       <Version>2.4.0</Version>

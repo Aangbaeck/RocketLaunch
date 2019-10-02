@@ -34,6 +34,7 @@ namespace BetterStart.Views
             InitializeComponent();
             Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
             Messenger.Default.Register<KeyState>(this, MessengerID.KeyPressed, HideShowWindow);
+            Messenger.Default.Register<bool>(this, MessengerID.HideWindow, HideWindow);
             Closing += (s, e) =>
             {
                 Log.Information("CLOSING APPLICATION...");
@@ -55,13 +56,20 @@ namespace BetterStart.Views
             };
 
         }
+        private void HideWindow(bool b)
+        {
+            this.WindowState = WindowState.Minimized;
+        }
 
         private void HideShowWindow(KeyState state)
         {
             if (state.Key == System.Windows.Forms.Keys.LWin && !state.IsDown)
             {
                 if (this.WindowState == WindowState.Minimized)
+                {
                     this.WindowState = WindowState.Normal;
+                    SearchTextBox.SelectAll();
+                }
                 else
                     this.WindowState = WindowState.Minimized;
             }
@@ -129,6 +137,7 @@ namespace BetterStart.Views
 
             SearchTextBox.Focusable = true;
             Keyboard.Focus(SearchTextBox);
+
         }
 
         /// <summary>

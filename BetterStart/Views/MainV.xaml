@@ -36,6 +36,9 @@
             </Binding.Source>
         </Binding>
     </Window.Icon>
+    <Window.InputBindings>
+        <KeyBinding Key="Enter" Command="{Binding ExecuteFirstListViewItem}" />
+    </Window.InputBindings>
     <Window.Resources>
         <Style
             x:Key="SelectedTextBoxStyle"
@@ -85,16 +88,27 @@
                 x:Name="SearchTextBox"
                 Margin="10,10,10,0"
                 materialDesign:HintAssist.Hint="Search..."
+                AcceptsReturn="False"
+                AcceptsTab="False"
                 Style="{StaticResource SelectedTextBoxStyle}"
-                Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}" />
-            <ListView Margin="10,0,10,10" ItemsSource="{Binding SearchSuggestions}">
+                Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
+                <!--<TextBox.InputBindings>
+                    <KeyBinding
+                        Key="Enter"
+                        Command="{Binding ExecuteFirstListViewItem}"
+                         />
+                </TextBox.InputBindings>-->
+            </TextBox>
+            <ListView
+                Margin="10,0,10,10"
+                ItemsSource="{Binding SearchSuggestions}"
+                SelectedIndex="{Binding SelectedIndex}">
 
                 <ListView.ItemContainerStyle>
                     <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
-                        <Setter Property="Focusable" Value="false" />
+                        <!--<Setter Property="Focusable" Value="false" />-->
                         <Setter Property="VerticalContentAlignment" Value="Center" />
                         <Setter Property="VerticalAlignment" Value="Center" />
-
                     </Style>
 
                 </ListView.ItemContainerStyle>
@@ -103,15 +117,31 @@
                         <GridViewColumn>
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Image Source="{Binding Icon}" ToolTip="{Binding Path}">
-                                        <Image.Effect>
+                                    <Image
+                                        Width="32"
+                                        Source="{Binding Icon}"
+                                        ToolTip="{Binding URI}">
+                                        <!--<Image.Effect>
                                             <grayscaleEffect:GrayscaleEffect x:Name="grayscaleEffect" />
-                                        </Image.Effect>
+                                        </Image.Effect>-->
                                     </Image>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
                         </GridViewColumn>
-                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding FileName}" />
+                        <GridViewColumn>
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Width="Auto" DisplayMemberBinding="{Binding Name}" />
+                        <GridViewColumn
+                            Width="Auto"
+                            DisplayMemberBinding="{Binding RunNrOfTimes}"
+                            ToolTipService.ToolTip="Nr of runs" />
                     </GridView>
                 </ListView.View>
 

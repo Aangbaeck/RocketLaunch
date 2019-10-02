@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using BetterStart.Model;
 using ProtoBuf;
@@ -10,11 +11,11 @@ namespace Trie
     [ProtoContract]
     public class Trie
     {
-        [ProtoMember(1, AsReference = true)] 
+        [ProtoMember(1, AsReference = true)]
         public TrieBase InnerTrie { get; set; } = new TrieBase();
 
         [ProtoMember(2)]
-        public Dictionary<string, HashSet<RunItem>> KeyValueObjects { get; set; } =new Dictionary<string, HashSet<RunItem>>(true ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        public Dictionary<string, HashSet<RunItem>> KeyValueObjects { get; set; } = new Dictionary<string, HashSet<RunItem>>(true ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
         public void Insert(string key, RunItem value)
         {
@@ -76,16 +77,19 @@ namespace Trie
         //    return this.InnerTrie.Contains(key);
         //}
 
-        public ICollection<RunItem> Search(RunItem item)
+        public ICollection<RunItem> Search(RunItem item, int nrOfHits)
         {
-            return this.Search(item.GetHashCode().ToString(), SearchType.Substring);
+            return this.Search(item.GetHashCode().ToString(), SearchType.Substring, nrOfHits);
         }
 
-        public ICollection<RunItem> Search(string filter, SearchType searchType)
+        public ICollection<RunItem> Search(string filter, SearchType searchType, int nrOfHits)
         {
-            ICollection<string> strResults = this.InnerTrie.Search(filter, searchType);
-            ICollection<RunItem> tResults = this.GetValuesFromKeys(strResults);
-
+            var sw = new Stopwatch();
+            sw.Start();
+            ICollection<string> strResults = this.InnerTrie.Search(filter, searchType, nrOfHits);
+            var t = sw.ElapsedMilliseconds;
+            ICollection<RunItem> tResults = this.GetValuesFromKeys(strResults, nrOfHits);
+            var t2 = sw.ElapsedMilliseconds;
             return tResults;
         }
 
@@ -96,7 +100,7 @@ namespace Trie
 
         //    return all;
         //}
-        private ICollection<RunItem> GetValuesFromKeys(ICollection<string> keys)
+        private ICollection<RunItem> GetValuesFromKeys(ICollection<string> keys, int nrOfHits)
         {
             List<RunItem> result = new List<RunItem>();
             foreach (string key in keys)
@@ -105,7 +109,9 @@ namespace Trie
                 {
                     foreach (RunItem value in this.KeyValueObjects[key])
                     {
-                        result.Add(value);
+                        if (nrOfHits < result.Count) return result;
+                        else
+                            result.Add(value);
                     }
                 }
             }
@@ -113,7 +119,7 @@ namespace Trie
             return result;
         }
 
-        
+
 
         //#region IEnumerable<T> Members
 

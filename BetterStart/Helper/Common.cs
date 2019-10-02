@@ -63,7 +63,7 @@ namespace BetterStart.Helper
         public static string SettingsPath { get; set; } = Directory + "Settings/Settings.json";
         public static string WindowPositionsPath { get; set; } = Directory + "WindowPositions/";
         public static string Directory => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "//";
-
+        
 
     }
 

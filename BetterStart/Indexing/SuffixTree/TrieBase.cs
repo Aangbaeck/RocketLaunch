@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Windows.Navigation;
 using ProtoBuf;
 using Trie;
 
@@ -132,9 +133,9 @@ namespace TrieImplementation
         /// Searches for word inside the Trie with a StartsWith SearchType
         /// </summary>
         /// <returns>All found words starting with Word</returns>
-        public ICollection<string> Search(string word)
+        public ICollection<string> Search(string word, int nrOfHits)
         {
-            return this.Search(word, SearchType.Prefix);
+            return this.Search(word, SearchType.Prefix, nrOfHits);
         }
         
         /// <summary>
@@ -143,7 +144,7 @@ namespace TrieImplementation
         /// <param name="word"></param>
         /// <param name="searchType"></param>
         /// <returns>All words meeting the criteria</returns>
-        public ICollection<string> Search(string word, SearchType searchType)
+        public ICollection<string> Search(string word, SearchType searchType, int nrOfHits)
         {
             if (word == null)
             {
@@ -151,26 +152,26 @@ namespace TrieImplementation
             }
             else if (word == string.Empty)
             {
-                return this.FindAll();
+                return this.FindAll(nrOfHits);
             }
-
+            
             ICollection<string> results = new HashSet<string>();
             if (searchType == SearchType.Prefix)
             {
-                this.PrefixSearchCore(this.Root, 0, new StringBuilder(word), results);
+                this.PrefixSearchCore(this.Root, 0, new StringBuilder(word), results, nrOfHits);
             }
             else if (searchType == SearchType.Substring)
             {
-                this.SubstringSearchCore(word, results);
+                this.SubstringSearchCore(word, results, nrOfHits);
             }
             
             return results;
         }
 
-        public ICollection<string> FindAll()
+        public ICollection<string> FindAll(int nrOfHits)
         {
             List<string> words = new List<string>();
-            this.DfsForAllWords(this.Root, new StringBuilder(string.Empty), words);
+            this.DfsForAllWords(this.Root, new StringBuilder(string.Empty), words, nrOfHits);
             return words;
         }
         
@@ -179,7 +180,7 @@ namespace TrieImplementation
         /// </summary>
         /// <param name="word">Word to search</param>
         /// <param name="results"></param>
-        protected virtual void SubstringSearchCore(string word, ICollection<string> results)
+        protected virtual void SubstringSearchCore(string word, ICollection<string> results, int nrOfHits)
         {
             int currentPositionInWord = 0;
             if (this.Nodes.ContainsKey(word[currentPositionInWord]))
@@ -188,10 +189,14 @@ namespace TrieImplementation
                 
                 for (int i = 0; i < startNodes.Count; i++)
                 {
+                    if (results.Count > nrOfHits)
+                        break;
                     TrieNode currentStartNode = startNodes[i];
                     bool contains = false;
                     while (currentPositionInWord < word.Length)
                     {
+                        if (results.Count > nrOfHits)
+                            return;
                         if (currentStartNode.Children.ContainsKey(word[currentPositionInWord]))
                         {
                             currentStartNode = currentStartNode.Children[word[currentPositionInWord]];
@@ -208,9 +213,11 @@ namespace TrieImplementation
                 
                     if (contains || word.Length == 1)
                     {
-                        this.BuildResultsFromSubstring(currentStartNode, results);
+                        this.BuildResultsFromSubstring(currentStartNode, results, nrOfHits);
+                        
                     }
-                
+                    if (results.Count > nrOfHits)
+                        return;
                     currentPositionInWord = 1;
                 }
             }
@@ -222,8 +229,10 @@ namespace TrieImplementation
         /// </summary>
         /// <param name="nodeValue">The node to build results from</param>
         /// <param name="results">Output</param>
-        protected virtual void BuildResultsFromSubstring(TrieNode nodeValue, ICollection<string> results)
+        protected virtual void BuildResultsFromSubstring(TrieNode nodeValue, ICollection<string> results, int nrOfHits)
         {
+            if (results.Count > nrOfHits)
+                return;
             string builtWord = nodeValue.BuildUpToWord();
             if (nodeValue.Children.Count == 0)
             {
@@ -232,20 +241,24 @@ namespace TrieImplementation
             }
             else
             {
+                if (results.Count > nrOfHits)
+                    return;
                 //Using a DepthFirstApproach (http://en.wikipedia.org/wiki/Depth-first_search) finds all descendants of the current node and adds their
                 //values to the results.
-                this.DfsForAllWords(nodeValue, new StringBuilder(builtWord), results);
+                this.DfsForAllWords(nodeValue, new StringBuilder(builtWord), results, nrOfHits);
             }
         }
         
         /// <summary>
         /// Searches the Trie for words with a StartsWith SearchType. Uses recursion - http://en.wikipedia.org/wiki/Recursion
         /// </summary>
-        protected virtual void PrefixSearchCore(TrieNode currentNode, int currentPositionInWord, StringBuilder word, ICollection<string> results)
+        protected virtual void PrefixSearchCore(TrieNode currentNode, int currentPositionInWord, StringBuilder word, ICollection<string> results, int nrOfHits)
         {
             if (currentPositionInWord >= word.Length)
             {
-                this.DfsForAllWords(currentNode, word, results);
+                if (results.Count > nrOfHits)
+                    return;
+                this.DfsForAllWords(currentNode, word, results, nrOfHits);
                 return;
             }
             
@@ -254,13 +267,15 @@ namespace TrieImplementation
             bool containsKey = currentNode.Children.ContainsKey(currentChar);
             if (containsKey)
             {
+                if (results.Count > nrOfHits)
+                    return;
                 if (currentPositionInWord == word.Length - 1)
                 {
                     results.Add(word.ToString());
                 }
                 
                 TrieNode child = currentNode.Children[currentChar];
-                this.PrefixSearchCore(child, ++currentPositionInWord, word, results);
+                this.PrefixSearchCore(child, ++currentPositionInWord, word, results, nrOfHits);
             }
         }
         
@@ -268,19 +283,24 @@ namespace TrieImplementation
         /// Using a DepthFirstApproach (http://en.wikipedia.org/wiki/Depth-first_search) finds all descendants of the current node and adds their
         /// values to the results.
         /// </summary>
-        protected virtual void DfsForAllWords(TrieNode currentNode, StringBuilder word, ICollection<string> results)
+        protected virtual void DfsForAllWords(TrieNode currentNode, StringBuilder word, ICollection<string> results, int nrOfHits)
         {
+            if (results.Count > nrOfHits)
+                return;
             TrieNode[] nodesArray = new TrieNode[currentNode.Children.Count];
             currentNode.Children.Values.CopyTo(nodesArray, 0);
             foreach (TrieNode node in nodesArray)
             {
+                if (results.Count > nrOfHits)
+                    return;
                 word.Append(node.Value);
                 if (node.IsWord)
                 {
+                    
                     results.Add(word.ToString());
                 }
                 
-                this.DfsForAllWords(node, word, results);
+                this.DfsForAllWords(node, word, results, nrOfHits);
                 word.Length--;
             }
         }

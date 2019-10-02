@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,7 +13,6 @@ using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Text;
 using ProtoBuf;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using Trie;
@@ -28,8 +28,18 @@ namespace BetterStart.Services
 
         public IndexingService(SettingsService s)
         {
+            if (!File.Exists(Common.Directory + "Matcher.trie"))
+                RunIndexing();
+            else
+            {
+                LoadTrie();
+            }
 
-            RunIndexing();
+            if (NrOfPaths == 0)
+            {
+                Log.Debug("Something is wrong with the loading. Let's reindex...");
+                RunIndexing();
+            }
             S = s;
             var timer = new Timer(s.ReindexingTime);
             timer.Start();
@@ -39,13 +49,15 @@ namespace BetterStart.Services
             };
         }
 
-        public Trie.Trie Matcher { get; set; } = new Trie.Trie();
-        public Trie.Trie Matcher2 { get; set; } = new Trie.Trie();
-        private Trie.Trie TempMatcher { get; set; } = new Trie.Trie();
+        //General file matcher
+        private Trie.Trie Matcher { get; set; } = new Trie.Trie();
+        //This matcher is for things that has been run before. They are of course more prioritized.
+        private Trie.Trie PrioMatcher { get; set; } = new Trie.Trie();
+
 
         public SettingsService S { get; set; }
 
-        private List<(string path, string searchString, bool SearchSub)> SearchDirectories { get; set; } = new List<(string, string, bool)> { ("C:/Program Files/", "*.*", true) };
+        private List<(string path, string searchString, bool SearchSub)> SearchDirectories { get; set; } = new List<(string, string, bool)> { ("C:/Program Files/", "*.exe", true) };
 
         public int NrOfPaths
         {
@@ -63,30 +75,37 @@ namespace BetterStart.Services
 
                 //This puts all files in from SearchDirectories in UnorderedFiles 
                 Task.WaitAll(SearchDirectories.Select(d => ProcessDirectory(d.path, d.searchString, d.SearchSub, unorderedFiles)).ToArray());
-                NrOfPaths = unorderedFiles.Count();
 
                 var tempList = unorderedFiles.ToArray();
 
-                NrOfPaths = tempList.Length;
-                if (NrOfPaths == 0) return;
-
-                var count = tempList.Length;
-                for (int i = 0; i < 2000; i++)
+                var temp = new Trie.Trie();
+                //var sw = new Stopwatch();
+                //sw.Start();
+                for (int i = 0; i < tempList.Length; i++)
                 {
-                    Progress = i / count * 100;
-                    TempMatcher.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                    Progress = i / tempList.Length * 100;
+                    if (tempList[i].Type == RunItem.ItemType.File)
+                        temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                    if (tempList[i].Type == RunItem.ItemType.Directory)
+                        temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                    //if (!string.IsNullOrEmpty(tempList[i].Group))
+                    //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
-
+                //sw.Stop();
                 //Add settings and other good stuff
-                foreach (var setting in CommonControlPanel.Settings)
+                foreach (var setting in RunItem.CommonControlPanel.Settings)
                 {
-                    TempMatcher.Insert(setting.Name, setting);
-                    TempMatcher.Insert(setting.Group, setting);
+                    if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
+                    {
+                        PrioMatcher.Insert(setting.Name, setting);
+                        PrioMatcher.Insert(setting.Group, setting);
+                    }
                 }
 
-                Matcher = TempMatcher;
+                NrOfPaths = temp.KeyValueObjects.Count;
+                Matcher = temp;
 
-                //SaveTrie(TempMatcher);
+                SaveTrie();
                 //var t = LoadTrie();
 
 
@@ -115,18 +134,17 @@ namespace BetterStart.Services
             });
         }
 
-        public void SaveTrie(Trie.Trie trie)
+        public void SavePrioTrie()
         {
             try
             {
-                //var json = JsonConvert.SerializeObject(Matcher,Formatting.None, new JsonSerializerSettings{ PreserveReferencesHandling = PreserveReferencesHandling.Objects });
-                var json = JsonConvert.SerializeObject(trie, Formatting.None, new JsonSerializerSettings
+                var json = JsonConvert.SerializeObject(PrioMatcher, Formatting.None, new JsonSerializerSettings
                 {
                     PreserveReferencesHandling = PreserveReferencesHandling.Objects
                 });
                 var zip = json.Zip();
-                File.WriteAllBytes(Common.Directory + "Matcher.trie", zip);
-                
+                File.WriteAllBytes(Common.Directory + "PrioMatcher.trie", zip);
+
             }
             catch (Exception e)
             {
@@ -135,7 +153,34 @@ namespace BetterStart.Services
             }
         }
 
-        public Trie.Trie LoadTrie()
+        public void SaveTrie()
+        {
+            try
+            {
+                //var json = JsonConvert.SerializeObject(Matcher,Formatting.None, new JsonSerializerSettings{ PreserveReferencesHandling = PreserveReferencesHandling.Objects });
+                var json = JsonConvert.SerializeObject(Matcher, Formatting.None, new JsonSerializerSettings
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                });
+                var zip = json.Zip();
+                File.WriteAllBytes(Common.Directory + "Matcher.trie", zip);
+
+                json = JsonConvert.SerializeObject(PrioMatcher, Formatting.None, new JsonSerializerSettings
+                {
+                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
+                });
+                zip = json.Zip();
+                File.WriteAllBytes(Common.Directory + "PrioMatcher.trie", zip);
+
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Could not save trie");
+
+            }
+        }
+
+        public void LoadTrie()
         {
             var trie = new Trie.Trie();
             try
@@ -143,17 +188,22 @@ namespace BetterStart.Services
                 var path = Common.Directory + "Matcher.trie";
                 byte[] zip = File.ReadAllBytes(path);
                 string json = zip.Unzip();
-                trie = JsonConvert.DeserializeObject<Trie.Trie>(json);
-                
+                Matcher = JsonConvert.DeserializeObject<Trie.Trie>(json);
+                NrOfPaths = trie.KeyValueObjects.Count;
+
+                path = Common.Directory + "PrioMatcher.trie";
+                zip = File.ReadAllBytes(path);
+                json = zip.Unzip();
+                PrioMatcher = JsonConvert.DeserializeObject<Trie.Trie>(json);
+
             }
             catch (Exception e)
             {
                 Log.Error(e, "Could not load Trie");
             }
-            return trie;
         }
 
-        
+
 
         public int Progress
         {
@@ -161,41 +211,43 @@ namespace BetterStart.Services
             set { _progress = value; RaisePropertyChanged(); }
         }
 
-        public List<RunItem> Search(string s, int nrOfResults = 10)
+        public ICollection<RunItem> Search(string s, int nrOfHits = 10)
         {
             var fileList = new List<RunItem>();
-            var counter = nrOfResults;
-            foreach (var result in Matcher.Search(s.ToLower(), SearchType.Substring))
+            ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
+            ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
+            prioResult = prioResult.GroupBy(x => x.Name).Select(x => x.First()).ToList();
+            foreach (var genRes in generalResult)
             {
-                counter--;
-                fileList.Add(result);
-                if (counter <= 0)
-                    break;
+                if (prioResult.Count < nrOfHits && prioResult.All(p => p.Name != genRes.Name))
+                    prioResult.Add(genRes);
             }
-            return fileList;
+            return prioResult;
         }
 
         public static Task ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentBag<RunItem> theBag)
         {
             try
             {
-                theBag.Add(new RunItem()
+                var dir = new RunItem()
                 {
                     Name = new DirectoryInfo(targetDirectory).Name,
-                    Group = targetDirectory,
                     URI = targetDirectory,
-                    Type = ItemType.Directory
-                });
+                    Type = RunItem.ItemType.Directory
+                };
+                theBag.Add(dir);
+
                 // Process the list of files found in the directory.
                 string[] fileEntries = Directory.GetFiles(targetDirectory, searchPattern);
                 foreach (string fileName in fileEntries)
                 {
+                    var sb = new StringBuilder();
                     var item = new RunItem()
                     {
-                        URI = fileName,
-                        Type = ItemType.File,
+                        URI = new StringBuilder(fileName).Replace("\\", "/").Replace("//", "/").ToString(),
+                        Type = RunItem.ItemType.File,
                     };
-                    item.Name = item.FileNameWithoutExtension;
+                    item.Name = item.FileName;
                     theBag.Add(item);
                 }
             }
@@ -228,8 +280,10 @@ namespace BetterStart.Services
         }
 
 
-
-
+        public void AddExecutedItem(RunItem exItem)
+        {
+            PrioMatcher.Insert(exItem.Name, exItem);
+        }
     }
 
 }

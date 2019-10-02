@@ -9,7 +9,6 @@
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
 */
 
-using BetterStart.Indexing;
 using CommonServiceLocator;
 using GalaSoft.MvvmLight.Ioc;
 using BetterStart.Model;
@@ -29,7 +28,6 @@ namespace BetterStart.Views
         static ViewModelLocator()
         {
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
-            SimpleIoc.Default.Register<DataService>();
             SimpleIoc.Default.Register<SettingsService>();
             SimpleIoc.Default.Register<MainVM>();
             SimpleIoc.Default.Register<IndexingService>();
