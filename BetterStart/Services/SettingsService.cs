@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using BetterStart.Helper;
+using RocketLaunch.Helper;
 using Serilog;
 
-namespace BetterStart.Model
+namespace RocketLaunch.Model
 {
     public class SettingsService
     {

@@ -10,7 +10,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Data;
 
-namespace BetterStart.Helper
+namespace RocketLaunch.Helper
 {
     [Serializable]
     public class ObservableDictionary<TKey, TValue> : IDictionary<TKey, TValue>, INotifyCollectionChanged, INotifyPropertyChanged

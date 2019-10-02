@@ -7,13 +7,13 @@ using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using BetterStart.Helper;
+using RocketLaunch.Helper;
 using GalaSoft.MvvmLight;
 using ProtoBuf;
 using Serilog;
 using Exception = System.Exception;
 
-namespace BetterStart.Model
+namespace RocketLaunch.Model
 {
     [ProtoContract]
     public class RunItem

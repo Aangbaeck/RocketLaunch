@@ -10,14 +10,16 @@ using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
-using BetterStart.Helper;
-using BetterStart.Model;
-using BetterStart.Services;
+using RocketLaunch.Helper;
+using RocketLaunch.Model;
+using RocketLaunch.Services;
 using MaterialDesignThemes.Wpf;
 using Serilog;
 using System.Diagnostics;
+using System.Linq;
+using System.Windows.Input;
 
-namespace BetterStart.Views
+namespace RocketLaunch.Views
 {
     public class MainVM : ViewModelBase
     {
@@ -28,6 +30,36 @@ namespace BetterStart.Views
         public RelayCommand OpenNewWindowCmd => new RelayCommand(() => { Messenger.Default.Send(typeof(SecondV), MessengerID.MainWindowV); });
         public RelayCommand ToggleDebugMode => new RelayCommand(() => { DebugMode = !DebugMode; });
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
+        public RelayCommand<RunItem> DoubleClickOnItemCmd  => new RelayCommand<RunItem>(ExecuteThisListViewItem);
+
+        private void ExecuteThisListViewItem(RunItem run)
+        {
+            Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
+            
+            
+                System.Diagnostics.Process.Start(run.URI);
+                SearchSuggestions[SelectedIndex].RunNrOfTimes++;
+                Indexing.AddExecutedItem(SearchSuggestions[SelectedIndex]);
+                Indexing.SavePrioTrie();
+            
+        }
+
+        public RelayCommand DownKeyPressedCmd => new RelayCommand(() =>
+        {
+            if (SelectedIndex < SearchSuggestions.Count - 1)
+                SelectedIndex++;
+        });
+        public RelayCommand UpKeyPressedCmd => new RelayCommand(() =>
+        {
+            if (SelectedIndex > 0)
+                SelectedIndex--;
+        });
+        public RelayCommand AnyKeyPressedCmd => new RelayCommand(AnyKeyPressed);
+
+        private void AnyKeyPressed()
+        {
+        }
+
         public RelayCommand TabOrArrow => new RelayCommand(ChangeSelectedIndex);
 
         private void ChangeSelectedIndex()
@@ -39,7 +71,7 @@ namespace BetterStart.Views
 
             try
             {
-                Messenger.Default.Send<bool>(true,MessengerID.HideWindow);
+                Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
                 var index = 0;
                 if (SelectedIndex > 0)
                     index = SelectedIndex;
@@ -113,10 +145,11 @@ namespace BetterStart.Views
             set
             {
                 _searchString = value;
-                SelectedIndex = 0;
-                ICollection<RunItem> list = Indexing.Search(value);
+                
+                List<RunItem> list = Indexing.Search(value);
                 SearchSuggestions.Clear();
                 SearchSuggestions.AddRange(list);
+                SelectedIndex = 0;
                 //var sw = new Stopwatch();
                 //sw.Start();
 
@@ -156,6 +189,7 @@ namespace BetterStart.Views
             {
                 if (value != -1)
                     _selectedIndex = value;
+                RaisePropertyChanged();
 
             }
         }

@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using WindowsInput;
 using WindowsInput.Native;
-using static BetterStart.App;
+using static RocketLaunch.App;
 
-namespace BetterStart.Services
+namespace RocketLaunch.Services
 {
     public class KeyBoardHandlerService
     {

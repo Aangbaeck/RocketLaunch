@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using BetterStart.Model;
+using RocketLaunch.Model;
 using ProtoBuf;
 using TrieImplementation;
 

@@ -2,9 +2,9 @@
 using System.Windows;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
-using BetterStart.Helper;
+using RocketLaunch.Helper;
 
-namespace BetterStart.Views
+namespace RocketLaunch.Views
 {
     /// <summary>
     /// Description for TheSecondWindowV.

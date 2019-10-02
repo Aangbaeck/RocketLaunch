@@ -5,7 +5,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
 using MaterialDesignThemes.Wpf;
-using BetterStart.Helper;
+using RocketLaunch.Helper;
 using Serilog;
 
 namespace Calculator3D.Views.UserControls

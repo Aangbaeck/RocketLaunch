@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -8,9 +9,11 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Timers;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Media.Imaging;
 
-namespace BetterStart.Helper
+namespace RocketLaunch.Helper
 {
     public static class Common
     {
@@ -133,6 +136,8 @@ namespace BetterStart.Helper
             ((FrameworkElement)sender).SetValue(IsFocusedProperty, false);
         }
     }
+
+    
 
 
 }

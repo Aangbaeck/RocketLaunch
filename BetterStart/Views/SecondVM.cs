@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel;
 using System.Reflection;
 using GalaSoft.MvvmLight;
-using BetterStart.Model;
+using RocketLaunch.Model;
 
-namespace BetterStart.Views
+namespace RocketLaunch.Views
 {
     public class SecondVM : ViewModelBase
     {

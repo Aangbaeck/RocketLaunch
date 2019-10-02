@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Input;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
-using BetterStart.Helper;
+using RocketLaunch.Helper;
 using Serilog;
 using Serilog.Configuration;
 using Serilog.Core;
@@ -15,10 +15,10 @@ using Serilog.Events;
 using Application = System.Windows.Application;
 using WinForms = System.Windows.Forms;
 using Gma.System.MouseKeyHook;
-using BetterStart.Services;
+using RocketLaunch.Services;
 using CommonServiceLocator;
 
-namespace BetterStart
+namespace RocketLaunch
 {
     /// <summary>
     /// Interaction logic for App.xaml

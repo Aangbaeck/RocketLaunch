@@ -11,10 +11,10 @@
 
 using CommonServiceLocator;
 using GalaSoft.MvvmLight.Ioc;
-using BetterStart.Model;
-using BetterStart.Services;
+using RocketLaunch.Model;
+using RocketLaunch.Services;
 
-namespace BetterStart.Views
+namespace RocketLaunch.Views
 {
     /// <summary>
     /// This class contains static references to all the view models in the

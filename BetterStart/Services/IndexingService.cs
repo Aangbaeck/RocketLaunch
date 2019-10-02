@@ -6,8 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
-using BetterStart.Helper;
-using BetterStart.Model;
+using RocketLaunch.Helper;
+using RocketLaunch.Model;
 using GalaSoft.MvvmLight;
 using Newtonsoft.Json;
 using System.IO.Compression;
@@ -18,7 +18,7 @@ using Serilog;
 using Trie;
 using TrieImplementation;
 
-namespace BetterStart.Services
+namespace RocketLaunch.Services
 {
     public class IndexingService : ViewModelBase
     {
@@ -57,7 +57,14 @@ namespace BetterStart.Services
 
         public SettingsService S { get; set; }
 
-        private List<(string path, string searchString, bool SearchSub)> SearchDirectories { get; set; } = new List<(string, string, bool)> { ("C:/Program Files/", "*.exe", true) };
+        private List<(string path, string searchString, bool SearchSub)> SearchDirectories { get; set; } = new List<(string, string, bool)> { 
+            (Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "*.*", true),
+            (Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "*.*", true),
+            (Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "*.*", true),
+            (Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "*.*", true),
+            //("C:/Program Files/", "*.exe", true),
+
+        };
 
         public int NrOfPaths
         {
@@ -211,7 +218,7 @@ namespace BetterStart.Services
             set { _progress = value; RaisePropertyChanged(); }
         }
 
-        public ICollection<RunItem> Search(string s, int nrOfHits = 10)
+        public List<RunItem> Search(string s, int nrOfHits = 10)
         {
             var fileList = new List<RunItem>();
             ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
@@ -222,7 +229,9 @@ namespace BetterStart.Services
                 if (prioResult.Count < nrOfHits && prioResult.All(p => p.Name != genRes.Name))
                     prioResult.Add(genRes);
             }
-            return prioResult;
+
+            var finalResults = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();
+            return finalResults;
         }
 
         public static Task ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentBag<RunItem> theBag)

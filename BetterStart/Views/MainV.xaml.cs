@@ -12,15 +12,15 @@ using System.Windows.Threading;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 using Newtonsoft.Json;
-using BetterStart.Helper;
-using BetterStart.Model;
+using RocketLaunch.Helper;
+using RocketLaunch.Model;
 using Serilog;
 using Serilog.Formatting.Json;
 using Path = System.IO.Path;
-using static BetterStart.App;
-using BetterStart.Services;
+using static RocketLaunch.App;
+using RocketLaunch.Services;
 
-namespace BetterStart.Views
+namespace RocketLaunch.Views
 {
     public partial class MainV
     {
@@ -29,8 +29,8 @@ namespace BetterStart.Views
             Application.Current.DispatcherUnhandledException += ThreadStuffUI;
             SimpleIoc.Default.Register<SettingsService>();
             S = SimpleIoc.Default.GetInstance<SettingsService>();
-
-            Log.Information("STARTING APPLICATION...");
+        
+        Log.Information("STARTING APPLICATION...");
             InitializeComponent();
             Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
             Messenger.Default.Register<KeyState>(this, MessengerID.KeyPressed, HideShowWindow);

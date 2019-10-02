@@ -6,10 +6,10 @@ using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using Newtonsoft.Json;
-using BetterStart.Views;
+using RocketLaunch.Views;
 using Serilog;
 
-namespace BetterStart.Helper
+namespace RocketLaunch.Helper
 {
 
     // RECT structure required by WINDOWPLACEMENT structure

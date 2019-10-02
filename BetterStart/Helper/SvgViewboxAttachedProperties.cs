@@ -5,7 +5,7 @@ using System.Windows;
 using Serilog;
 using SharpVectors.Converters;
 
-namespace BetterStart.Helper
+namespace RocketLaunch.Helper
 {
     public class SvgViewboxAttachedProperties : DependencyObject
     {

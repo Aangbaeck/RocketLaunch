@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Bson;
 
-namespace BetterStart.Helper
+namespace RocketLaunch.Helper
 {
     public static class Bson
     {

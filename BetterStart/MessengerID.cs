@@ -1,4 +1,4 @@
-﻿namespace BetterStart
+﻿namespace RocketLaunch
 {
     //Instead of free strings we use intelisense(safe) strings as messages instead
     public static class MessengerID
