@@ -136,7 +136,7 @@ namespace RocketLaunch
 
                 var keyState = new KeyState() { Key = key, IsDown = wParam.ToString() == "256" };
                 if(kb.SW.ElapsedMilliseconds > 200)
-                    Messenger.Default.Send<KeyState>(keyState, MessengerID.KeyPressed);
+                    Messenger.Default.Send<KeyState>(keyState, MessengerID.WinKeyPressed);
 
                 
                 kb.CheckForCombo();
@@ -177,7 +177,7 @@ namespace RocketLaunch
             if (key == Keys.LWin /*|| (control && key == Keys.Escape)*/)
             {
 
-                Messenger.Default.Send<bool>(true, MessengerID.KeyPressed);
+                Messenger.Default.Send<bool>(true, MessengerID.WinKeyPressed);
                 return false;
             }
 

@@ -25,7 +25,7 @@
     TextElement.FontSize="16"
     TextElement.FontWeight="Medium"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-    Topmost="True"
+    Topmost="True" KeyDown="WinOnKeyDown"
     WindowStyle="None">
     <Window.Icon>
         <Binding Converter="{StaticResource ConvertMaterialDesignIconToIcon}">
@@ -52,15 +52,39 @@
             </Style.Triggers>
         </Style>
         <focus:IndexConverter x:Key="IndexConverter" />
-
+        <!--<Storyboard x:Key="FadeOut">
+            --><!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:0" Storyboard.TargetProperty="Visibility">
+                <DiscreteObjectKeyFrame KeyTime="0">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Visible</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+            </ObjectAnimationUsingKeyFrames>--><!--
+            <DoubleAnimation BeginTime="0:0:0.0" Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.300"/>
+            
+            --><!--<ObjectAnimationUsingKeyFrames BeginTime="0:0:5.5" Storyboard.TargetProperty="Visibility">
+                <DiscreteObjectKeyFrame KeyTime="0">
+                    <DiscreteObjectKeyFrame.Value>
+                        <Visibility>Hidden</Visibility>
+                    </DiscreteObjectKeyFrame.Value>
+                </DiscreteObjectKeyFrame>
+            </ObjectAnimationUsingKeyFrames>--><!--
+        </Storyboard>
+        <Storyboard x:Key="FadeIn">
+            <DoubleAnimation BeginTime="0:0:0.0" Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.300"/>
+        </Storyboard>-->
 
     </Window.Resources>
+    
+    
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="KeyDown">
             <i:InvokeCommandAction Command="{Binding AnyKeyPressedCmd}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>
+
     <Grid>
+
         <Border
             Grid.Row="0"
             Grid.ColumnSpan="2"
@@ -71,7 +95,7 @@
             PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
             PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
             PreviewMouseMove="OnMouseMove" />
-        <StackPanel>
+        <StackPanel Margin="10">
             <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
 
             <!--<ComboBox Margin="20"
@@ -97,7 +121,7 @@
                 x:Name="SearchTextBox"
                 Margin="10,10,10,0"
                 materialDesign:HintAssist.Hint="Search..."
-                AcceptsReturn="False"
+                AcceptsReturn="False" 
                 AcceptsTab="False"
                 Style="{StaticResource SelectedTextBoxStyle}"
                 Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
@@ -124,7 +148,7 @@
                 SelectedIndex="{Binding SelectedIndex}">
                 <i:Interaction.Triggers>
                     <i:EventTrigger EventName="MouseDoubleClick">
-                        <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" CommandParameter="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}" />
+                        <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
                     </i:EventTrigger>
                 </i:Interaction.Triggers>
 
@@ -161,8 +185,8 @@
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Name}" />
-                                        <TextBlock FontSize="8" Text="{Binding URI}" />
+                                        <TextBlock Text="{Binding Name}" FontSize="14" />
+                                        <TextBlock FontSize="9" Text="{Binding URI}" Foreground="LightGray" />
                                     </StackPanel>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

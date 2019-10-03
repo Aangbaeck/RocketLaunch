@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using RocketLaunch.Model;
 using ProtoBuf;
@@ -30,7 +31,13 @@ namespace Trie
                 this.KeyValueObjects[key] = new HashSet<RunItem>();
             }
 
-            this.KeyValueObjects[key].Add(value);
+            //var first = KeyValueObjects[key].Any(p => p.URI == value.URI);
+            if (!KeyValueObjects[key].Any(p => p.URI == value.URI))  //No reason to set in the same thing twice...
+                this.KeyValueObjects[key].Add(value);
+            else
+            {
+                
+            }
         }
 
         //public bool Remove(string key)

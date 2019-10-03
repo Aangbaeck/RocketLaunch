@@ -12,11 +12,13 @@ using GalaSoft.MvvmLight;
 using Newtonsoft.Json;
 using System.IO.Compression;
 using System.Text;
+using IWshRuntimeLibrary;
 using ProtoBuf;
 using Newtonsoft.Json.Serialization;
 using Serilog;
 using Trie;
 using TrieImplementation;
+using File = System.IO.File;
 
 namespace RocketLaunch.Services
 {
@@ -32,14 +34,14 @@ namespace RocketLaunch.Services
                 RunIndexing();
             else
             {
-                LoadTrie();
+                LoadTries();
+                if (NrOfPaths == 0)
+                {
+                    Log.Debug("Something is wrong with the loading. Let's reindex...");
+                    RunIndexing();
+                }
             }
-
-            if (NrOfPaths == 0)
-            {
-                Log.Debug("Something is wrong with the loading. Let's reindex...");
-                RunIndexing();
-            }
+            
             S = s;
             var timer = new Timer(s.ReindexingTime);
             timer.Start();
@@ -57,14 +59,7 @@ namespace RocketLaunch.Services
 
         public SettingsService S { get; set; }
 
-        private List<(string path, string searchString, bool SearchSub)> SearchDirectories { get; set; } = new List<(string, string, bool)> { 
-            (Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "*.*", true),
-            //("C:/Program Files/", "*.exe", true),
-
-        };
+        
 
         public int NrOfPaths
         {
@@ -78,12 +73,12 @@ namespace RocketLaunch.Services
         {
             Task.Run(() =>
             {
-                var unorderedFiles = new ConcurrentBag<RunItem>();
+                var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
 
-                //This puts all files in from SearchDirectories in UnorderedFiles 
-                Task.WaitAll(SearchDirectories.Select(d => ProcessDirectory(d.path, d.searchString, d.SearchSub, unorderedFiles)).ToArray());
+                //Spread out the search on all directories on different tasks
+                Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.path, d.pattern, d.subFolders, unorderedFiles)).ToArray());
 
-                var tempList = unorderedFiles.ToArray();
+                RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
 
                 var temp = new Trie.Trie();
                 //var sw = new Stopwatch();
@@ -91,53 +86,25 @@ namespace RocketLaunch.Services
                 for (int i = 0; i < tempList.Length; i++)
                 {
                     Progress = i / tempList.Length * 100;
-                    if (tempList[i].Type == RunItem.ItemType.File)
-                        temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
-                    if (tempList[i].Type == RunItem.ItemType.Directory)
-                        temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                    temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
                     //if (!string.IsNullOrEmpty(tempList[i].Group))
                     //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
                 //sw.Stop();
                 //Add settings and other good stuff
-                foreach (var setting in RunItem.CommonControlPanel.Settings)
+                foreach (var setting in CommonControlPanel.Settings)
                 {
                     if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
                     {
-                        PrioMatcher.Insert(setting.Name, setting);
-                        PrioMatcher.Insert(setting.Group, setting);
+                        PrioMatcher.Insert(setting.Name.ToLower(), setting);
+                        PrioMatcher.Insert(setting.Group.ToLower(), setting);
                     }
                 }
 
                 NrOfPaths = temp.KeyValueObjects.Count;
                 Matcher = temp;
 
-                SaveTrie();
-                //var t = LoadTrie();
-
-
-                //var list = new List<RunItem>();
-                //foreach (var result in Matcher.Search("ru".ToLower(),SearchType.Substring))
-                //{
-                //    list.Add(result);
-                //}
-                //foreach (var result in Matcher.Search("w".ToLower(),SearchType.Substring))
-                //{
-                //    list.Add(result);
-                //}
-                //SaveTrie();
-                //LoadTrie();
-
-                //var list2 = new List<RunItem>();
-                //foreach (var result in Matcher.Search("ru".ToLower(), SearchType.Substring))
-                //{
-                //    list2.Add(result);
-                //}
-                //foreach (var result in Matcher.Search("w".ToLower(), SearchType.Substring))
-                //{
-                //    list2.Add(result);
-                //}
-
+                SaveTries();
             });
         }
 
@@ -160,7 +127,7 @@ namespace RocketLaunch.Services
             }
         }
 
-        public void SaveTrie()
+        public void SaveTries()
         {
             try
             {
@@ -187,16 +154,15 @@ namespace RocketLaunch.Services
             }
         }
 
-        public void LoadTrie()
+        public void LoadTries()
         {
-            var trie = new Trie.Trie();
             try
             {
                 var path = Common.Directory + "Matcher.trie";
                 byte[] zip = File.ReadAllBytes(path);
                 string json = zip.Unzip();
                 Matcher = JsonConvert.DeserializeObject<Trie.Trie>(json);
-                NrOfPaths = trie.KeyValueObjects.Count;
+                NrOfPaths = Matcher.KeyValueObjects.Count;
 
                 path = Common.Directory + "PrioMatcher.trie";
                 zip = File.ReadAllBytes(path);
@@ -210,8 +176,6 @@ namespace RocketLaunch.Services
             }
         }
 
-
-
         public int Progress
         {
             get { return _progress; }
@@ -223,10 +187,10 @@ namespace RocketLaunch.Services
             var fileList = new List<RunItem>();
             ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
             ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
-            prioResult = prioResult.GroupBy(x => x.Name).Select(x => x.First()).ToList();
+            prioResult = prioResult.GroupBy(x => x.URI).Select(x => x.First()).ToList();
             foreach (var genRes in generalResult)
             {
-                if (prioResult.Count < nrOfHits && prioResult.All(p => p.Name != genRes.Name))
+                if (prioResult.Count < nrOfHits && prioResult.All(p => p.URI != genRes.URI))
                     prioResult.Add(genRes);
             }
 
@@ -234,30 +198,62 @@ namespace RocketLaunch.Services
             return finalResults;
         }
 
-        public static Task ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentBag<RunItem> theBag)
+        public static Task ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentDictionary<string, RunItem> theBag)
         {
             try
             {
                 var dir = new RunItem()
                 {
                     Name = new DirectoryInfo(targetDirectory).Name,
-                    URI = targetDirectory,
-                    Type = RunItem.ItemType.Directory
+                    URI = new StringBuilder(targetDirectory).Replace("/", "\\").Replace("//", "\\").ToString(),
+                    Type = ItemType.Directory
                 };
-                theBag.Add(dir);
-
+                theBag.TryAdd(dir.URI, dir);
+                //var t = theBag.ContainsKey(dir.URI);
                 // Process the list of files found in the directory.
                 string[] fileEntries = Directory.GetFiles(targetDirectory, searchPattern);
                 foreach (string fileName in fileEntries)
                 {
                     var sb = new StringBuilder();
-                    var item = new RunItem()
+
+                    if (Path.GetExtension(fileName) == ".lnk")
                     {
-                        URI = new StringBuilder(fileName).Replace("\\", "/").Replace("//", "/").ToString(),
-                        Type = RunItem.ItemType.File,
-                    };
-                    item.Name = item.FileName;
-                    theBag.Add(item);
+                        var item = new RunItem();
+                        
+                        WshShell shell = new WshShell(); //Create a new WshShell Interface
+                        IWshShortcut link = (IWshShortcut)shell.CreateShortcut(fileName); //Link the interface to our shortcut
+                        var uri = link.TargetPath;
+                        
+                        if (!System.IO.File.Exists(uri))  //It sometimes mixes up the program files folder. Lets check both.
+                        {
+                            if (uri.Contains("Program Files (x86)"))   
+                            {
+                                uri = new StringBuilder(uri).Replace("Program Files (x86)", "Program Files").ToString();
+                            }
+                            if(!File.Exists(uri) && uri.Contains("Program Files"))
+                                uri = new StringBuilder(uri).Replace("Program Files", "Program Files (x86)").ToString();
+                        }
+                        
+                        if (System.IO.File.Exists(uri) && !uri.Contains("C:\\Windows\\Installer\\"))  //No reason to add a broken link.
+                        {
+                            item.Type = ItemType.File;
+                            item.URI = new StringBuilder(uri).Replace("/", "\\").Replace("//", "\\").ToString();
+                            item.Name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                            theBag.TryAdd(item.URI, item);
+                        }
+                    }
+                    else
+                    {
+                        var item = new RunItem();
+                        item.Type = ItemType.File;
+                        item.URI = new StringBuilder(fileName).Replace("/", "\\").Replace("//", "\\").ToString();
+                        item.Name = item.FileName;
+                        if (!theBag.ContainsKey(item.URI))
+                            theBag.TryAdd(item.URI, item);
+                    }
+
+
+
                 }
             }
             catch (Exception)
@@ -293,6 +289,9 @@ namespace RocketLaunch.Services
         {
             PrioMatcher.Insert(exItem.Name, exItem);
         }
+
+
     }
+
 
 }

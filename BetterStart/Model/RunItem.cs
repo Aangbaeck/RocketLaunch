@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -9,6 +11,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using RocketLaunch.Helper;
 using GalaSoft.MvvmLight;
+
 using ProtoBuf;
 using Serilog;
 using Exception = System.Exception;
@@ -21,8 +24,9 @@ namespace RocketLaunch.Model
         [ProtoMember(1)] public string Name { get; set; }
         [ProtoMember(2)] public string Group { get; set; }
         [ProtoMember(3)] public ItemType Type { get; set; }
-        [ProtoMember(4)] public string URI { get; set; }
-        [ProtoMember(5)] public int RunNrOfTimes { get; set; } = 0;
+        [ProtoMember(4)] public string CustomIconName { get; set; } //settings or other manually customized icons
+        [ProtoMember(5)] public string URI { get; set; }
+        [ProtoMember(6)] public int RunNrOfTimes { get; set; } = 0;
 
         public string FileName
         {
@@ -62,8 +66,6 @@ namespace RocketLaunch.Model
             }
         }
 
-        public bool HasIcon { get; set; }
-        
         public ImageSource Icon
         {
             get
@@ -72,23 +74,32 @@ namespace RocketLaunch.Model
                 BitmapSource icon = null;
                 try
                 {
-                    
+
                     if (Type == ItemType.Directory)
                     {
                         var uri = new Uri("pack://application:,,,/Assets/folder.png");
                         return new BitmapImage(uri);
                     }
 
-                    var path = URI;
-                    
-
-                    using (System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(path))
+                    if (Type == ItemType.Setting)
                     {
-                        if (sysicon != null)
-                            icon = Imaging.CreateBitmapSourceFromHIcon(
-                                sysicon.Handle,
-                                Int32Rect.Empty,
-                                BitmapSizeOptions.FromEmptyOptions());
+                        var uri = new Uri("pack://application:,,,/Assets/"+ CustomIconName);
+                        return new BitmapImage(uri);
+                    }
+                    if (System.IO.File.Exists(URI))
+                    {
+                        var path = URI;
+                        using (System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(path))
+                        {
+                            var handle = (int)sysicon.Handle;
+                            icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                            if (handle == 441650415)   //This 441650415 handle means that it uses a standard icon.
+                            {
+                                ImageSource sysIcon = IconManager.FindIconForFilename(URI, true);  //Fail silently with 'as'. All we can do is try...
+                                if (sysIcon != null)
+                                    return sysIcon;
+                            }
+                        }
                     }
                 }
                 catch (Exception e)
@@ -105,27 +116,19 @@ namespace RocketLaunch.Model
 
 
         }
+    }
 
-        public enum ItemType
+    public static class RunItemFactory
+    {
+        public static RunItem Setting(string name, string group, string uri, string customIcon)
         {
-            File,
-            Setting,
-            Directory
-
+            return new RunItem() { Name = name, Group = group, URI = uri, Type = ItemType.Setting, CustomIconName = customIcon };
         }
-
-        public static class CommonControlPanel
-        {
-            public static List<RunItem> Settings { get; } = new List<RunItem>()
-            {
-                new RunItem()
-                    {Name = "Settings home page", Group = "Home", URI = "ms-settings:", Type = ItemType.Setting}
-            };
-            //TODO add more https://winaero.com/blog/ms-settings-commands-windows-10/
-
-
-        }
-
-
+    }
+    public enum ItemType
+    {
+        File,
+        Setting,
+        Directory,
     }
 }

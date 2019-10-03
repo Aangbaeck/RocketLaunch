@@ -6,8 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
@@ -33,7 +36,7 @@ namespace RocketLaunch.Views
         Log.Information("STARTING APPLICATION...");
             InitializeComponent();
             Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
-            Messenger.Default.Register<KeyState>(this, MessengerID.KeyPressed, HideShowWindow);
+            Messenger.Default.Register<KeyState>(this, MessengerID.WinKeyPressed, HideShowWindow);
             Messenger.Default.Register<bool>(this, MessengerID.HideWindow, HideWindow);
             Closing += (s, e) =>
             {
@@ -51,28 +54,51 @@ namespace RocketLaunch.Views
 
                 var startWindows = JsonConvert.SerializeObject(listOfWindowsToOpenNextTime);
                 S.WindowsToOpenAtStart = startWindows;
-                S.SaveSettings();
                 ViewModelLocator.Cleanup();
             };
 
         }
         private void HideWindow(bool b)
         {
+            ((Storyboard)FindResource("FadeOut")).Begin(this);
+            Wait(300);
             this.WindowState = WindowState.Minimized;
         }
 
         private void HideShowWindow(KeyState state)
         {
+            
             if (state.Key == System.Windows.Forms.Keys.LWin && !state.IsDown)
             {
                 if (this.WindowState == WindowState.Minimized)
                 {
+                    //Log.Debug("In");
+                    //this.Opacity = 0;
+                    //((Storyboard)FindResource("FadeIn")).Begin(this);
                     this.WindowState = WindowState.Normal;
+                    //Wait(300);
                     SearchTextBox.SelectAll();
                 }
                 else
+                {
+                    //Log.Debug("Out");
+                    //((Storyboard) FindResource("FadeOut")).Begin(this);
+                    //Wait(300);
                     this.WindowState = WindowState.Minimized;
+                }
             }
+        }
+        private void Wait(double milliseconds)
+        {
+            var frame = new DispatcherFrame();
+            var t = Task.Run(
+                async () => {
+                    await Task.Delay(TimeSpan.FromMilliseconds(milliseconds));
+                    frame.Continue = false;
+                });
+
+            Dispatcher.PushFrame(frame);
+            t.Wait();
         }
 
         public SettingsService S { get; set; }
@@ -221,5 +247,9 @@ namespace RocketLaunch.Views
             window.Topmost = true;
         }
 
+        private void WinOnKeyDown(object sender, KeyEventArgs e)
+        {
+            SearchTextBox.Focus();
+        }
     }
 }

@@ -30,41 +30,23 @@ namespace RocketLaunch.Views
         public RelayCommand OpenNewWindowCmd => new RelayCommand(() => { Messenger.Default.Send(typeof(SecondV), MessengerID.MainWindowV); });
         public RelayCommand ToggleDebugMode => new RelayCommand(() => { DebugMode = !DebugMode; });
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
-        public RelayCommand<RunItem> DoubleClickOnItemCmd  => new RelayCommand<RunItem>(ExecuteThisListViewItem);
-
-        private void ExecuteThisListViewItem(RunItem run)
-        {
-            Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
-            
-            
-                System.Diagnostics.Process.Start(run.URI);
-                SearchSuggestions[SelectedIndex].RunNrOfTimes++;
-                Indexing.AddExecutedItem(SearchSuggestions[SelectedIndex]);
-                Indexing.SavePrioTrie();
-            
-        }
+        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(ExecuteSelectedListViewItem);
 
         public RelayCommand DownKeyPressedCmd => new RelayCommand(() =>
-        {
-            if (SelectedIndex < SearchSuggestions.Count - 1)
-                SelectedIndex++;
-        });
+              {
+                  if (SelectedIndex < SearchSuggestions.Count - 1)
+                      SelectedIndex++;
+              });
         public RelayCommand UpKeyPressedCmd => new RelayCommand(() =>
         {
             if (SelectedIndex > 0)
                 SelectedIndex--;
         });
-        public RelayCommand AnyKeyPressedCmd => new RelayCommand(AnyKeyPressed);
 
-        private void AnyKeyPressed()
-        {
-        }
 
-        public RelayCommand TabOrArrow => new RelayCommand(ChangeSelectedIndex);
 
-        private void ChangeSelectedIndex()
-        {
-        }
+
+
 
         private void ExecuteSelectedListViewItem()
         {
@@ -119,7 +101,7 @@ namespace RocketLaunch.Views
 
         public RelayCommand OpenLogFile => new RelayCommand(() =>
         {
-            var directory = Path.GetDirectoryName(Common.LogfilesPath); /*+ "Logfile.log";*/
+            var directory = Path.GetDirectoryName(Common.LogfilesPath);
             if (directory != null)
             {
                 Directory.CreateDirectory(directory);
@@ -135,41 +117,20 @@ namespace RocketLaunch.Views
                 }
             }
         });
-
-
-        //CancellationTokenSource source = new CancellationTokenSource();
-        //CancellationToken token;
+        
         public string SearchString
         {
             get { return _searchString; }
             set
             {
                 _searchString = value;
-                
                 List<RunItem> list = Indexing.Search(value);
                 SearchSuggestions.Clear();
                 SearchSuggestions.AddRange(list);
                 SelectedIndex = 0;
-                //var sw = new Stopwatch();
-                //sw.Start();
-
-                //source.Cancel();  //Close old searches
-                //source = new CancellationTokenSource();
-                //token = source.Token;
-                //Task.Run(() =>
-                //{
-
-                //Dispatcher.CurrentDispatcher.Invoke(() => { SearchSuggestions.Clear(); }, DispatcherPriority.DataBind);
-                //List<RunItem> list = Indexing.Search(value);
-                //Dispatcher.CurrentDispatcher.Invoke(() => { SearchSuggestions.AddRange(list); }, DispatcherPriority.DataBind);
-                //}, token);
-
-
             }
         }
-
-
-
+        
         public bool IsFocused
         {
             get { return _isFocused; }

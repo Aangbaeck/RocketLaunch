@@ -70,6 +70,7 @@
     <Compile Include="Helper\Bson.cs" />
     <Compile Include="Helper\Common.cs" />
     <Compile Include="Helper\DeepCopyByExpressionTrees.cs" />
+    <Compile Include="Helper\IconManager.cs" />
     <Compile Include="Helper\ListViewIndexConverter.cs" />
     <Compile Include="Helper\ObservableDictionary.cs" />
     <Compile Include="Helper\SvgViewboxAttachedProperties.cs" />
@@ -81,6 +82,7 @@
     <Compile Include="Indexing\SuffixTree\Trie.cs" />
     <Compile Include="Indexing\SuffixTree\TrieBase.cs" />
     <Compile Include="Indexing\SuffixTree\TrieNode.cs" />
+    <Compile Include="Model\ControlPanelSettings.cs" />
     <Compile Include="Model\RunItem.cs" />
     <Compile Include="Services\IndexingService.cs" />
     <Compile Include="Services\KeyBoardHandlerService.cs" />
@@ -150,10 +152,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Assets\settings.png" />
     <Resource Include="Assets\rocket.png" />
-    <Resource Include="Assets\folder.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
+    <Resource Include="Assets\folder.png" />
     <Resource Include="Assets\questionmark.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
@@ -211,8 +212,21 @@
     <PackageReference Include="System.IO.Compression">
       <Version>4.3.0</Version>
     </PackageReference>
+    <PackageReference Include="TinyMapper">
+      <Version>2.0.8</Version>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
