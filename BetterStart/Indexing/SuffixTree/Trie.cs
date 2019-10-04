@@ -36,35 +36,36 @@ namespace Trie
                 this.KeyValueObjects[key].Add(value);
             else
             {
-                
+                //var changeValue = this.KeyValueObjects[key].FirstOrDefault(p => p.URI == value.URI);
+                //changeValue = value;
             }
         }
 
-        //public bool Remove(string key)
-        //{
-        //    if (this.KeyValueObjects.ContainsKey(key))
-        //    {
-        //        this.KeyValueObjects.Remove(key);
-        //        return true;
-        //    }
+        public bool Remove(string key)
+        {
+            if (this.KeyValueObjects.ContainsKey(key))
+            {
+                this.KeyValueObjects.Remove(key);
+                return true;
+            }
 
-        //    return false;
-        //}
+            return false;
+        }
 
-        //public bool Remove(RunItem item)
-        //{
-        //    return this.Remove(item.GetHashCode().ToString(), item);
-        //}
+        public bool Remove(RunItem item)
+        {
+            return this.Remove(item.GetHashCode().ToString(), item);
+        }
 
-        //public bool Remove(string key, RunItem item)
-        //{
-        //    if (this.KeyValueObjects.ContainsKey(key))
-        //    {
-        //        return this.KeyValueObjects[key].Remove(item);
-        //    }
+        public bool Remove(string key, RunItem item)
+        {
+            if (this.KeyValueObjects.ContainsKey(key))
+            {
+                return this.KeyValueObjects[key].Remove(item);
+            }
 
-        //    return false;
-        //}
+            return false;
+        }
 
         //public void InsertRange(IEnumerable<RunItem> items)
         //{

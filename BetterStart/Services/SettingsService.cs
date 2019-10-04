@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,30 +10,49 @@ using Nelibur.ObjectMapper;
 using Newtonsoft.Json;
 using RocketLaunch.Helper;
 using Serilog;
+using Syroot.Windows.IO;
 
 namespace RocketLaunch.Model
 {
-    public class SettingsService: ViewModelBase
+    public class SettingsService : ViewModelBase
     {
+        private bool _addWindowsSettings;
+
         public SettingsService()
         {
             TinyMapper.Bind<SettingsService, SettingsService>();
             this.PropertyChanged += (sender, args) => { Save(); };
         }
         public string WindowsToOpenAtStart { get; set; }
-        //public string FolderIconPath => (new Uri("/Assets/folder.ico", UriKind.Relative)).AbsolutePath;
-        public int ReindexingTime { get; set; } = 1000000;
-        public DateTime LastIndexed { get; set; } = DateTime.MinValue;
-        
-        public List<(string path, string pattern, bool subFolders)> SearchDirectories { get; set; } = new List<(string, string, bool)> {
-            (Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "*.*", true),
-            (Environment.GetFolderPath(Environment.SpecialFolder.CommonDesktopDirectory), "*.*", true),
-            
-            //(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "*.*", true),
-            //("C:/Program Files/", "*.exe", true),
 
+        //public string FolderIconPath => (new Uri("/Assets/folder.ico", UriKind.Relative)).AbsolutePath;
+        public bool AddWindowsSettings
+        {
+            get { return _addWindowsSettings; }
+            set { _addWindowsSettings = value; RaisePropertyChanged(); }
+        }
+
+        /// <summary>
+        /// time between reindexing (minutes)
+        /// </summary>
+        public int ReindexingTime { get; set; } = 20;
+        public DateTime LastIndexed { get; set; } = DateTime.MinValue;
+
+        public ObservableCollection<FolderSearch> SearchDirectories { get; set; } = new ObservableCollection<FolderSearch>()
+        {
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), SearchPattern = "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), SearchPattern = "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop), SearchPattern = "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.AdminTools), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Downloads).Path, SearchPattern =  "*.*", SearchSubFolders = true },
+            //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), SearchPattern =  "*.*", SearchSubFolders = true },
+           
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Personal), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup), SearchPattern =  "*.*", SearchSubFolders = true },
         };
 
         public void Load()
@@ -42,7 +62,7 @@ namespace RocketLaunch.Model
                 Directory.CreateDirectory(Path.GetDirectoryName(Common.SettingsPath) ?? "");
                 var json = File.ReadAllText(Common.SettingsPath);
                 var ss = JsonConvert.DeserializeObject<SettingsService>(json);
-                TinyMapper.Map(ss,this);  //writing the settings back to itself without destroying the handle
+                TinyMapper.Map(ss, this);  //writing the settings back to itself without destroying the handle
             }
 
             catch (Exception e)

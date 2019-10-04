@@ -32,8 +32,8 @@ namespace RocketLaunch.Views
             Application.Current.DispatcherUnhandledException += ThreadStuffUI;
             SimpleIoc.Default.Register<SettingsService>();
             S = SimpleIoc.Default.GetInstance<SettingsService>();
-        
-        Log.Information("STARTING APPLICATION...");
+
+            Log.Information("STARTING APPLICATION...");
             InitializeComponent();
             Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
             Messenger.Default.Register<KeyState>(this, MessengerID.WinKeyPressed, HideShowWindow);
@@ -57,42 +57,30 @@ namespace RocketLaunch.Views
                 ViewModelLocator.Cleanup();
             };
 
+            
+
         }
         private void HideWindow(bool b)
         {
-            ((Storyboard)FindResource("FadeOut")).Begin(this);
-            Wait(300);
+            //((Storyboard)FindResource("FadeOut")).Begin(this);
+            //Wait(300);
             this.WindowState = WindowState.Minimized;
         }
 
         private void HideShowWindow(KeyState state)
         {
-            
+
             if (state.Key == System.Windows.Forms.Keys.LWin && !state.IsDown)
             {
-                if (this.WindowState == WindowState.Minimized)
-                {
-                    //Log.Debug("In");
-                    //this.Opacity = 0;
-                    //((Storyboard)FindResource("FadeIn")).Begin(this);
-                    this.WindowState = WindowState.Normal;
-                    //Wait(300);
-                    SearchTextBox.SelectAll();
-                }
-                else
-                {
-                    //Log.Debug("Out");
-                    //((Storyboard) FindResource("FadeOut")).Begin(this);
-                    //Wait(300);
-                    this.WindowState = WindowState.Minimized;
-                }
+                ToogleWindowState(null, null);
             }
         }
         private void Wait(double milliseconds)
         {
             var frame = new DispatcherFrame();
             var t = Task.Run(
-                async () => {
+                async () =>
+                {
                     await Task.Delay(TimeSpan.FromMilliseconds(milliseconds));
                     frame.Continue = false;
                 });
@@ -111,13 +99,13 @@ namespace RocketLaunch.Views
 
         private void OpenAnotherWindow(Type window)
         {
-            if (typeof(SecondV) == window)
-            {
-                if (IsWindowOpen<SecondV>())  //If window is already open, why open another?
-                    Application.Current.Windows.OfType<SecondV>().First().Activate(); //Attempts to bring the current window to the foreground
-                else
-                    new SecondV() { Owner = this }.Show();
-            }
+            //if (typeof(SettingsV) == window)
+            //{
+            //    if (IsWindowOpen<SettingsV>())  //If window is already open, why open another?
+            //        Application.Current.Windows.OfType<SettingsV>().First().Activate(); //Attempts to bring the current window to the foreground
+            //    else
+            //        new SettingsV() { Owner = this }.Show();
+            //}
             //else if (typeof(AnotherV) == window)
             //{
             //    if (IsWindowOpen<AnotherV>())
@@ -164,6 +152,15 @@ namespace RocketLaunch.Views
             SearchTextBox.Focusable = true;
             Keyboard.Focus(SearchTextBox);
 
+            var window = Window.GetWindow(this);
+            window.KeyDown += HandleKeyPress;
+
+        }
+
+        private void HandleKeyPress(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape && e.IsDown)
+                ToogleWindowState(null, null);
         }
 
         /// <summary>
@@ -179,39 +176,19 @@ namespace RocketLaunch.Views
         //These mouse methods is used for normal window behavour and still it's a borderless stylable window
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            //if (e.ClickCount == 2)
-            //{
-            //    if (this.ResizeMode != ResizeMode.CanResize &&
-            //        this.ResizeMode != ResizeMode.CanResizeWithGrip)
-            //    {
-            //        return;
-            //    }
-
-            //    this.WindowState = this.WindowState == WindowState.Maximized
-            //        ? WindowState.Normal
-            //        : WindowState.Maximized;
-            //}
-            //else
-            //{
             _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
             this.DragMove();
-            //}
         }
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (_mRestoreForDragMove)
             {
                 _mRestoreForDragMove = false;
-
                 var point = PointToScreen(e.MouseDevice.GetPosition(this));
-
                 this.Left = point.X - (this.RestoreBounds.Width * 0.5);
                 this.Top = point.Y;
                 this.WindowState = WindowState.Normal;
-
                 this.DragMove();
-
-
             }
         }
         private void MaximizeRestoreWindow(object sender, RoutedEventArgs e)
@@ -242,7 +219,8 @@ namespace RocketLaunch.Views
         public WindowState LastWindowState { get; set; }
         private void Window_Deactivated(object sender, EventArgs e)
         {
-            this.WindowState = WindowState.Minimized;
+            Messenger.Default.Send<bool>(true,MessengerID.WindowDeactivated);
+            
             Window window = (Window)sender;
             window.Topmost = true;
         }
@@ -250,6 +228,27 @@ namespace RocketLaunch.Views
         private void WinOnKeyDown(object sender, KeyEventArgs e)
         {
             SearchTextBox.Focus();
+        }
+
+
+        private void ToogleWindowState(object sender, RoutedEventArgs e)
+        {
+            if (this.WindowState == WindowState.Minimized)
+            {
+                //Log.Debug("In");
+                //this.Opacity = 0;
+                //((Storyboard)FindResource("FadeIn")).Begin(this);
+                this.WindowState = WindowState.Normal;
+                //Wait(300);
+                SearchTextBox.SelectAll();
+            }
+            else
+            {
+                //Log.Debug("Out");
+                //((Storyboard) FindResource("FadeOut")).Begin(this);
+                //Wait(300);
+                this.WindowState = WindowState.Minimized;
+            }
         }
     }
 }

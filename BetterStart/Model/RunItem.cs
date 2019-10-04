@@ -21,12 +21,15 @@ namespace RocketLaunch.Model
     [ProtoContract]
     public class RunItem
     {
-        [ProtoMember(1)] public string Name { get; set; }
-        [ProtoMember(2)] public string Group { get; set; }
-        [ProtoMember(3)] public ItemType Type { get; set; }
-        [ProtoMember(4)] public string CustomIconName { get; set; } //settings or other manually customized icons
-        [ProtoMember(5)] public string URI { get; set; }
-        [ProtoMember(6)] public int RunNrOfTimes { get; set; } = 0;
+        [ProtoMember(1)] public string Name { get; set; } //What we will actually search for
+        [ProtoMember(2)] public List<string> KeyWords { get; set; } //Add groups, similar words etc. This should be searchable as well
+        [ProtoMember(3)] public ItemType Type { get; set; }  //The way we take a decision on what to do with this type
+        [ProtoMember(4)] public string Command { get; set; } //The actual command to run for settings
+        [ProtoMember(5)] public string CustomIconName { get; set; } //manually customized icons
+        [ProtoMember(6)] public string URI { get; set; } //The file path or website or specific text that should be written underneath the Name in the UI.
+        [ProtoMember(7)] public int RunNrOfTimes { get; set; } = 0;
+
+
 
         public string FileName
         {
@@ -77,15 +80,15 @@ namespace RocketLaunch.Model
 
                     if (Type == ItemType.Directory)
                     {
-                        var uri = new Uri("pack://application:,,,/Assets/folder.png");
+                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/folder.png");
+                        return new BitmapImage(uri);
+                    }
+                    if (Type == ItemType.ControlPanelSetting || Type == ItemType.RunDialog)
+                    {
+                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + CustomIconName);
                         return new BitmapImage(uri);
                     }
 
-                    if (Type == ItemType.Setting)
-                    {
-                        var uri = new Uri("pack://application:,,,/Assets/"+ CustomIconName);
-                        return new BitmapImage(uri);
-                    }
                     if (System.IO.File.Exists(URI))
                     {
                         var path = URI;
@@ -104,7 +107,7 @@ namespace RocketLaunch.Model
                 }
                 catch (Exception e)
                 {
-                    Log.Error("This should not happen since we check this before...");
+                    Log.Error(e,"This should not happen since we check this before...");
                 }
 
                 return icon;
@@ -118,17 +121,11 @@ namespace RocketLaunch.Model
         }
     }
 
-    public static class RunItemFactory
-    {
-        public static RunItem Setting(string name, string group, string uri, string customIcon)
-        {
-            return new RunItem() { Name = name, Group = group, URI = uri, Type = ItemType.Setting, CustomIconName = customIcon };
-        }
-    }
     public enum ItemType
     {
         File,
-        Setting,
+        ControlPanelSetting,
         Directory,
+        RunDialog
     }
 }

@@ -30,6 +30,7 @@ namespace RocketLaunch.Services
 
         public IndexingService(SettingsService s)
         {
+            CleanIndexes();
             if (!File.Exists(Common.Directory + "Matcher.trie"))
                 RunIndexing();
             else
@@ -41,14 +42,22 @@ namespace RocketLaunch.Services
                     RunIndexing();
                 }
             }
-            
+
             S = s;
-            var timer = new Timer(s.ReindexingTime);
+            var timer = new Timer(s.ReindexingTime*1000*60);
             timer.Start();
             timer.Elapsed += (_, __) =>
             {
                 RunIndexing();
             };
+        }
+
+        private void CleanIndexes()
+        {
+            if(File.Exists(Common.Directory + "Matcher.trie"))
+                File.Delete(Common.Directory + "Matcher.trie");
+            if (File.Exists(Common.Directory + "PrioMatcher.trie"))
+                File.Delete(Common.Directory + "PrioMatcher.trie");
         }
 
         //General file matcher
@@ -59,7 +68,7 @@ namespace RocketLaunch.Services
 
         public SettingsService S { get; set; }
 
-        
+
 
         public int NrOfPaths
         {
@@ -76,10 +85,10 @@ namespace RocketLaunch.Services
                 var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
 
                 //Spread out the search on all directories on different tasks
-                Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.path, d.pattern, d.subFolders, unorderedFiles)).ToArray());
+                Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
 
                 RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
-
+                tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
                 var temp = new Trie.Trie();
                 //var sw = new Stopwatch();
                 //sw.Start();
@@ -90,22 +99,38 @@ namespace RocketLaunch.Services
                     //if (!string.IsNullOrEmpty(tempList[i].Group))
                     //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
-                //sw.Stop();
+                
                 //Add settings and other good stuff
-                foreach (var setting in CommonControlPanel.Settings)
-                {
-                    if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
-                    {
-                        PrioMatcher.Insert(setting.Name.ToLower(), setting);
-                        PrioMatcher.Insert(setting.Group.ToLower(), setting);
-                    }
-                }
+                AddGoodStuffToPrioMatcher();
+
 
                 NrOfPaths = temp.KeyValueObjects.Count;
                 Matcher = temp;
 
                 SaveTries();
             });
+        }
+
+        private void AddGoodStuffToPrioMatcher()
+        {
+            foreach (var setting in RunItemFactory.Settings)
+            {
+                if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
+                {
+                    PrioMatcher.Insert(setting.Name.ToLower(), setting);
+                    foreach (var keyWord in setting.KeyWords)
+                    {
+                        PrioMatcher.Insert(keyWord, setting);
+                    }
+                    
+                }
+            }
+            var rundialog = RunItemFactory.RunDialog();
+            if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
+            {
+                PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
+            }
+
         }
 
         public void SavePrioTrie()
@@ -187,11 +212,15 @@ namespace RocketLaunch.Services
             var fileList = new List<RunItem>();
             ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
             ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
-            prioResult = prioResult.GroupBy(x => x.URI).Select(x => x.First()).ToList();
+            //prioResult = prioResult.GroupBy(x => x.Name+x.URI+x.Command).Select(x => x.First()).ToList();    //removing potential duplicates
             foreach (var genRes in generalResult)
             {
-                if (prioResult.Count < nrOfHits && prioResult.All(p => p.URI != genRes.URI))
+                if (prioResult.Count < nrOfHits)  //removing potential duplicates
                     prioResult.Add(genRes);
+                else
+                {
+                    break;
+                }
             }
 
             var finalResults = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();
@@ -219,21 +248,21 @@ namespace RocketLaunch.Services
                     if (Path.GetExtension(fileName) == ".lnk")
                     {
                         var item = new RunItem();
-                        
+
                         WshShell shell = new WshShell(); //Create a new WshShell Interface
                         IWshShortcut link = (IWshShortcut)shell.CreateShortcut(fileName); //Link the interface to our shortcut
                         var uri = link.TargetPath;
-                        
+
                         if (!System.IO.File.Exists(uri))  //It sometimes mixes up the program files folder. Lets check both.
                         {
-                            if (uri.Contains("Program Files (x86)"))   
+                            if (uri.Contains("Program Files (x86)"))
                             {
                                 uri = new StringBuilder(uri).Replace("Program Files (x86)", "Program Files").ToString();
                             }
-                            if(!File.Exists(uri) && uri.Contains("Program Files"))
+                            if (!File.Exists(uri) && uri.Contains("Program Files"))
                                 uri = new StringBuilder(uri).Replace("Program Files", "Program Files (x86)").ToString();
                         }
-                        
+
                         if (System.IO.File.Exists(uri) && !uri.Contains("C:\\Windows\\Installer\\"))  //No reason to add a broken link.
                         {
                             item.Type = ItemType.File;
@@ -287,6 +316,8 @@ namespace RocketLaunch.Services
 
         public void AddExecutedItem(RunItem exItem)
         {
+            Matcher.Remove(exItem);
+            exItem.RunNrOfTimes++;
             PrioMatcher.Insert(exItem.Name, exItem);
         }
 

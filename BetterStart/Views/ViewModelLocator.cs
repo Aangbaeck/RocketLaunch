@@ -30,6 +30,7 @@ namespace RocketLaunch.Views
             ServiceLocator.SetLocatorProvider(() => SimpleIoc.Default);
             SimpleIoc.Default.Register<SettingsService>();
             SimpleIoc.Default.Register<MainVM>();
+            SimpleIoc.Default.Register<SettingsVM>();
             SimpleIoc.Default.Register<IndexingService>();
             SimpleIoc.Default.Register<KeyBoardHandlerService>();
 
@@ -44,6 +45,7 @@ namespace RocketLaunch.Views
             "CA1822:MarkMembersAsStatic",
             Justification = "This non-static member is needed for data binding purposes.")]
         public MainVM MainVM => ServiceLocator.Current.GetInstance<MainVM>();
+        public SettingsVM SettingsVM => ServiceLocator.Current.GetInstance<SettingsVM>();
 
         /// <summary>
         /// Cleans up all the resources.

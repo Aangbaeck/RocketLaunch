@@ -1,13 +1,13 @@
 using System.Collections.Generic;
 
-namespace TrieImplementation
+namespace RocketLaunch.Indexing.SuffixTree
 {
     /// <summary>
     /// Used to compare the names of the TrieNodes.
     /// </summary>
     internal class CharComparer : IEqualityComparer<char>
     {
-        public bool ignoreCase;
+        public bool IgnoreCase;
 
         /// <summary>
         /// Initializes the comparer
@@ -16,7 +16,7 @@ namespace TrieImplementation
         /// ignore the casing</param>
         public CharComparer(bool ignoreCase = true)
         {
-            this.ignoreCase = ignoreCase;
+            IgnoreCase = ignoreCase;
         }
 
         /// <summary>
@@ -24,7 +24,7 @@ namespace TrieImplementation
         /// </summary>
         public bool Equals(char x, char y)
         {
-            if (this.ignoreCase)
+            if (IgnoreCase)
             {
                 return char.ToLower(x) == char.ToLower(y);
             }

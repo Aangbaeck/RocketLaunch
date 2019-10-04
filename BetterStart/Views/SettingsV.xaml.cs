@@ -9,19 +9,16 @@ namespace RocketLaunch.Views
     /// <summary>
     /// Description for TheSecondWindowV.
     /// </summary>
-    public partial class SecondV : Window
+    public partial class SettingsV
     {
         /// <summary>
         /// Initializes a new instance of the TheSecondWindowV class.
         /// </summary>
-        public SecondV()
+        public SettingsV()
         {
             InitializeComponent();
         }
-        private void CloseClick(object sender, RoutedEventArgs e)
-        {
-            this.Close();
-        }
+        
 
 
 

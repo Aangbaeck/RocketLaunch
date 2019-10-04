@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf;
+using RocketLaunch.Indexing.SuffixTree;
 
 namespace TrieImplementation
 {

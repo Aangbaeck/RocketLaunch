@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Navigation;
 using ProtoBuf;
+using RocketLaunch.Indexing.SuffixTree;
 using Trie;
 
 namespace TrieImplementation
