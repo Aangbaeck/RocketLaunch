@@ -27,6 +27,7 @@ namespace RocketLaunch.Services
         private int _nrOfPaths;
         private SettingsService _s;
         private int _progress;
+        private int _generalSearchTime;
 
         public IndexingService(SettingsService s)
         {
@@ -207,11 +208,38 @@ namespace RocketLaunch.Services
             set { _progress = value; RaisePropertyChanged(); }
         }
 
+        public int GeneralSearchTime
+        {
+            get { return _generalSearchTime; }
+            set { _generalSearchTime = value; RaisePropertyChanged(); }
+        }
+        private int _prioSearchTime;
+                
+        public int PrioSearchTime
+        {
+            get { return _prioSearchTime; }
+            set { _prioSearchTime = value; RaisePropertyChanged(); }
+        }
+        private int _totalSearchTime;
+                
+        public int TotalSearchTime
+        {
+            get { return _totalSearchTime; }
+            set { _totalSearchTime = value; RaisePropertyChanged(); }
+        }
+
         public List<RunItem> Search(string s, int nrOfHits = 10)
         {
             var fileList = new List<RunItem>();
+
+            var sw = new Stopwatch();
+            sw.Start();
             ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
+            GeneralSearchTime = (int)sw.ElapsedMilliseconds;
+            sw.Restart();
             ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
+            PrioSearchTime = (int)sw.ElapsedMilliseconds;
+            sw.Restart();
             //prioResult = prioResult.GroupBy(x => x.Name+x.URI+x.Command).Select(x => x.First()).ToList();    //removing potential duplicates
             foreach (var genRes in generalResult)
             {
@@ -224,6 +252,7 @@ namespace RocketLaunch.Services
             }
 
             var finalResults = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();
+            TotalSearchTime = GeneralSearchTime + PrioSearchTime + (int)sw.ElapsedMilliseconds;
             return finalResults;
         }
 

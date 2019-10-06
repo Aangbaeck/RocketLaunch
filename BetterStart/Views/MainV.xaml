@@ -290,18 +290,34 @@
                         <!--<ListView>
 
         </ListView>-->
-                        <Grid>
-                            <StackPanel
-                                Margin="20,20,0,20"
-                                Orientation="Horizontal"
-                                Visibility="{convertersWpf:SwitchBinding DebugMode,
+
+                        <StackPanel Margin="20,20,0,20" Visibility="{convertersWpf:SwitchBinding DebugMode,
                                                                          Visible,
                                                                          Collapsed}">
+                            <StackPanel
+                                Orientation="Horizontal"
+                                >
                                 <TextBlock Text="{Binding Indexing.NrOfPaths}" />
                                 <TextBlock Text=" nr of paths" />
                             </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Gen search Time: " />
+                                <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Prio search time: " />
+                                <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Total search time: " />
+                                <TextBlock Text="{Binding Indexing.TotalSearchTime}" />
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Rendering time: " />
+                                <TextBlock Text="{Binding RenderingTime}" />
+                            </StackPanel>
+                        </StackPanel>
 
-                        </Grid>
                     </StackPanel>
                 </materialDesign:Card>
             </materialDesign:TransitionerSlide>

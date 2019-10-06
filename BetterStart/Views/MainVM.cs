@@ -109,13 +109,24 @@ namespace RocketLaunch.Views
             get { return _searchString; }
             set
             {
-                SelectedIndex = -1;
+                var sw = new Stopwatch();
+                sw.Start();
                 _searchString = value;
+                SelectedIndex = -1;
                 List<RunItem> list = Indexing.Search(value);
                 SearchSuggestions.Clear();
                 SearchSuggestions.AddRange(list);
+                sw.Stop();
+                RenderingTime = (int)sw.ElapsedMilliseconds;
 
             }
+        }
+        private int _renderingTime;
+
+        public int RenderingTime
+        {
+            get { return _renderingTime; }
+            set { _renderingTime = value; RaisePropertyChanged(); }
         }
 
         public bool IsFocused
