@@ -28,10 +28,10 @@ namespace RocketLaunch.Services
         private SettingsService _s;
         private int _progress;
         private int _generalSearchTime;
+        public DateTime LastIndexed { get; set; } = DateTime.MinValue;
 
         public IndexingService(SettingsService s)
         {
-            CleanIndexes();
             if (!File.Exists(Common.Directory + "Matcher.trie"))
                 RunIndexing();
             else
@@ -45,7 +45,7 @@ namespace RocketLaunch.Services
             }
 
             S = s;
-            var timer = new Timer(s.ReindexingTime*1000*60);
+            var timer = new Timer(s.Settings.ReindexingTime * 1000 * 60);
             timer.Start();
             timer.Elapsed += (_, __) =>
             {
@@ -53,12 +53,15 @@ namespace RocketLaunch.Services
             };
         }
 
-        private void CleanIndexes()
+        public void CleanIndexes()
         {
-            if(File.Exists(Common.Directory + "Matcher.trie"))
+            if (File.Exists(Common.Directory + "Matcher.trie"))
                 File.Delete(Common.Directory + "Matcher.trie");
             if (File.Exists(Common.Directory + "PrioMatcher.trie"))
                 File.Delete(Common.Directory + "PrioMatcher.trie");
+            Matcher = new Trie.Trie();
+            PrioMatcher = new Trie.Trie();
+            RunIndexing();
         }
 
         //General file matcher
@@ -84,9 +87,21 @@ namespace RocketLaunch.Services
             Task.Run(() =>
             {
                 var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
-
+                LastIndexed = DateTime.Now;
                 //Spread out the search on all directories on different tasks
-                Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
+                //Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
+
+                foreach (var dir in S.Settings.SearchDirectories)
+                {
+                    var tempBag = new ConcurrentDictionary<string, RunItem>();
+                    ProcessDirectory(dir.Path, dir.SearchPattern, dir.SearchSubFolders, tempBag);
+                    dir.NrOfFiles = tempBag.Count;
+                    foreach (var item in tempBag)
+                    {
+                        unorderedFiles.TryAdd(item.Key, item.Value);
+                    }
+                }
+
 
                 RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
                 tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
@@ -100,7 +115,7 @@ namespace RocketLaunch.Services
                     //if (!string.IsNullOrEmpty(tempList[i].Group))
                     //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
-                
+
                 //Add settings and other good stuff
                 AddGoodStuffToPrioMatcher();
 
@@ -123,7 +138,7 @@ namespace RocketLaunch.Services
                     {
                         PrioMatcher.Insert(keyWord, setting);
                     }
-                    
+
                 }
             }
             var rundialog = RunItemFactory.RunDialog();
@@ -214,14 +229,14 @@ namespace RocketLaunch.Services
             set { _generalSearchTime = value; RaisePropertyChanged(); }
         }
         private int _prioSearchTime;
-                
+
         public int PrioSearchTime
         {
             get { return _prioSearchTime; }
             set { _prioSearchTime = value; RaisePropertyChanged(); }
         }
         private int _totalSearchTime;
-                
+
         public int TotalSearchTime
         {
             get { return _totalSearchTime; }
@@ -231,42 +246,41 @@ namespace RocketLaunch.Services
         public List<RunItem> Search(string s, int nrOfHits = 10)
         {
             var fileList = new List<RunItem>();
-
             var sw = new Stopwatch();
             sw.Start();
             ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
-            GeneralSearchTime = (int)sw.ElapsedMilliseconds;
+            GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
-            ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
-            PrioSearchTime = (int)sw.ElapsedMilliseconds;
-            sw.Restart();
-            //prioResult = prioResult.GroupBy(x => x.Name+x.URI+x.Command).Select(x => x.First()).ToList();    //removing potential duplicates
-            foreach (var genRes in generalResult)
-            {
-                if (prioResult.Count < nrOfHits)  //removing potential duplicates
-                    prioResult.Add(genRes);
-                else
-                {
-                    break;
-                }
-            }
-
-            var finalResults = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();
-            TotalSearchTime = GeneralSearchTime + PrioSearchTime + (int)sw.ElapsedMilliseconds;
-            return finalResults;
+            var count = nrOfHits;
+            if (s == "") count = Math.Min(PrioMatcher.KeyValueObjects.Count, 50);
+            ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, count);
+            prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
+            prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
+            prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.First()).ToList();  //remove potential duplicates
+            PrioSearchTime = (int)sw.ElapsedTicks;
+            TotalSearchTime = GeneralSearchTime + PrioSearchTime;
+            return prioResult.Take(10).ToList();
         }
 
-        public static Task ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentDictionary<string, RunItem> theBag)
+        public static void ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentDictionary<string, RunItem> theBag)
         {
             try
             {
-                var dir = new RunItem()
+                if (Directory.Exists(targetDirectory))
                 {
-                    Name = new DirectoryInfo(targetDirectory).Name,
-                    URI = new StringBuilder(targetDirectory).Replace("/", "\\").Replace("//", "\\").ToString(),
-                    Type = ItemType.Directory
-                };
-                theBag.TryAdd(dir.URI, dir);
+                    var dir = new RunItem()
+                    {
+                        Name = new DirectoryInfo(targetDirectory).Name,
+                        URI = new StringBuilder(targetDirectory).Replace("/", "\\").Replace("//", "\\").ToString(),
+                        Type = ItemType.Directory
+                    };
+                    theBag.TryAdd(dir.URI, dir);
+                }
+                else
+                {
+                    Log.Error($"{targetDirectory} does not exist...");
+                    return;
+                }
                 //var t = theBag.ContainsKey(dir.URI);
                 // Process the list of files found in the directory.
                 string[] fileEntries = Directory.GetFiles(targetDirectory, searchPattern);
@@ -339,7 +353,6 @@ namespace RocketLaunch.Services
                     Log.Debug($"Could not get subdirectoryEntries for {targetDirectory}");
                 }
             }
-            return Task.CompletedTask;
         }
 
 

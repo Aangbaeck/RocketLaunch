@@ -1,18 +1,15 @@
-﻿<Window xmlns:Views="clr-namespace:RocketLaunch.Views" 
+﻿<Window
     x:Class="RocketLaunch.Views.MainV"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:conv="clr-namespace:RocketLaunch.Helper"
+    xmlns:Views="clr-namespace:RocketLaunch.Views"
     xmlns:convertersWpf="clr-namespace:ConvertersWPF;assembly=ConvertersWPF"
-    xmlns:focus="clr-namespace:RocketLaunch.Helper"
-    xmlns:grayscaleEffect="clr-namespace:GrayscaleEffect;assembly=GrayscaleEffect"
     xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
     xmlns:l="clr-namespace:RocketLaunch.Helper"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
-    xmlns:rich="clr-namespace:WpfRichText;assembly=WpfRichText"
     xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    xmlns:userControls="clr-namespace:Calculator3D.Views.UserControls"
+    MinHeight="751.2"
     HorizontalAlignment="Center"
     VerticalAlignment="Center"
     AllowsTransparency="True"
@@ -22,7 +19,6 @@
     FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"
     KeyDown="WinOnKeyDown"
     Loaded="OnLoaded"
-    
     SizeChanged="WindowStateChanged"
     SizeToContent="Height"
     Style="{StaticResource WindowStyle}"
@@ -55,7 +51,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <l:StringToRichTextBoxConverter x:Key="RichTextConverter" />
+        <!--<l:StringToRichTextBoxConverter x:Key="RichTextConverter" />-->
         <!--<focus:IndexConverter x:Key="IndexConverter" />-->
         <!--<Storyboard x:Key="FadeOut">
         -->
@@ -86,11 +82,11 @@
     </Window.Resources>
 
 
-    <i:Interaction.Triggers>
+    <!--<i:Interaction.Triggers>
         <i:EventTrigger EventName="KeyDown">
             <i:InvokeCommandAction Command="{Binding AnyKeyPressedCmd}" />
         </i:EventTrigger>
-    </i:Interaction.Triggers>
+    </i:Interaction.Triggers>-->
 
     <Grid>
         <tb:TaskbarIcon
@@ -148,114 +144,115 @@
 
             <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
                 <materialDesign:Card Margin="10" VerticalAlignment="Stretch">
-                    <StackPanel Margin="10">
-                        <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
-                        <Grid>
-                            <Grid
-                                Width="100"
-                                Height="100"
-                                Margin="0,20,0,20">
-                                <!--<Image Source="../Assets/rocket.png"></Image>-->
-                                <svgc:SvgViewbox
-                                    AutoSize="False"
-                                    Source="/Assets/rocket.svg"
-                                    ToolTip="Icons made by www.flaticon.com"
-                                    ToolTipService.InitialShowDelay="8000">
-                                    <svgc:SvgViewbox.InputBindings>
-                                        <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
-                                        <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
-                                    </svgc:SvgViewbox.InputBindings>
-                                </svgc:SvgViewbox>
+                    <Grid>
+
+                        <StackPanel Margin="10">
+                            <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
+                            <Grid>
+                                <Grid
+                                    Width="100"
+                                    Height="100"
+                                    Margin="0,20,0,20">
+                                    <!--<Image Source="../Assets/rocket.png"></Image>-->
+                                    <svgc:SvgViewbox
+                                        AutoSize="False"
+                                        Source="/Assets/rocket.svg"
+                                        ToolTip="Icons made by www.flaticon.com"
+                                        ToolTipService.InitialShowDelay="8000">
+                                        <svgc:SvgViewbox.InputBindings>
+                                            <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
+                                            <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
+                                        </svgc:SvgViewbox.InputBindings>
+                                    </svgc:SvgViewbox>
+                                </Grid>
+                                <Button
+                                    HorizontalAlignment="Right"
+                                    VerticalAlignment="Top"
+                                    Command="{Binding OpenSettingsWindowCmd}"
+                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                    ToolTip="Settings">
+                                    <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
+                                </Button>
                             </Grid>
-                            <Button
-                                Grid.Column="1"
-                                HorizontalAlignment="Right"
-                                VerticalAlignment="Top"
-                                Command="{Binding OpenSettingsWindowCmd}"
-                                Style="{StaticResource MaterialDesignIconButton}"
-                                ToolTip="Settings">
-                                <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
-                            </Button>
-                        </Grid>
 
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBox
-                                x:Name="SearchTextBox"
-                                Grid.ColumnSpan="2"
-                                Margin="10,10,10,0"
-                                materialDesign:HintAssist.Hint="Search..."
-                                AcceptsReturn="False"
-                                AcceptsTab="False"
-                                Style="{StaticResource SelectedTextBoxStyle}"
-                                Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox
+                                    x:Name="SearchTextBox"
+                                    Grid.ColumnSpan="2"
+                                    Margin="10,10,10,0"
+                                    materialDesign:HintAssist.Hint="Search..."
+                                    AcceptsReturn="False"
+                                    AcceptsTab="False"
+                                    Style="{StaticResource SelectedTextBoxStyle}"
+                                    Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
 
-                                <TextBox.InputBindings>
-                                    <KeyBinding Key="Enter" Command="{Binding ExecuteFirstListViewItem}" />
-                                    <KeyBinding Key="Down" Command="{Binding DownKeyPressedCmd}" />
-                                    <KeyBinding Key="Up" Command="{Binding UpKeyPressedCmd}" />
-                                    <!--<KeyBinding Key="PageDown" Command="{Binding ExecuteFirstListViewItem}" />
+                                    <TextBox.InputBindings>
+                                        <KeyBinding Key="Enter" Command="{Binding ExecuteFirstListViewItem}" />
+                                        <KeyBinding Key="Down" Command="{Binding DownKeyPressedCmd}" />
+                                        <KeyBinding Key="Up" Command="{Binding UpKeyPressedCmd}" />
+                                        <!--<KeyBinding Key="PageDown" Command="{Binding ExecuteFirstListViewItem}" />
         <KeyBinding Key="PageUp" Command="{Binding ExecuteFirstListViewItem}" />
         <KeyBinding Key="PageUp" Command="{Binding AnyKeyPressed}" />-->
-                                </TextBox.InputBindings>
-                                <!--<TextBox.InputBindings>
+                                    </TextBox.InputBindings>
+                                    <!--<TextBox.InputBindings>
                     <KeyBinding
                         Key="Enter"
                         Command="{Binding ExecuteFirstListViewItem}"
                          />
                 </TextBox.InputBindings>-->
 
-                            </TextBox>
+                                </TextBox>
 
-                        </Grid>
-                        <ListView
-                            Margin="10,0,10,10"
-                            ItemsSource="{Binding SearchSuggestions}"
-                            SelectedIndex="{Binding SelectedIndex}">
-                            <i:Interaction.Triggers>
-                                <i:EventTrigger EventName="MouseDoubleClick">
-                                    <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
-                                </i:EventTrigger>
-                            </i:Interaction.Triggers>
+                            </Grid>
+                            <ListView
+                                Margin="10,0,10,10"
+                                ItemsSource="{Binding SearchSuggestions}"
+                                SelectedIndex="{Binding SelectedIndex}">
+                                <i:Interaction.Triggers>
+                                    <i:EventTrigger EventName="MouseDoubleClick">
+                                        <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
+                                    </i:EventTrigger>
+                                </i:Interaction.Triggers>
 
-                            <ListView.ItemContainerStyle>
-                                <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
-                                    <!--<Setter Property="Focusable" Value="false" />-->
-                                    <Setter Property="VerticalContentAlignment" Value="Center" />
-                                    <Setter Property="VerticalAlignment" Value="Center" />
-                                </Style>
+                                <ListView.ItemContainerStyle>
+                                    <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
+                                        <!--<Setter Property="Focusable" Value="false" />-->
+                                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                                        <Setter Property="VerticalAlignment" Value="Center" />
+                                    </Style>
 
-                            </ListView.ItemContainerStyle>
-                            <ListView.View>
-                                <GridView>
-                                    <!--  This is index column. Dont't want that right now  -->
-                                    <!--<GridViewColumn
+                                </ListView.ItemContainerStyle>
+                                <ListView.View>
+                                    <GridView>
+                                        <!--  This is index column. Dont't want that right now  -->
+                                        <!--<GridViewColumn
                             Width="100"
                             DisplayMemberBinding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, Converter={StaticResource IndexConverter}}"
                              />-->
-                                    <GridViewColumn>
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <Image
-                                                    Width="32"
-                                                    Source="{Binding Icon}"
-                                                    ToolTip="{Binding URI}">
-                                                    <!--<Image.Effect>
+                                        <GridViewColumn>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Image
+                                                        Width="32"
+                                                        Source="{Binding Icon}"
+                                                        ToolTip="{Binding URI}">
+                                                        <!--<Image.Effect>
                                             <grayscaleEffect:GrayscaleEffect x:Name="grayscaleEffect" />
                                         </Image.Effect>-->
-                                                </Image>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <GridViewColumn Width="500">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <StackPanel>
+                                                    </Image>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn Width="500">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel>
 
-                                                    <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
+                                                        <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
                                             <rich:RichTextEditor.Text>
                                                 <MultiBinding Converter="{StaticResource RichTextConverter}">
                                                     <Binding ElementName="{Binding Name}" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"></Binding>
@@ -264,78 +261,62 @@
                                             </rich:RichTextEditor.Text>
 
                                         </rich:RichTextEditor>-->
-                                                    <TextBlock FontSize="14" Text="{Binding Name}" />
-                                                    <TextBlock
-                                                        FontSize="9"
-                                                        Foreground="LightGray"
-                                                        Text="{Binding URI}" />
-                                                    <!--<TextBlock
+                                                        <TextBlock FontSize="14" Text="{Binding Name}" />
+                                                        <TextBlock
+                                                            FontSize="9"
+                                                            Foreground="LightGray"
+                                                            Text="{Binding URI}" />
+                                                        <!--<TextBlock
 
                                             Text="{Binding URI}" />-->
-                                                </StackPanel>
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                    <!--<GridViewColumn Width="Auto" DisplayMemberBinding="{Binding URI}" />-->
-                                    <GridViewColumn
-                                        Width="Auto"
-                                        l:GridViewColumnVisibilityManager.IsVisible="{Binding DebugMode}"
-                                        DisplayMemberBinding="{Binding RunNrOfTimes}"
-                                        ToolTipService.ToolTip="Nr of runs" />
-                                </GridView>
-                            </ListView.View>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <!--<GridViewColumn Width="Auto" DisplayMemberBinding="{Binding URI}" />-->
+                                        <GridViewColumn
+                                            Width="Auto"
+                                            l:GridViewColumnVisibilityManager.IsVisible="{Binding S.Settings.DebugMode}"
+                                            DisplayMemberBinding="{Binding RunNrOfTimes}"
+                                            ToolTipService.ToolTip="Nr of runs" />
+                                    </GridView>
+                                </ListView.View>
 
 
-                        </ListView>
-                        <!--<ListView>
+                            </ListView>
+                            <StackPanel Margin="20,20,0,20" Visibility="{convertersWpf:SwitchBinding S.Settings.DebugMode, Visible, Collapsed}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Indexing.NrOfPaths}" />
+                                    <TextBlock Text=" nr of paths" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Gen search Time: " />
+                                    <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Prio search time: " />
+                                    <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Total search time: " />
+                                    <TextBlock Text="{Binding Indexing.TotalSearchTime}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Rendering time: " />
+                                    <TextBlock Text="{Binding RenderingTime}" />
+                                </StackPanel>
 
-        </ListView>-->
+                            </StackPanel>
 
-                        <StackPanel Margin="20,20,0,20" Visibility="{convertersWpf:SwitchBinding DebugMode,
-                                                                         Visible,
-                                                                         Collapsed}">
-                            <StackPanel
-                                Orientation="Horizontal"
-                                >
-                                <TextBlock Text="{Binding Indexing.NrOfPaths}" />
-                                <TextBlock Text=" nr of paths" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Gen search Time: " />
-                                <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Prio search time: " />
-                                <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Total search time: " />
-                                <TextBlock Text="{Binding Indexing.TotalSearchTime}" />
-                            </StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Rendering time: " />
-                                <TextBlock Text="{Binding RenderingTime}" />
-                            </StackPanel>
                         </StackPanel>
 
-                    </StackPanel>
+                    </Grid>
                 </materialDesign:Card>
             </materialDesign:TransitionerSlide>
             <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
-                <materialDesign:Card Margin="10" VerticalAlignment="Stretch">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="*" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
-                        <Views:SettingsV />
-                        <Button
-                            Grid.Row="1"
-                            Margin="10"
-                            Command="{Binding CloseSettingsCmd}"
-                            Content="Close settings" />
-                    </Grid>
-                </materialDesign:Card>
+
+                <Views:SettingsV Margin="10" />
+
             </materialDesign:TransitionerSlide>
             <!--<materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
                 <materialDesign:Card Margin="10" VerticalAlignment="Stretch">

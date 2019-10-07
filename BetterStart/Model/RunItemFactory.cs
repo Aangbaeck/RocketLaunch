@@ -15,6 +15,9 @@ namespace RocketLaunch.Model
                 case ItemType.File:
                     System.Diagnostics.Process.Start(item.URI);
                     break;
+                case ItemType.Directory:
+                    System.Diagnostics.Process.Start(item.URI);
+                    break;
                 case ItemType.RunDialog:
                     Task.Run(() => { RunFileDlg(IntPtr.Zero, IntPtr.Zero, null, null, null, 0); });  //Fire away this. We don't need to hold on to it...
                     break;

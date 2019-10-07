@@ -17,6 +17,8 @@ using WinForms = System.Windows.Forms;
 using Gma.System.MouseKeyHook;
 using RocketLaunch.Services;
 using CommonServiceLocator;
+using Nelibur.ObjectMapper;
+using RocketLaunch.Model;
 
 namespace RocketLaunch
 {
@@ -32,7 +34,7 @@ namespace RocketLaunch
 
             try
             {
-
+                
                 _hookID = InterceptKeys.SetHook(_proc);
 
             }

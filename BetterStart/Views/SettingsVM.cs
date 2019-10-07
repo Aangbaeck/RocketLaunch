@@ -2,20 +2,39 @@
 using System.Reflection;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
+using GalaSoft.MvvmLight.Messaging;
 using Ookii.Dialogs.Wpf;
 using RocketLaunch.Model;
+using RocketLaunch.Services;
 
 namespace RocketLaunch.Views
 {
     public class SettingsVM : ViewModelBase
     {
-        public SettingsVM(SettingsService s)
+        public SettingsVM(SettingsService s, IndexingService index)
         {
             S = s;
-
+            IndexService = index;
+            
 
         }
-        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(()=> { });
+        public IndexingService IndexService { get; set; }
+        public SettingsService S { get; set; }
+
+        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(() => { });
+        public RelayCommand<FolderSearch> RemoveSelectedItemFromListCmd => new RelayCommand<FolderSearch>((folder) =>
+        {
+            S.Settings.SearchDirectories.Remove(folder);
+        });
+        public RelayCommand ResetIndexingCmd => new RelayCommand(() =>
+        {
+            IndexService.RunIndexing();
+        });
+        public RelayCommand RemoveAllIndexingCmd => new RelayCommand(() =>
+        {
+            IndexService.CleanIndexes();
+        });
+        public RelayCommand ReturnToSearchViewCmd => new RelayCommand(() => { Messenger.Default.Send<bool>(true, MessengerID.ReturnToSearchWindow); });
         public RelayCommand AddFolderCmd => new RelayCommand(() =>
         {
             VistaFolderBrowserDialog dlg = new VistaFolderBrowserDialog();
@@ -24,11 +43,11 @@ namespace RocketLaunch.Views
             if (dlg.ShowDialog() == true)
             {
                 string path = dlg.SelectedPath;
+                S.Settings.SearchDirectories.Add(new FolderSearch() {Path = path, SearchPattern = "*.*",SearchSubFolders = true});
             }
 
         });
-        public SettingsService S { get; set; }
 
-        public int SelectedIndex { get; set; }
-}
+        
+    }
 }

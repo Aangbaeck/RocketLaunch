@@ -26,8 +26,7 @@ namespace RocketLaunch.Views
         private bool _isFocused;
 
         public RelayCommand OpenSettingsWindowCmd => new RelayCommand(() => { SelectedViewIndex = 1; });
-        public RelayCommand CloseSettingsCmd => new RelayCommand(() => { SelectedViewIndex = 0; });
-        public RelayCommand ToggleDebugMode => new RelayCommand(() => { DebugMode = !DebugMode; });
+        public RelayCommand ToggleDebugMode => new RelayCommand(() => { S.Settings.DebugMode = !S.Settings.DebugMode; });
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
         public RelayCommand DoubleClickOnItemCmd => new RelayCommand(ExecuteSelectedListViewItem);
 
@@ -42,14 +41,8 @@ namespace RocketLaunch.Views
                 SelectedIndex--;
         });
 
-
-
-
-
-
         private void ExecuteSelectedListViewItem()
         {
-
             try
             {
                 Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
@@ -62,7 +55,7 @@ namespace RocketLaunch.Views
 
                     Indexing.AddExecutedItem(SearchSuggestions[index]);
                     Indexing.SavePrioTrie();
-                    RaisePropertyChanged("");
+                    SearchString = _searchString;
                 }
             }
             catch (Exception e)
@@ -70,21 +63,13 @@ namespace RocketLaunch.Views
                 Log.Error(e, "Could not execute application");
 
             }
-
         }
-
         public int SelectedViewIndex
         {
             get { return _selectedViewIndex; }
             set { _selectedViewIndex = value; RaisePropertyChanged(); }
         }
-
-        public bool DebugMode
-        {
-            get { return _debugMode; }
-            set { _debugMode = value; RaisePropertyChanged(); }
-        }
-
+        
         public RelayCommand OpenLogFile => new RelayCommand(() =>
         {
             var directory = Path.GetDirectoryName(Common.LogfilesPath);
@@ -98,7 +83,7 @@ namespace RocketLaunch.Views
                     var filePath = files[files.Length - 1];
                     if (File.Exists(filePath))
                     {
-                        System.Diagnostics.Process.Start(filePath);
+                        Process.Start(filePath);
                     }
                 }
             }
@@ -140,6 +125,7 @@ namespace RocketLaunch.Views
         }
 
         public WpfObservableRangeCollection<RunItem> SearchSuggestions { get; set; } = new WpfObservableRangeCollection<RunItem>();
+        //public ObservableCollection<RunItem> SearchSuggestions { get; set; } = new ObservableCollection<RunItem>();
 
         public int SelectedIndex
         {
@@ -153,19 +139,14 @@ namespace RocketLaunch.Views
             }
         }
 
-        public int StoredSelectedIndex
-        {
-            get { return _storedSelectedIndex; }
-            set { _storedSelectedIndex = value; }
-        }
+        public int StoredSelectedIndex { get; set; }
 
         private static readonly PaletteHelper _paletteHelper = new PaletteHelper();
-        private bool _debugMode = true;
+        
 
         private string _searchString;
         private int _selectedIndex = -1;
         private int _selectedViewIndex = 0;
-        private int _storedSelectedIndex;
 
         private static void ApplyBase(bool isDark)
         {
@@ -181,14 +162,21 @@ namespace RocketLaunch.Views
         /// <summary>
         /// Initializes a new instance of the MainViewModel class. IOC
         /// </summary>
-        public MainVM(IndexingService index)
+        public MainVM(IndexingService index, SettingsService s)
         {
             Indexing = index;
             //ApplyBase(true);
             IsFocused = false;
             IsFocused = true;
+            S = s;
             Messenger.Default.Register<bool>(this, MessengerID.WindowDeactivated, HandleWindowDeactivated);
+            Messenger.Default.Register<bool>(this, MessengerID.ReturnToSearchWindow, (e)=>
+            {
+                SelectedViewIndex = 0;
+            });
         }
+
+        public SettingsService S { get; set; }
 
         private void HandleWindowDeactivated(bool obj)
         {

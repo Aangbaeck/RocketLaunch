@@ -12,6 +12,7 @@ namespace RocketLaunch.Model
         private bool _searchSubFolders;
         private string _searchPattern;
         private string _path;
+        private int _nrOfFiles;
 
         public string Path
         {
@@ -29,6 +30,15 @@ namespace RocketLaunch.Model
         {
             get { return _searchSubFolders; }
             set { _searchSubFolders = value; RaisePropertyChanged(); }
+        }
+
+        public int NrOfFiles
+        {
+            get { return _nrOfFiles; }
+            set
+            {
+                _nrOfFiles = value; RaisePropertyChanged();
+            }
         }
     }
 }

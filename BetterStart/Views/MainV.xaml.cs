@@ -53,7 +53,7 @@ namespace RocketLaunch.Views
                 }
 
                 var startWindows = JsonConvert.SerializeObject(listOfWindowsToOpenNextTime);
-                S.WindowsToOpenAtStart = startWindows;
+                S.Settings.WindowsToOpenAtStart = startWindows;
                 ViewModelLocator.Cleanup();
             };
 
@@ -130,7 +130,7 @@ namespace RocketLaunch.Views
         {
             try
             {
-                var startWindows = JsonConvert.DeserializeObject<List<Type>>(S.WindowsToOpenAtStart);
+                var startWindows = JsonConvert.DeserializeObject<List<Type>>(S.Settings.WindowsToOpenAtStart);
                 foreach (var w in startWindows)
                 {
                     try
