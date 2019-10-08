@@ -19,6 +19,9 @@
     FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"
     KeyDown="WinOnKeyDown"
     Loaded="OnLoaded"
+    PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
+    PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
+    PreviewMouseMove="OnMouseMove"
     SizeChanged="WindowStateChanged"
     Style="{StaticResource WindowStyle}"
     TextElement.FontSize="16"
@@ -86,16 +89,16 @@
             <i:InvokeCommandAction Command="{Binding AnyKeyPressedCmd}" />
         </i:EventTrigger>
     </i:Interaction.Triggers>-->
+    <Viewbox>
+        <Grid>
+            <tb:TaskbarIcon
+                IconSource="/Assets/rocket.ico"
+                PopupActivation="RightClick"
+                ToolTipText="Rocket Launch"
+                TrayLeftMouseDown="ToogleWindowState"
+                Visibility="Visible">
 
-    <Grid>
-        <tb:TaskbarIcon
-            IconSource="/Assets/rocket.ico"
-            PopupActivation="RightClick"
-            ToolTipText="Rocket Launch"
-            TrayLeftMouseDown="ToogleWindowState"
-            Visibility="Visible">
-
-            <!--<tb:TaskbarIcon.TrayToolTip>
+                <!--<tb:TaskbarIcon.TrayToolTip>
                 <Border
                     Width="160"
                     Height="40"
@@ -110,181 +113,186 @@
                         Text="hello world" />
                 </Border>
             </tb:TaskbarIcon.TrayToolTip>-->
-            <tb:TaskbarIcon.TrayPopup>
-                <materialDesign:Card Margin="10" Padding="10">
+                <tb:TaskbarIcon.TrayPopup>
+                    <materialDesign:Card Margin="10" Padding="10">
 
-                    <StackPanel Width="150">
+                        <StackPanel Width="150">
 
-                        <!--<Button Style="{StaticResource MaterialDesignFlatButton}" ToolTip="Follow me on Twitter">
+                            <!--<Button Style="{StaticResource MaterialDesignFlatButton}" ToolTip="Follow me on Twitter">
                             <materialDesign:PackIcon Kind="TwitterBox" />
                         </Button>-->
-                        <StackPanel Orientation="Horizontal" Margin="0 20 0 20"  HorizontalAlignment="Center">
-                        <TextBlock Text="RocketLaunch" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" ></TextBlock>
-                            <materialDesign:PackIcon Margin="5 0 0 0" Kind="Rocket" />
-                        </StackPanel>
-                        <CheckBox
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Content="Autostart" FontSize="15"
-                            IsChecked="{Binding S.AutoStart}"
-                            ToolTip="Autostart with windows"
-                            ToolTipService.HorizontalOffset="20"
-                            ToolTipService.Placement="Right"
-                            ToolTipService.VerticalOffset="0" />
-
-                        <Button Margin="20"
-                            Command="{Binding CloseApplicationCmd}"
-                            
-                            ToolTip="Close RocketLaunch"
-                            ToolTipService.HorizontalOffset="20"
-                            ToolTipService.Placement="Right"
-                            ToolTipService.VerticalOffset="0">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Close" />
-                                <materialDesign:PackIcon Margin="10 0 0 0" Kind="Rocket" />
+                            <StackPanel
+                                Margin="0,20,0,20"
+                                HorizontalAlignment="Center"
+                                Orientation="Horizontal">
+                                <TextBlock
+                                    HorizontalAlignment="Center"
+                                    FontSize="15"
+                                    FontWeight="Bold"
+                                    Text="RocketLaunch" />
+                                <materialDesign:PackIcon Margin="5,0,0,0" Kind="Rocket" />
                             </StackPanel>
-                        </Button>
+                            <CheckBox
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Content="Autostart"
+                                FontSize="15"
+                                IsChecked="{Binding S.AutoStart}"
+                                ToolTip="Autostart with windows"
+                                ToolTipService.HorizontalOffset="20"
+                                ToolTipService.Placement="Right"
+                                ToolTipService.VerticalOffset="0" />
+
+                            <Button
+                                Margin="20"
+                                Command="{Binding CloseApplicationCmd}"
+                                ToolTip="Close RocketLaunch"
+                                ToolTipService.HorizontalOffset="20"
+                                ToolTipService.Placement="Right"
+                                ToolTipService.VerticalOffset="0">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Close" />
+                                    <materialDesign:PackIcon Margin="10,0,0,0" Kind="Rocket" />
+                                </StackPanel>
+                            </Button>
 
 
-                    </StackPanel>
+                        </StackPanel>
 
 
 
 
-                </materialDesign:Card>
-            </tb:TaskbarIcon.TrayPopup>
-        </tb:TaskbarIcon>
-        <Border
-            Grid.Row="0"
-            Grid.ColumnSpan="2"
-            Background="{DynamicResource MaterialDesignPaper}"
-            BorderBrush="{StaticResource MaterialDesignCardBackground}"
-            BorderThickness="1"
-            CornerRadius="10,10,10,10"
-            PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
-            PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
-            PreviewMouseMove="OnMouseMove" />
-        <materialDesign:Transitioner AutoApplyTransitionOrigins="True" SelectedIndex="{Binding SelectedViewIndex}">
-            <!--<materialDesign:Transitioner.InputBindings>
+                    </materialDesign:Card>
+                </tb:TaskbarIcon.TrayPopup>
+            </tb:TaskbarIcon>
+            <Border
+                Grid.Row="0"
+                Grid.ColumnSpan="2"
+                Background="{DynamicResource MaterialDesignPaper}"
+                BorderBrush="{StaticResource MaterialDesignCardBackground}"
+                BorderThickness="2"
+                CornerRadius="10,10,10,10" />
+            <materialDesign:Transitioner AutoApplyTransitionOrigins="True" SelectedIndex="{Binding SelectedViewIndex}">
+                <!--<materialDesign:Transitioner.InputBindings>
                 <KeyBinding Key="Left" Command="{x:Static materialDesign:Transitioner.MovePreviousCommand}" />
                 <KeyBinding Key="Right" Command="{x:Static materialDesign:Transitioner.MoveNextCommand}" />
             </materialDesign:Transitioner.InputBindings>-->
-            <!--  you can use a slide for each page, let's add a touch of fade for our first page  -->
+                <!--  you can use a slide for each page, let's add a touch of fade for our first page  -->
 
-            <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
-                <materialDesign:Card Margin="10" VerticalAlignment="Stretch">
-                    <Grid>
+                <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
+                    <materialDesign:Card Margin="10" VerticalAlignment="Stretch">
+                        <Grid>
 
-                        <StackPanel Margin="10">
-                            <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
-                            <Grid>
-                                <Button
-                                    Width="100"
-                                    Height="100"
-                                    Margin="0,20,0,20"
-                                    materialDesign:ButtonProgressAssist.IsIndeterminate="True"
-                                    materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding Indexing.IndexingIsRunning}"
-                                    materialDesign:ButtonProgressAssist.Value="-1"
-                                    Style="{StaticResource MaterialDesignFloatingActionButton}">
-                                    <Button.InputBindings>
-                                        <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
-                                        <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
-                                    </Button.InputBindings>
-                                    <!--<Image Source="../Assets/rocket.png"></Image>-->
-                                    <svgc:SvgViewbox
-                                        AutoSize="False"
-                                        Source="/Assets/rocket.svg"
-                                        ToolTip="Icons made by www.flaticon.com"
-                                        ToolTipService.InitialShowDelay="8000" />
-                                </Button>
-                                <Button
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Top"
-                                    Command="{Binding OpenSettingsWindowCmd}"
-                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                    ToolTip="Settings">
-                                    <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
-                                </Button>
-                            </Grid>
+                            <StackPanel Margin="10">
+                                <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
+                                <Grid>
+                                    <Button
+                                        Width="100"
+                                        Height="100"
+                                        Margin="0,20,0,20"
+                                        materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                                        materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding Indexing.IndexingIsRunning}"
+                                        materialDesign:ButtonProgressAssist.Value="-1"
+                                        Style="{StaticResource MaterialDesignFloatingActionButton}">
+                                        <Button.InputBindings>
+                                            <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
+                                            <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
+                                        </Button.InputBindings>
+                                        <!--<Image Source="../Assets/rocket.png"></Image>-->
+                                        <svgc:SvgViewbox
+                                            AutoSize="False"
+                                            Source="/Assets/rocket.svg"
+                                            ToolTip="Icons made by www.flaticon.com"
+                                            ToolTipService.InitialShowDelay="8000" />
+                                    </Button>
+                                    <Button
+                                        HorizontalAlignment="Right"
+                                        VerticalAlignment="Top"
+                                        Command="{Binding OpenSettingsWindowCmd}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="Settings">
+                                        <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
+                                    </Button>
+                                </Grid>
 
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox
-                                    x:Name="SearchTextBox"
-                                    Grid.ColumnSpan="2"
-                                    Margin="10,10,10,0"
-                                    materialDesign:HintAssist.Hint="Search..."
-                                    AcceptsReturn="False"
-                                    AcceptsTab="False"
-                                    Style="{StaticResource SelectedTextBoxStyle}"
-                                    Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox
+                                        x:Name="SearchTextBox"
+                                        Grid.ColumnSpan="2"
+                                        Margin="10,10,10,0"
+                                        materialDesign:HintAssist.Hint="Search..."
+                                        AcceptsReturn="False"
+                                        AcceptsTab="False"
+                                        Style="{StaticResource SelectedTextBoxStyle}"
+                                        Text="{Binding SearchString, UpdateSourceTrigger=PropertyChanged}">
 
-                                    <TextBox.InputBindings>
-                                        <KeyBinding Key="Enter" Command="{Binding ExecuteFirstListViewItem}" />
-                                        <KeyBinding Key="Down" Command="{Binding DownKeyPressedCmd}" />
-                                        <KeyBinding Key="Up" Command="{Binding UpKeyPressedCmd}" />
-                                        <!--<KeyBinding Key="PageDown" Command="{Binding ExecuteFirstListViewItem}" />
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Enter" Command="{Binding ExecuteFirstListViewItem}" />
+                                            <KeyBinding Key="Down" Command="{Binding DownKeyPressedCmd}" />
+                                            <KeyBinding Key="Up" Command="{Binding UpKeyPressedCmd}" />
+                                            <!--<KeyBinding Key="PageDown" Command="{Binding ExecuteFirstListViewItem}" />
         <KeyBinding Key="PageUp" Command="{Binding ExecuteFirstListViewItem}" />
         <KeyBinding Key="PageUp" Command="{Binding AnyKeyPressed}" />-->
-                                    </TextBox.InputBindings>
-                                    <!--<TextBox.InputBindings>
+                                        </TextBox.InputBindings>
+                                        <!--<TextBox.InputBindings>
                     <KeyBinding
                         Key="Enter"
                         Command="{Binding ExecuteFirstListViewItem}"
                          />
                 </TextBox.InputBindings>-->
 
-                                </TextBox>
+                                    </TextBox>
 
-                            </Grid>
-                            <ListView
-                                Margin="10,0,10,10"
-                                ItemsSource="{Binding SearchSuggestions}"
-                                SelectedIndex="{Binding SelectedIndex}">
-                                <i:Interaction.Triggers>
-                                    <i:EventTrigger EventName="MouseDoubleClick">
-                                        <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
-                                    </i:EventTrigger>
-                                </i:Interaction.Triggers>
+                                </Grid>
+                                <ListView
+                                    Margin="10,0,10,10"
+                                    ItemsSource="{Binding SearchSuggestions}"
+                                    SelectedIndex="{Binding SelectedIndex}">
+                                    <i:Interaction.Triggers>
+                                        <i:EventTrigger EventName="MouseDoubleClick">
+                                            <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
+                                        </i:EventTrigger>
+                                    </i:Interaction.Triggers>
 
-                                <ListView.ItemContainerStyle>
-                                    <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
-                                        <!--<Setter Property="Focusable" Value="false" />-->
-                                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                                        <Setter Property="VerticalAlignment" Value="Center" />
-                                    </Style>
+                                    <ListView.ItemContainerStyle>
+                                        <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
+                                            <!--<Setter Property="Focusable" Value="false" />-->
+                                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                                            <Setter Property="VerticalAlignment" Value="Center" />
+                                        </Style>
 
-                                </ListView.ItemContainerStyle>
-                                <ListView.View>
-                                    <GridView>
-                                        <!--  This is index column. Dont't want that right now  -->
-                                        <!--<GridViewColumn
+                                    </ListView.ItemContainerStyle>
+                                    <ListView.View>
+                                        <GridView>
+                                            <!--  This is index column. Dont't want that right now  -->
+                                            <!--<GridViewColumn
                             Width="100"
                             DisplayMemberBinding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, Converter={StaticResource IndexConverter}}"
                              />-->
-                                        <GridViewColumn>
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <Image
-                                                        Width="32"
-                                                        Source="{Binding Icon}"
-                                                        ToolTip="{Binding URI}">
-                                                        <!--<Image.Effect>
+                                            <GridViewColumn>
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <Image
+                                                            Width="32"
+                                                            Source="{Binding Icon}"
+                                                            ToolTip="{Binding URI}">
+                                                            <!--<Image.Effect>
                                             <grayscaleEffect:GrayscaleEffect x:Name="grayscaleEffect" />
                                         </Image.Effect>-->
-                                                    </Image>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Width="500">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel>
+                                                        </Image>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+                                            <GridViewColumn Width="500">
+                                                <GridViewColumn.CellTemplate>
+                                                    <DataTemplate>
+                                                        <StackPanel>
 
-                                                        <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
+                                                            <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
                                             <rich:RichTextEditor.Text>
                                                 <MultiBinding Converter="{StaticResource RichTextConverter}">
                                                     <Binding ElementName="{Binding Name}" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"></Binding>
@@ -293,81 +301,80 @@
                                             </rich:RichTextEditor.Text>
 
                                         </rich:RichTextEditor>-->
-                                                        <TextBlock FontSize="14" Text="{Binding Name}" />
-                                                        <TextBlock
-                                                            FontSize="9"
-                                                            Foreground="LightGray"
-                                                            Text="{Binding URI}" />
-                                                        <!--<TextBlock
+                                                            <TextBlock FontSize="14" Text="{Binding Name}" />
+                                                            <TextBlock
+                                                                FontSize="9"
+                                                                Foreground="LightGray"
+                                                                Text="{Binding URI}" />
 
-                                            Text="{Binding URI}" />-->
-                                                    </StackPanel>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <!--<GridViewColumn Width="Auto" DisplayMemberBinding="{Binding URI}" />-->
-                                        <GridViewColumn
-                                            Width="Auto"
-                                            l:GridViewColumnVisibilityManager.IsVisible="{Binding S.Settings.DebugMode}"
-                                            DisplayMemberBinding="{Binding RunNrOfTimes}"
-                                            ToolTipService.ToolTip="Nr of runs" />
-                                    </GridView>
-                                </ListView.View>
+                                                        </StackPanel>
+                                                    </DataTemplate>
+                                                </GridViewColumn.CellTemplate>
+                                            </GridViewColumn>
+
+                                            <!--  l:GridViewColumnVisibilityManager.IsVisible="{Binding S.Settings.DebugMode}"  -->
+                                            <GridViewColumn
+                                                Width="Auto"
+                                                DisplayMemberBinding="{Binding RunNrOfTimes}"
+                                                ToolTipService.ToolTip="Nr of runs" />
+                                        </GridView>
+                                    </ListView.View>
 
 
-                            </ListView>
-                            <StackPanel Margin="20,20,0,20" Visibility="{convertersWpf:SwitchBinding S.Settings.DebugMode, Visible, Collapsed}">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Indexing.NrOfPaths}" />
-                                    <TextBlock Text=" nr of paths" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Gen search Time: " />
-                                    <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Prio search time: " />
-                                    <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Total search time: " />
-                                    <TextBlock Text="{Binding Indexing.TotalSearchTime}" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Rendering time: " />
-                                    <TextBlock Text="{Binding RenderingTime}" />
+                                </ListView>
+                                <StackPanel Margin="20,20,0,20" Visibility="{convertersWpf:SwitchBinding S.Settings.DebugMode, Visible, Collapsed}">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Indexing.NrOfPaths}" />
+                                        <TextBlock Text=" nr of paths" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Gen search Time: " />
+                                        <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Prio search time: " />
+                                        <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Total search time: " />
+                                        <TextBlock Text="{Binding Indexing.TotalSearchTime}" />
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Rendering time: " />
+                                        <TextBlock Text="{Binding RenderingTime}" />
+                                    </StackPanel>
+
                                 </StackPanel>
 
                             </StackPanel>
 
-                        </StackPanel>
+                        </Grid>
+                    </materialDesign:Card>
+                </materialDesign:TransitionerSlide>
+                <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
 
-                    </Grid>
-                </materialDesign:Card>
-            </materialDesign:TransitionerSlide>
-            <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
+                    <Views:SettingsV Margin="10" />
 
-                <Views:SettingsV Margin="10" />
-
-            </materialDesign:TransitionerSlide>
-            <!--<materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
+                </materialDesign:TransitionerSlide>
+                <!--<materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
                 <materialDesign:Card Margin="10" VerticalAlignment="Stretch">
-            -->
-            <!--<views:CalibrateSquareUserCtrl />-->
-            <!--
+                -->
+                <!--<views:CalibrateSquareUserCtrl />-->
+                <!--
                 </materialDesign:Card>
             </materialDesign:TransitionerSlide>
             <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
                 <materialDesign:Card Margin="10">
-            -->
-            <!--<views:CalibrateLengthUserCtrl />-->
-            <!--
+                -->
+                <!--<views:CalibrateLengthUserCtrl />-->
+                <!--
                 </materialDesign:Card>
             </materialDesign:TransitionerSlide>-->
 
-        </materialDesign:Transitioner>
+            </materialDesign:Transitioner>
 
 
-    </Grid>
+        </Grid>
+    </Viewbox>
 </Window>
 

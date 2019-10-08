@@ -266,6 +266,7 @@
     <Resource Include="Assets\CustomIcons\windowsupdate.png" />
     <Resource Include="Assets\CustomIcons\workplace.png" />
     <Resource Include="Assets\CustomIcons\yourinfo.png" />
+    <Resource Include="Assets\CustomIcons\turnoff.png" />
     <Content Include="Assets\rocket.svg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -135,6 +135,7 @@ namespace RocketLaunch.Model
         File,
         ControlPanelSetting,
         Directory,
-        RunDialog
+        RunDialog,
+        TurnOffComputer
     }
 }

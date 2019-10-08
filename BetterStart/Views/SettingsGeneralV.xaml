@@ -6,6 +6,10 @@
     xmlns:local="clr-namespace:RocketLaunch.Views"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    TextElement.FontSize="16"
+    TextElement.FontWeight="Medium"
+    TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+    FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"
     DataContext="{Binding SettingsVM, Source={StaticResource Locator}}"
     mc:Ignorable="d">
     <Grid>

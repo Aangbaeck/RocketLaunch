@@ -9,6 +9,8 @@
     Background="{DynamicResource MaterialDesignPaper}"
     DataContext="{Binding SettingsVM, Source={StaticResource Locator}}"
     FontFamily="pack://application:,,,/MaterialDesignThemes.Wpf;component/Resources/Roboto/#Roboto"
+    TextElement.FontSize="16"
+    TextElement.FontWeight="Medium"
     TextElement.Foreground="{DynamicResource MaterialDesignBody}">
 
 

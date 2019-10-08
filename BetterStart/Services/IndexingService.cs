@@ -32,6 +32,7 @@ namespace RocketLaunch.Services
 
         public IndexingService(SettingsService s)
         {
+            S = s;
             if (!File.Exists(Common.Directory + "Matcher.trie"))
                 RunIndexingFirstTime();
             else
@@ -44,7 +45,7 @@ namespace RocketLaunch.Services
                 }
             }
 
-            S = s;
+
             var timer = new Timer(s.Settings.ReindexingTime * 1000 * 60);
             timer.Start();
             timer.Elapsed += (_, __) =>
@@ -91,7 +92,7 @@ namespace RocketLaunch.Services
 
         public void RunIndexing()
         {
-            
+
             Task.Run(() =>
             {
                 IndexingIsRunning = true;
@@ -136,33 +137,41 @@ namespace RocketLaunch.Services
         public bool IndexingIsRunning
         {
             get { return _indexingIsRunning; }
-            set { _indexingIsRunning = value; RaisePropertyChanged();}
+            set { _indexingIsRunning = value; RaisePropertyChanged(); }
         }
 
         private void AddGoodStuffToPrioMatcher()
         {
-            if (S.Settings.IncludeWindowsSettings)
+            Task.Run(() =>
             {
-                foreach (var setting in RunItemFactory.Settings)
+                if (S.Settings.IncludeWindowsSettings)
                 {
-                    if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
+                    foreach (var setting in RunItemFactory.Settings)
                     {
-                        PrioMatcher.Insert(setting.Name.ToLower(), setting);
-                        foreach (var keyWord in setting.KeyWords)
+                        if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
                         {
-                            PrioMatcher.Insert(keyWord, setting);
-                            PrioMatcher.Insert(setting.KeyWords, setting);
-                        }
+                            PrioMatcher.Insert(setting.Name.ToLower(), setting);
+                            foreach (var keyWord in setting.KeyWords)
+                            {
+                                PrioMatcher.Insert(keyWord, setting);
+                                PrioMatcher.Insert(setting.KeyWords, setting);
+                            }
 
+                        }
+                    }
+
+                    var rundialog = RunItemFactory.RunDialog();
+                    if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
+                    {
+                        PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
+                    }
+                    var turnOff = RunItemFactory.TurnOff();
+                    if (!PrioMatcher.KeyValueObjects.ContainsKey(turnOff.Name))
+                    {
+                        PrioMatcher.Insert(turnOff.Name.ToLower(), turnOff);
                     }
                 }
-
-                var rundialog = RunItemFactory.RunDialog();
-                if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
-                {
-                    PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
-                }
-            }
+            });
 
         }
 

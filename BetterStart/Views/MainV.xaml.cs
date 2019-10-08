@@ -14,6 +14,7 @@ using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
+using MaterialDesignThemes.Wpf;
 using Newtonsoft.Json;
 using RocketLaunch.Helper;
 using RocketLaunch.Model;
@@ -176,20 +177,25 @@ namespace RocketLaunch.Views
         //These mouse methods is used for normal window behavour and still it's a borderless stylable window
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
-            this.DragMove();
+            if (e.Source is Card)
+            {
+                
+                _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
+                this.DragMove();
+            }
         }
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (_mRestoreForDragMove)
-            {
-                _mRestoreForDragMove = false;
-                var point = PointToScreen(e.MouseDevice.GetPosition(this));
-                this.Left = point.X - (this.RestoreBounds.Width * 0.5);
-                this.Top = point.Y;
-                this.WindowState = WindowState.Normal;
-                this.DragMove();
-            }
+                {
+                    _mRestoreForDragMove = false;
+                    var point = PointToScreen(e.MouseDevice.GetPosition(this));
+                    this.Left = point.X - (this.RestoreBounds.Width * 0.5);
+                    this.Top = point.Y;
+                    this.WindowState = WindowState.Normal;
+                    this.DragMove();
+                }
+            
         }
         private void MaximizeRestoreWindow(object sender, RoutedEventArgs e)
         {

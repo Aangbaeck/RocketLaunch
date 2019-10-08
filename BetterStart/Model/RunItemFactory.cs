@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -24,6 +25,9 @@ namespace RocketLaunch.Model
                 case ItemType.ControlPanelSetting:
                     System.Diagnostics.Process.Start(item.Command);
                     break;
+                case ItemType.TurnOffComputer:
+                    Process.Start("shutdown", "/s /t 0");
+                    break;
 
             }
         }
@@ -36,6 +40,11 @@ namespace RocketLaunch.Model
         {
             return new RunItem() { Name = "Run", URI = "Run file dialog Windows", Type = ItemType.RunDialog, CustomIconName = "run_command.png" };
         }
+        public static RunItem TurnOff()
+        {
+            return new RunItem() { Name = "Turn off", URI = "Turn off windows", Type = ItemType.TurnOffComputer, CustomIconName = "turnoff.png" };
+        }
+
 
         public static List<RunItem> Settings { get; } = new List<RunItem>()
         {
