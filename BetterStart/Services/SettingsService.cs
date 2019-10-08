@@ -1,13 +1,17 @@
 ﻿using System;
 using System.IO;
+using System.Windows.Forms;
 using AutoMapper;
+using GalaSoft.MvvmLight;
+using IWshRuntimeLibrary;
 using Newtonsoft.Json;
 using RocketLaunch.Helper;
 using Serilog;
+using File = System.IO.File;
 
 namespace RocketLaunch.Services
 {
-    public class SettingsService
+    public class SettingsService: ViewModelBase
     {
         public AppSettings Settings { get; set; } = new AppSettings();
         public SettingsService()
@@ -23,7 +27,37 @@ namespace RocketLaunch.Services
             };
         }
 
+        public void ResetFolderPaths()
+        {
+            Settings.ResetSearchDirectoriesToDefaultFolders();
+        }
+        public bool AutoStart
+        {
+            get { return Settings.AutoStart; }
+            set
+            {
+                Settings.AutoStart = value;
+                if (value)
+                    CreateShortCutInAutoStart();
+                else
+                    File.Delete(_startupPath);
+                RaisePropertyChanged();
+            }
+        }
 
+        private readonly string _startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup) + "\\" + "RocketLaunch.lnk";
+        private void CreateShortCutInAutoStart()
+        {
+            WshShell wshShell = new WshShell();
+            // Create the shortcut
+            IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)wshShell.CreateShortcut(_startupPath);
+
+            shortcut.TargetPath = Application.ExecutablePath;
+            shortcut.WorkingDirectory = Application.StartupPath;
+            shortcut.Description = "Launch RocketLaunch Application";
+            // shortcut.IconLocation = Application.StartupPath + @"\App.ico";
+            shortcut.Save();
+        }
 
         public void Load()
         {

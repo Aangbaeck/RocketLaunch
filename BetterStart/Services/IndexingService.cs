@@ -151,6 +151,7 @@ namespace RocketLaunch.Services
                         foreach (var keyWord in setting.KeyWords)
                         {
                             PrioMatcher.Insert(keyWord, setting);
+                            PrioMatcher.Insert(setting.KeyWords, setting);
                         }
 
                     }

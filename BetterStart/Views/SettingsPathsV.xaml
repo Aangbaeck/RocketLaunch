@@ -19,7 +19,8 @@
             </Grid.RowDefinitions>
             <Grid Grid.Row="0" Margin="30,20,45,0">
 
-                <CheckBox HorizontalAlignment="Left"
+                <CheckBox
+                    HorizontalAlignment="Left"
                     Content="Include windows settings"
                     IsChecked="{Binding S.Settings.IncludeWindowsSettings}"
                     ToolTip="Include windows settings in the results." />
@@ -29,6 +30,11 @@
                         Command="{Binding RefreshIndexingCmd}"
                         Content="Refresh Indexing"
                         ToolTip="Search folders for new files" />
+                    <Button
+                        Margin="10"
+                        Command="{Binding ResetFolderToDefaultCmd}"
+                        Content="Reset to default folders"
+                        ToolTip="Remove all folders and set it back to default folders." />
 
                     <Button
                         HorizontalAlignment="Right"
@@ -45,7 +51,7 @@
 
             </Grid>
 
-            <ListView 
+            <ListView
                 x:Name="ListView1"
                 Grid.Row="1"
                 Margin="10,0,10,10"

@@ -22,6 +22,19 @@ namespace RocketLaunch.Indexing.SuffixTree
             this.InsertToDictionary(key, value);
             this.InnerTrie.Insert(key);
         }
+        /// <summary>
+        /// Inserts same value with multiple keys. Some things have similar keywords - lets add all of them.
+        /// </summary>
+        /// <param name="keys"></param>
+        /// <param name="value"></param>
+        public void Insert(IEnumerable<string> keys, T value)
+        {
+            foreach (var key in keys)
+            {
+                Insert(key,value);
+            }
+        }
+
 
         private void InsertToDictionary(string key, T value)
         {

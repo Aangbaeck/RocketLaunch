@@ -20,6 +20,12 @@ namespace RocketLaunch.Services
             set { _debugMode = value; RaisePropertyChanged(); }
         }
 
+        public bool AutoStart
+        {
+            get { return _autoStart; }
+            set { _autoStart = value; RaisePropertyChanged();}
+        }
+
         public string WindowsToOpenAtStart
         {
             get { return _windowsToOpenAtStart; }
@@ -29,6 +35,7 @@ namespace RocketLaunch.Services
         private bool _includeWindowsSettings = true;
         private string _windowsToOpenAtStart;
         private int _reindexingTime = 20;
+        private bool _autoStart;
 
         public bool IncludeWindowsSettings
         {
@@ -43,7 +50,21 @@ namespace RocketLaunch.Services
             get { return _reindexingTime; }
             set { _reindexingTime = value; RaisePropertyChanged(); }
         }
-        public BindingList<FolderSearch> SearchDirectories { get; set; } = new BindingList<FolderSearch>()
+
+        public void ResetSearchDirectoriesToDefaultFolders()
+        {
+            SearchDirectories.RaiseListChangedEvents = false;
+            SearchDirectories.Clear();
+            foreach (var defaultFolder in DefaultFolders)
+            {
+                SearchDirectories.Add(defaultFolder);
+            }
+            SearchDirectories.RaiseListChangedEvents = true;
+            SearchDirectories.ResetBindings();
+
+        }
+        public BindingList<FolderSearch> SearchDirectories { get; set; } = DefaultFolders;
+        public static BindingList<FolderSearch> DefaultFolders => new BindingList<FolderSearch>()
         {
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), SearchPattern = "*.*", SearchSubFolders = true },
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), SearchPattern = "*.*", SearchSubFolders = true },

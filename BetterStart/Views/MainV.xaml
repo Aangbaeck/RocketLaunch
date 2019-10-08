@@ -90,11 +90,12 @@
     <Grid>
         <tb:TaskbarIcon
             IconSource="/Assets/rocket.ico"
+            PopupActivation="RightClick"
             ToolTipText="Rocket Launch"
             TrayLeftMouseDown="ToogleWindowState"
             Visibility="Visible">
 
-            <tb:TaskbarIcon.TrayToolTip>
+            <!--<tb:TaskbarIcon.TrayToolTip>
                 <Border
                     Width="160"
                     Height="40"
@@ -108,20 +109,49 @@
                         VerticalAlignment="Center"
                         Text="hello world" />
                 </Border>
-            </tb:TaskbarIcon.TrayToolTip>
+            </tb:TaskbarIcon.TrayToolTip>-->
             <tb:TaskbarIcon.TrayPopup>
-                <Border
-                    Width="160"
-                    Height="40"
-                    Background="White"
-                    BorderBrush="Orange"
-                    BorderThickness="2"
-                    CornerRadius="4">
-                    <Button
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Content="Click Me!" />
-                </Border>
+                <materialDesign:Card Margin="10" Padding="10">
+
+                    <StackPanel Width="150">
+
+                        <!--<Button Style="{StaticResource MaterialDesignFlatButton}" ToolTip="Follow me on Twitter">
+                            <materialDesign:PackIcon Kind="TwitterBox" />
+                        </Button>-->
+                        <StackPanel Orientation="Horizontal" Margin="0 20 0 20"  HorizontalAlignment="Center">
+                        <TextBlock Text="RocketLaunch" FontWeight="Bold" FontSize="15" HorizontalAlignment="Center" ></TextBlock>
+                            <materialDesign:PackIcon Margin="5 0 0 0" Kind="Rocket" />
+                        </StackPanel>
+                        <CheckBox
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Content="Autostart" FontSize="15"
+                            IsChecked="{Binding S.AutoStart}"
+                            ToolTip="Autostart with windows"
+                            ToolTipService.HorizontalOffset="20"
+                            ToolTipService.Placement="Right"
+                            ToolTipService.VerticalOffset="0" />
+
+                        <Button Margin="20"
+                            Command="{Binding CloseApplicationCmd}"
+                            
+                            ToolTip="Close RocketLaunch"
+                            ToolTipService.HorizontalOffset="20"
+                            ToolTipService.Placement="Right"
+                            ToolTipService.VerticalOffset="0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Close" />
+                                <materialDesign:PackIcon Margin="10 0 0 0" Kind="Rocket" />
+                            </StackPanel>
+                        </Button>
+
+
+                    </StackPanel>
+
+
+
+
+                </materialDesign:Card>
             </tb:TaskbarIcon.TrayPopup>
         </tb:TaskbarIcon>
         <Border
@@ -150,12 +180,12 @@
                             <Grid>
                                 <Button
                                     Width="100"
-                                    Height="100" 
+                                    Height="100"
                                     Margin="0,20,0,20"
-                                    Style="{StaticResource MaterialDesignFloatingActionButton}"
+                                    materialDesign:ButtonProgressAssist.IsIndeterminate="True"
                                     materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding Indexing.IndexingIsRunning}"
                                     materialDesign:ButtonProgressAssist.Value="-1"
-                                    materialDesign:ButtonProgressAssist.IsIndeterminate="True">
+                                    Style="{StaticResource MaterialDesignFloatingActionButton}">
                                     <Button.InputBindings>
                                         <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
                                         <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
@@ -165,9 +195,7 @@
                                         AutoSize="False"
                                         Source="/Assets/rocket.svg"
                                         ToolTip="Icons made by www.flaticon.com"
-                                        ToolTipService.InitialShowDelay="8000">
-                                        
-                                    </svgc:SvgViewbox>
+                                        ToolTipService.InitialShowDelay="8000" />
                                 </Button>
                                 <Button
                                     HorizontalAlignment="Right"

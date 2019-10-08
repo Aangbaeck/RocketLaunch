@@ -32,6 +32,10 @@ namespace RocketLaunch.Views
         {
             IndexService.RunIndexing();
         });
+        public RelayCommand ResetFolderToDefaultCmd => new RelayCommand(() =>
+        {
+            S.ResetFolderPaths();
+        });
         public RelayCommand RemoveAllIndexingCmd => new RelayCommand(() =>
         {
             IndexService.CleanIndexes();

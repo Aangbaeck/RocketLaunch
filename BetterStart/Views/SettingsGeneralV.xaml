@@ -9,10 +9,7 @@
     DataContext="{Binding SettingsVM, Source={StaticResource Locator}}"
     mc:Ignorable="d">
     <Grid>
-        <StackPanel
-            Grid.Row="0"
-            VerticalAlignment="Top"
-            Orientation="Horizontal">
+        <StackPanel Grid.Row="0" VerticalAlignment="Top">
 
 
 
@@ -29,13 +26,18 @@
                 Text="{Binding S.Settings.ReindexingTime}"
                 ToolTip="Max time between reindexing (minutes)" />
             <Button
-                materialDesign:ButtonProgressAssist.Value="-1"
-                materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding IndexService.IndexingIsRunning}"
-                materialDesign:ButtonProgressAssist.IsIndeterminate="True"
                 Margin="10"
+                materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding IndexService.IndexingIsRunning}"
+                materialDesign:ButtonProgressAssist.Value="-1"
                 Command="{Binding RemoveAllIndexingCmd}"
                 Content="Reset history"
                 ToolTip="Resets all history that effects the choices of apps" />
+            <CheckBox
+                Margin="10"
+                Content="Autostart"
+                IsChecked="{Binding S.AutoStart}"
+                ToolTip="Autostart this application with windows" />
         </StackPanel>
     </Grid>
 </UserControl>

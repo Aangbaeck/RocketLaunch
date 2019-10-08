@@ -29,6 +29,7 @@ namespace RocketLaunch.Views
         public RelayCommand OpenSettingsWindowCmd => new RelayCommand(() => { SelectedViewIndex = 1; });
         public RelayCommand ToggleDebugMode => new RelayCommand(() => { S.Settings.DebugMode = !S.Settings.DebugMode; });
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
+        public RelayCommand CloseApplicationCmd => new RelayCommand(() => { System.Windows.Application.Current.Shutdown();});
         public RelayCommand DoubleClickOnItemCmd => new RelayCommand(ExecuteSelectedListViewItem);
 
         public RelayCommand DownKeyPressedCmd => new RelayCommand(() =>
@@ -70,7 +71,7 @@ namespace RocketLaunch.Views
             get { return _selectedViewIndex; }
             set { _selectedViewIndex = value; RaisePropertyChanged(); }
         }
-        
+
         public RelayCommand OpenLogFile => new RelayCommand(() =>
         {
             var directory = Path.GetDirectoryName(Common.LogfilesPath);
@@ -149,7 +150,7 @@ namespace RocketLaunch.Views
         public int StoredSelectedIndex { get; set; }
 
         private static readonly PaletteHelper _paletteHelper = new PaletteHelper();
-        
+
 
         private string _searchString;
         private int _selectedIndex = -1;
@@ -177,7 +178,7 @@ namespace RocketLaunch.Views
             IsFocused = true;
             S = s;
             Messenger.Default.Register<bool>(this, MessengerID.WindowDeactivated, HandleWindowDeactivated);
-            Messenger.Default.Register<bool>(this, MessengerID.ReturnToSearchWindow, (e)=>
+            Messenger.Default.Register<bool>(this, MessengerID.ReturnToSearchWindow, (e) =>
             {
                 SelectedViewIndex = 0;
             });
