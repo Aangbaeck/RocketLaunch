@@ -9,7 +9,7 @@
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:svgc="http://sharpvectors.codeplex.com/svgc/"
     xmlns:tb="http://www.hardcodet.net/taskbar"
-    MinHeight="751.2"
+    Height="751.2"
     HorizontalAlignment="Center"
     VerticalAlignment="Center"
     AllowsTransparency="True"
@@ -20,7 +20,6 @@
     KeyDown="WinOnKeyDown"
     Loaded="OnLoaded"
     SizeChanged="WindowStateChanged"
-    SizeToContent="Height"
     Style="{StaticResource WindowStyle}"
     TextElement.FontSize="16"
     TextElement.FontWeight="Medium"
@@ -149,22 +148,27 @@
                         <StackPanel Margin="10">
                             <!--  focus:FocusExtension.IsFocused="{Binding IsFocused}"  -->
                             <Grid>
-                                <Grid
+                                <Button
                                     Width="100"
-                                    Height="100"
-                                    Margin="0,20,0,20">
+                                    Height="100" 
+                                    Margin="0,20,0,20"
+                                    Style="{StaticResource MaterialDesignFloatingActionButton}"
+                                    materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding Indexing.IndexingIsRunning}"
+                                    materialDesign:ButtonProgressAssist.Value="-1"
+                                    materialDesign:ButtonProgressAssist.IsIndeterminate="True">
+                                    <Button.InputBindings>
+                                        <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
+                                        <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
+                                    </Button.InputBindings>
                                     <!--<Image Source="../Assets/rocket.png"></Image>-->
                                     <svgc:SvgViewbox
                                         AutoSize="False"
                                         Source="/Assets/rocket.svg"
                                         ToolTip="Icons made by www.flaticon.com"
                                         ToolTipService.InitialShowDelay="8000">
-                                        <svgc:SvgViewbox.InputBindings>
-                                            <MouseBinding Command="{Binding ToggleDebugMode, Mode=OneTime}" Gesture="MiddleClick" />
-                                            <MouseBinding Command="{Binding OpenLogFile, Mode=OneTime}" Gesture="RightClick" />
-                                        </svgc:SvgViewbox.InputBindings>
+                                        
                                     </svgc:SvgViewbox>
-                                </Grid>
+                                </Button>
                                 <Button
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"

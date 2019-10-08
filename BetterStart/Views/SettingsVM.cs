@@ -11,11 +11,13 @@ namespace RocketLaunch.Views
 {
     public class SettingsVM : ViewModelBase
     {
+        private int _selectedViewIndex = 0;
+
         public SettingsVM(SettingsService s, IndexingService index)
         {
             S = s;
             IndexService = index;
-            
+
 
         }
         public IndexingService IndexService { get; set; }
@@ -26,7 +28,7 @@ namespace RocketLaunch.Views
         {
             S.Settings.SearchDirectories.Remove(folder);
         });
-        public RelayCommand ResetIndexingCmd => new RelayCommand(() =>
+        public RelayCommand RefreshIndexingCmd => new RelayCommand(() =>
         {
             IndexService.RunIndexing();
         });
@@ -43,11 +45,15 @@ namespace RocketLaunch.Views
             if (dlg.ShowDialog() == true)
             {
                 string path = dlg.SelectedPath;
-                S.Settings.SearchDirectories.Add(new FolderSearch() {Path = path, SearchPattern = "*.*",SearchSubFolders = true});
+                S.Settings.SearchDirectories.Add(new FolderSearch() { Path = path, SearchPattern = "*.*", SearchSubFolders = true });
             }
 
         });
 
-        
+        public int SelectedViewIndex
+        {
+            get { return _selectedViewIndex; }
+            set { _selectedViewIndex = value; RaisePropertyChanged(); }
+        }
     }
 }

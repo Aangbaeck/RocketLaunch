@@ -1,0 +1,41 @@
+﻿<UserControl
+    x:Class="RocketLaunch.Views.SettingsGeneralV"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:RocketLaunch.Views"
+    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    DataContext="{Binding SettingsVM, Source={StaticResource Locator}}"
+    mc:Ignorable="d">
+    <Grid>
+        <StackPanel
+            Grid.Row="0"
+            VerticalAlignment="Top"
+            Orientation="Horizontal">
+
+
+
+            <!--<Rectangle
+                Width="1"
+                Height="30"
+                VerticalAlignment="Stretch"
+                Fill="#FF4F4F4F" />-->
+
+            <TextBox
+                Margin="10"
+                materialDesign:HintAssist.Hint="Reindexing time (minutes)"
+                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                Text="{Binding S.Settings.ReindexingTime}"
+                ToolTip="Max time between reindexing (minutes)" />
+            <Button
+                materialDesign:ButtonProgressAssist.Value="-1"
+                materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding IndexService.IndexingIsRunning}"
+                materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                Margin="10"
+                Command="{Binding RemoveAllIndexingCmd}"
+                Content="Reset history"
+                ToolTip="Resets all history that effects the choices of apps" />
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Input;
 using GalaSoft.MvvmLight.Messaging;
 using GalaSoft.MvvmLight.Threading;
 using RocketLaunch.Helper;
@@ -14,11 +12,9 @@ using Serilog.Core;
 using Serilog.Events;
 using Application = System.Windows.Application;
 using WinForms = System.Windows.Forms;
-using Gma.System.MouseKeyHook;
 using RocketLaunch.Services;
 using CommonServiceLocator;
-using Nelibur.ObjectMapper;
-using RocketLaunch.Model;
+using AutoMapper;
 
 namespace RocketLaunch
 {
@@ -42,8 +38,10 @@ namespace RocketLaunch
             {
                 DetachKeyboardHook();
             }
+
+
             
-            
+
             //var keyHanderService = new KeyBoardHandlerService();
             //keyHanderService.Subscribe();
 

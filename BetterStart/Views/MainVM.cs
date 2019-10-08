@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -99,8 +100,14 @@ namespace RocketLaunch.Views
                 _searchString = value;
                 SelectedIndex = -1;
                 List<RunItem> list = Indexing.Search(value);
+                SearchSuggestions.RaiseListChangedEvents = false;
                 SearchSuggestions.Clear();
-                SearchSuggestions.AddRange(list);
+                foreach (var item in list)
+                {
+                    SearchSuggestions.Add(item);
+                }
+                SearchSuggestions.RaiseListChangedEvents = true;
+                SearchSuggestions.ResetBindings();
                 sw.Stop();
                 RenderingTime = (int)sw.ElapsedMilliseconds;
 
@@ -124,7 +131,7 @@ namespace RocketLaunch.Views
             }
         }
 
-        public WpfObservableRangeCollection<RunItem> SearchSuggestions { get; set; } = new WpfObservableRangeCollection<RunItem>();
+        public BindingList<RunItem> SearchSuggestions { get; set; } = new BindingList<RunItem>();
         //public ObservableCollection<RunItem> SearchSuggestions { get; set; } = new ObservableCollection<RunItem>();
 
         public int SelectedIndex

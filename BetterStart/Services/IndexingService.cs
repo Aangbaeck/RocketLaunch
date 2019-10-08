@@ -33,14 +33,14 @@ namespace RocketLaunch.Services
         public IndexingService(SettingsService s)
         {
             if (!File.Exists(Common.Directory + "Matcher.trie"))
-                RunIndexing();
+                RunIndexingFirstTime();
             else
             {
                 LoadTries();
                 if (NrOfPaths == 0)
                 {
                     Log.Debug("Something is wrong with the loading. Let's reindex...");
-                    RunIndexing();
+                    RunIndexingFirstTime();
                 }
             }
 
@@ -53,21 +53,28 @@ namespace RocketLaunch.Services
             };
         }
 
+        private void RunIndexingFirstTime()
+        {
+            RunIndexing();
+            //Add settings and other good stuff
+            AddGoodStuffToPrioMatcher();
+        }
+
         public void CleanIndexes()
         {
             if (File.Exists(Common.Directory + "Matcher.trie"))
                 File.Delete(Common.Directory + "Matcher.trie");
             if (File.Exists(Common.Directory + "PrioMatcher.trie"))
                 File.Delete(Common.Directory + "PrioMatcher.trie");
-            Matcher = new Trie.Trie();
-            PrioMatcher = new Trie.Trie();
-            RunIndexing();
+            Matcher = new Indexing.SuffixTree.Trie<RunItem>();
+            PrioMatcher = new Indexing.SuffixTree.Trie<RunItem>();
+            RunIndexingFirstTime();
         }
 
         //General file matcher
-        private Trie.Trie Matcher { get; set; } = new Trie.Trie();
+        private Indexing.SuffixTree.Trie<RunItem> Matcher { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
         //This matcher is for things that has been run before. They are of course more prioritized.
-        private Trie.Trie PrioMatcher { get; set; } = new Trie.Trie();
+        private Indexing.SuffixTree.Trie<RunItem> PrioMatcher { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
 
 
         public SettingsService S { get; set; }
@@ -84,8 +91,10 @@ namespace RocketLaunch.Services
 
         public void RunIndexing()
         {
+            
             Task.Run(() =>
             {
+                IndexingIsRunning = true;
                 var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
                 LastIndexed = DateTime.Now;
                 //Spread out the search on all directories on different tasks
@@ -105,7 +114,7 @@ namespace RocketLaunch.Services
 
                 RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
                 tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
-                var temp = new Trie.Trie();
+                var temp = new Indexing.SuffixTree.Trie<RunItem>();
                 //var sw = new Stopwatch();
                 //sw.Start();
                 for (int i = 0; i < tempList.Length; i++)
@@ -116,35 +125,42 @@ namespace RocketLaunch.Services
                     //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
 
-                //Add settings and other good stuff
-                AddGoodStuffToPrioMatcher();
-
-
                 NrOfPaths = temp.KeyValueObjects.Count;
                 Matcher = temp;
 
                 SaveTries();
+                IndexingIsRunning = false;
             });
+        }
+
+        public bool IndexingIsRunning
+        {
+            get { return _indexingIsRunning; }
+            set { _indexingIsRunning = value; RaisePropertyChanged();}
         }
 
         private void AddGoodStuffToPrioMatcher()
         {
-            foreach (var setting in RunItemFactory.Settings)
+            if (S.Settings.IncludeWindowsSettings)
             {
-                if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
+                foreach (var setting in RunItemFactory.Settings)
                 {
-                    PrioMatcher.Insert(setting.Name.ToLower(), setting);
-                    foreach (var keyWord in setting.KeyWords)
+                    if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
                     {
-                        PrioMatcher.Insert(keyWord, setting);
-                    }
+                        PrioMatcher.Insert(setting.Name.ToLower(), setting);
+                        foreach (var keyWord in setting.KeyWords)
+                        {
+                            PrioMatcher.Insert(keyWord, setting);
+                        }
 
+                    }
                 }
-            }
-            var rundialog = RunItemFactory.RunDialog();
-            if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
-            {
-                PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
+
+                var rundialog = RunItemFactory.RunDialog();
+                if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
+                {
+                    PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
+                }
             }
 
         }
@@ -202,13 +218,13 @@ namespace RocketLaunch.Services
                 var path = Common.Directory + "Matcher.trie";
                 byte[] zip = File.ReadAllBytes(path);
                 string json = zip.Unzip();
-                Matcher = JsonConvert.DeserializeObject<Trie.Trie>(json);
+                Matcher = JsonConvert.DeserializeObject<Indexing.SuffixTree.Trie<RunItem>>(json);
                 NrOfPaths = Matcher.KeyValueObjects.Count;
 
                 path = Common.Directory + "PrioMatcher.trie";
                 zip = File.ReadAllBytes(path);
                 json = zip.Unzip();
-                PrioMatcher = JsonConvert.DeserializeObject<Trie.Trie>(json);
+                PrioMatcher = JsonConvert.DeserializeObject<Indexing.SuffixTree.Trie<RunItem>>(json);
 
             }
             catch (Exception e)
@@ -236,6 +252,7 @@ namespace RocketLaunch.Services
             set { _prioSearchTime = value; RaisePropertyChanged(); }
         }
         private int _totalSearchTime;
+        private bool _indexingIsRunning;
 
         public int TotalSearchTime
         {

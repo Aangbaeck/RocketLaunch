@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,14 +26,14 @@ namespace RocketLaunch.Services
             set { _windowsToOpenAtStart = value; RaisePropertyChanged(); }
         }
 
-        private bool _addWindowsSettings;
+        private bool _includeWindowsSettings = true;
         private string _windowsToOpenAtStart;
         private int _reindexingTime = 20;
 
-        public bool AddWindowsSettings
+        public bool IncludeWindowsSettings
         {
-            get { return _addWindowsSettings; }
-            set { _addWindowsSettings = value; RaisePropertyChanged(); }
+            get { return _includeWindowsSettings; }
+            set { _includeWindowsSettings = value; RaisePropertyChanged(); }
         }
         /// <summary>
         /// time between reindexing (minutes)
@@ -42,7 +43,7 @@ namespace RocketLaunch.Services
             get { return _reindexingTime; }
             set { _reindexingTime = value; RaisePropertyChanged(); }
         }
-        public ObservableCollection<FolderSearch> SearchDirectories { get; set; } = new ObservableCollection<FolderSearch>()
+        public BindingList<FolderSearch> SearchDirectories { get; set; } = new BindingList<FolderSearch>()
         {
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), SearchPattern = "*.*", SearchSubFolders = true },
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), SearchPattern = "*.*", SearchSubFolders = true },
@@ -53,8 +54,8 @@ namespace RocketLaunch.Services
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures), SearchPattern =  "*.*", SearchSubFolders = true },
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), SearchPattern =  "*.*", SearchSubFolders = true },
             new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Downloads).Path, SearchPattern =  "*.*", SearchSubFolders = true },
+            //new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Contacts).Path, SearchPattern =  "*.*", SearchSubFolders = true },
             //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), SearchPattern =  "*.*", SearchSubFolders = true },
-           
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Personal), SearchPattern =  "*.*", SearchSubFolders = true },
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup), SearchPattern =  "*.*", SearchSubFolders = true },
         };
