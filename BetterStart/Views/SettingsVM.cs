@@ -57,7 +57,12 @@ namespace RocketLaunch.Views
         public int SelectedViewIndex
         {
             get { return _selectedViewIndex; }
-            set { _selectedViewIndex = value; RaisePropertyChanged(); }
+            set
+            {
+                if (value != -1)
+                    _selectedViewIndex = value; 
+                RaisePropertyChanged();
+            }
         }
     }
 }

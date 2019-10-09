@@ -76,13 +76,13 @@
                 </ListView.ItemContainerStyle>
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Width="800" Header="Path">
+                        <GridViewColumn Width="500" Header="Path">
                             <GridViewColumn.CellTemplate>
                                 <DataTemplate>
                                     <TextBox
-                                        Width="800"
+                                        Width="480"
                                         Text="{Binding Path}"
-                                        TextWrapping="Wrap"
+                                        TextWrapping="Wrap" TextAlignment="Left"
                                         ToolTip="Folder path to search in" />
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>

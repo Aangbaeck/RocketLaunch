@@ -31,6 +31,10 @@ namespace RocketLaunch.Views
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
         public RelayCommand CloseApplicationCmd => new RelayCommand(() => { System.Windows.Application.Current.Shutdown();});
         public RelayCommand DoubleClickOnItemCmd => new RelayCommand(ExecuteSelectedListViewItem);
+        public RelayCommand ShowRightClickMenuCmd => new RelayCommand(() =>
+        {
+
+        });
 
         public RelayCommand DownKeyPressedCmd => new RelayCommand(() =>
               {

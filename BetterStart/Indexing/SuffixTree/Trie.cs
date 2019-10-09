@@ -11,16 +11,16 @@ namespace RocketLaunch.Indexing.SuffixTree
     [ProtoContract]
     public class Trie<T>
     {
-        [ProtoMember(1, AsReference = true)]
-        public TrieBase InnerTrie { get; set; } = new TrieBase();
+        [ProtoMember(1)]
+        public TrieBase TrieBase { get; set; } = new TrieBase();
 
         [ProtoMember(2)]
-        public Dictionary<string, HashSet<T>> KeyValueObjects { get; set; } = new Dictionary<string, HashSet<T>>(true ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        public Dictionary<string, HashSet<T>> DataDictionary { get; set; } = new Dictionary<string, HashSet<T>>(true ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
 
         public void Insert(string key, T value)
         {
             this.InsertToDictionary(key, value);
-            this.InnerTrie.Insert(key);
+            this.TrieBase.Insert(key);
         }
         /// <summary>
         /// Inserts same value with multiple keys. Some things have similar keywords - lets add all of them.
@@ -38,19 +38,19 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         private void InsertToDictionary(string key, T value)
         {
-            if (!this.KeyValueObjects.ContainsKey(key))
+            if (!this.DataDictionary.ContainsKey(key))
             {
-                this.KeyValueObjects[key] = new HashSet<T>();
+                this.DataDictionary[key] = new HashSet<T>();
             }
-            this.KeyValueObjects[key].Add(value);
+            this.DataDictionary[key].Add(value);
 
         }
 
         public bool Remove(string key)
         {
-            if (this.KeyValueObjects.ContainsKey(key))
+            if (this.DataDictionary.ContainsKey(key))
             {
-                this.KeyValueObjects.Remove(key);
+                this.DataDictionary.Remove(key);
                 return true;
             }
 
@@ -64,9 +64,9 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public bool Remove(string key, T item)
         {
-            if (this.KeyValueObjects.ContainsKey(key))
+            if (this.DataDictionary.ContainsKey(key))
             {
-                return this.KeyValueObjects[key].Remove(item);
+                return this.DataDictionary[key].Remove(item);
             }
 
             return false;
@@ -80,7 +80,7 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public bool Contains(string key)
         {
-            return this.InnerTrie.Contains(key);
+            return this.TrieBase.Contains(key);
         }
 
         public ICollection<T> Search(T item, int nrOfHits)
@@ -92,7 +92,7 @@ namespace RocketLaunch.Indexing.SuffixTree
         {
             var sw = new Stopwatch();
             sw.Start();
-            ICollection<string> strResults = this.InnerTrie.Search(filter, searchType, nrOfHits);
+            ICollection<string> strResults = this.TrieBase.Search(filter, searchType, nrOfHits);
             var t = sw.ElapsedMilliseconds;
             ICollection<T> tResults = this.GetValuesFromKeys(strResults, nrOfHits);
             var t2 = sw.ElapsedMilliseconds;
@@ -111,9 +111,9 @@ namespace RocketLaunch.Indexing.SuffixTree
             List<T> result = new List<T>();
             foreach (string key in keys)
             {
-                if (this.KeyValueObjects.ContainsKey(key))
+                if (this.DataDictionary.ContainsKey(key))
                 {
-                    foreach (T value in this.KeyValueObjects[key])
+                    foreach (T value in this.DataDictionary[key])
                     {
                         if (nrOfHits < result.Count) return result;
                         else

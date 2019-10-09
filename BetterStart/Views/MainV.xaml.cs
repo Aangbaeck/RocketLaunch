@@ -9,6 +9,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 using System.Windows.Threading;
@@ -58,7 +60,7 @@ namespace RocketLaunch.Views
                 ViewModelLocator.Cleanup();
             };
 
-            
+
 
         }
         private void HideWindow(bool b)
@@ -179,7 +181,6 @@ namespace RocketLaunch.Views
         {
             if (e.Source is Card)
             {
-                
                 _mRestoreForDragMove = this.WindowState == WindowState.Maximized;
                 this.DragMove();
             }
@@ -187,15 +188,15 @@ namespace RocketLaunch.Views
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (_mRestoreForDragMove)
-                {
-                    _mRestoreForDragMove = false;
-                    var point = PointToScreen(e.MouseDevice.GetPosition(this));
-                    this.Left = point.X - (this.RestoreBounds.Width * 0.5);
-                    this.Top = point.Y;
-                    this.WindowState = WindowState.Normal;
-                    this.DragMove();
-                }
-            
+            {
+                _mRestoreForDragMove = false;
+                var point = PointToScreen(e.MouseDevice.GetPosition(this));
+                this.Left = point.X - (this.RestoreBounds.Width * 0.5);
+                this.Top = point.Y;
+                this.WindowState = WindowState.Normal;
+                this.DragMove();
+            }
+
         }
         private void MaximizeRestoreWindow(object sender, RoutedEventArgs e)
         {
@@ -225,8 +226,8 @@ namespace RocketLaunch.Views
         public WindowState LastWindowState { get; set; }
         private void Window_Deactivated(object sender, EventArgs e)
         {
-            Messenger.Default.Send<bool>(true,MessengerID.WindowDeactivated);
-            
+            Messenger.Default.Send<bool>(true, MessengerID.WindowDeactivated);
+
             Window window = (Window)sender;
             window.Topmost = true;
         }
@@ -256,5 +257,27 @@ namespace RocketLaunch.Views
                 this.WindowState = WindowState.Minimized;
             }
         }
+        private void Show_PopupToolTip(object sender, MouseEventArgs e)
+        {
+            if (e.RightButton == MouseButtonState.Pressed)
+            {
+                Hide_PopupToolTip(null, null);
+                ListViewItem listViewItem = sender as ListViewItem;
+                
+                RunItem item = listViewItem.Content as RunItem;
+                MyToolTip.PlacementTarget = listViewItem;
+                MyToolTip.Placement = PlacementMode.MousePoint;
+                MyToolTip.IsOpen = true;
+            }
+            else
+            {
+                Hide_PopupToolTip(null, null);
+            }
+        }
+        private void Hide_PopupToolTip(object sender, MouseEventArgs e)
+        {
+            MyToolTip.IsOpen = false;
+        }
+
     }
 }

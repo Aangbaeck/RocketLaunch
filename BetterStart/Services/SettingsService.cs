@@ -16,6 +16,7 @@ namespace RocketLaunch.Services
         public AppSettings Settings { get; set; } = new AppSettings();
         public SettingsService()
         {
+            Settings.ResetSearchDirectoriesToDefaultFolders();
             Load();
             Settings.PropertyChanged += (sender, args) =>
             {

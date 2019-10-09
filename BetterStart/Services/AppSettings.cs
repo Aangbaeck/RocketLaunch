@@ -63,7 +63,7 @@ namespace RocketLaunch.Services
             SearchDirectories.ResetBindings();
 
         }
-        public BindingList<FolderSearch> SearchDirectories { get; set; } = DefaultFolders;
+        public BindingList<FolderSearch> SearchDirectories { get; set; } = new BindingList<FolderSearch>();
         public static BindingList<FolderSearch> DefaultFolders => new BindingList<FolderSearch>()
         {
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), SearchPattern = "*.*", SearchSubFolders = true },

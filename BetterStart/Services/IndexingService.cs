@@ -11,10 +11,13 @@ using RocketLaunch.Model;
 using GalaSoft.MvvmLight;
 using Newtonsoft.Json;
 using System.IO.Compression;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using IWshRuntimeLibrary;
+using Newtonsoft.Json.Bson;
 using ProtoBuf;
 using Newtonsoft.Json.Serialization;
+using RocketLaunch.Indexing.SuffixTree;
 using Serilog;
 using Trie;
 using TrieImplementation;
@@ -33,9 +36,7 @@ namespace RocketLaunch.Services
         public IndexingService(SettingsService s)
         {
             S = s;
-            if (!File.Exists(Common.Directory + "Matcher.trie"))
-                RunIndexingFirstTime();
-            else
+            if (File.Exists(Common.Directory + "Matcher.trie") && File.Exists(Common.Directory + "PrioMatcher.trie"))
             {
                 LoadTries();
                 if (NrOfPaths == 0)
@@ -44,6 +45,8 @@ namespace RocketLaunch.Services
                     RunIndexingFirstTime();
                 }
             }
+            else
+                RunIndexingFirstTime();
 
 
             var timer = new Timer(s.Settings.ReindexingTime * 1000 * 60);
@@ -126,7 +129,7 @@ namespace RocketLaunch.Services
                     //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
                 }
 
-                NrOfPaths = temp.KeyValueObjects.Count;
+                NrOfPaths = temp.DataDictionary.Count;
                 Matcher = temp;
 
                 SaveTries();
@@ -148,7 +151,7 @@ namespace RocketLaunch.Services
                 {
                     foreach (var setting in RunItemFactory.Settings)
                     {
-                        if (!PrioMatcher.KeyValueObjects.ContainsKey(setting.Name))
+                        if (!PrioMatcher.DataDictionary.ContainsKey(setting.Name))
                         {
                             PrioMatcher.Insert(setting.Name.ToLower(), setting);
                             foreach (var keyWord in setting.KeyWords)
@@ -161,12 +164,12 @@ namespace RocketLaunch.Services
                     }
 
                     var rundialog = RunItemFactory.RunDialog();
-                    if (!PrioMatcher.KeyValueObjects.ContainsKey(rundialog.Name))
+                    if (!PrioMatcher.DataDictionary.ContainsKey(rundialog.Name))
                     {
                         PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
                     }
                     var turnOff = RunItemFactory.TurnOff();
-                    if (!PrioMatcher.KeyValueObjects.ContainsKey(turnOff.Name))
+                    if (!PrioMatcher.DataDictionary.ContainsKey(turnOff.Name))
                     {
                         PrioMatcher.Insert(turnOff.Name.ToLower(), turnOff);
                     }
@@ -179,17 +182,17 @@ namespace RocketLaunch.Services
         {
             try
             {
-                var json = JsonConvert.SerializeObject(PrioMatcher, Formatting.None, new JsonSerializerSettings
+                Log.Debug("Saving prio trie");
+                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "PrioMatcher.trie"), FileMode.Create))
                 {
-                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
-                });
-                var zip = json.Zip();
-                File.WriteAllBytes(Common.Directory + "PrioMatcher.trie", zip);
+                    Serializer.Serialize(fs, PrioMatcher);
+                    fs.Flush();
+                }
 
             }
             catch (Exception e)
             {
-                Log.Error(e, "Could not save trie");
+                Log.Error(e, "Could not save prio trie");
 
             }
         }
@@ -198,21 +201,13 @@ namespace RocketLaunch.Services
         {
             try
             {
-                //var json = JsonConvert.SerializeObject(Matcher,Formatting.None, new JsonSerializerSettings{ PreserveReferencesHandling = PreserveReferencesHandling.Objects });
-                var json = JsonConvert.SerializeObject(Matcher, Formatting.None, new JsonSerializerSettings
+                Log.Debug("Saving general trie");
+                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "Matcher.trie"), FileMode.Create))
                 {
-                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
-                });
-                var zip = json.Zip();
-                File.WriteAllBytes(Common.Directory + "Matcher.trie", zip);
-
-                json = JsonConvert.SerializeObject(PrioMatcher, Formatting.None, new JsonSerializerSettings
-                {
-                    PreserveReferencesHandling = PreserveReferencesHandling.Objects
-                });
-                zip = json.Zip();
-                File.WriteAllBytes(Common.Directory + "PrioMatcher.trie", zip);
-
+                    Serializer.Serialize(fs, Matcher);
+                    fs.Flush();
+                }
+                SavePrioTrie();
             }
             catch (Exception e)
             {
@@ -225,17 +220,19 @@ namespace RocketLaunch.Services
         {
             try
             {
-                var path = Common.Directory + "Matcher.trie";
-                byte[] zip = File.ReadAllBytes(path);
-                string json = zip.Unzip();
-                Matcher = JsonConvert.DeserializeObject<Indexing.SuffixTree.Trie<RunItem>>(json);
-                NrOfPaths = Matcher.KeyValueObjects.Count;
+                Log.Debug("Loading general trie");
+                using (var file = File.OpenRead(Common.Directory + "Matcher.trie"))
+                {
+                    Matcher = Serializer.Deserialize<Trie<RunItem>>(file);
+                }
 
-                path = Common.Directory + "PrioMatcher.trie";
-                zip = File.ReadAllBytes(path);
-                json = zip.Unzip();
-                PrioMatcher = JsonConvert.DeserializeObject<Indexing.SuffixTree.Trie<RunItem>>(json);
+                NrOfPaths = Matcher.DataDictionary.Count;
 
+                Log.Debug("Loading prio trie");
+                using (var file = File.OpenRead(Common.Directory + "PrioMatcher.trie"))
+                {
+                    PrioMatcher = Serializer.Deserialize<Trie<RunItem>>(file);
+                }
             }
             catch (Exception e)
             {
@@ -279,11 +276,17 @@ namespace RocketLaunch.Services
             GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
             var count = nrOfHits;
-            if (s == "") count = Math.Min(PrioMatcher.KeyValueObjects.Count, 50);
+            if (s == "") count = Math.Min(PrioMatcher.DataDictionary.Count, 50);
             ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, count);
             prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
             prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
             prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.First()).ToList();  //remove potential duplicates
+                                                                                                               //for (int i = 0; i < UPPER; i++)
+                                                                                                               //{
+
+            //}
+
+
             PrioSearchTime = (int)sw.ElapsedTicks;
             TotalSearchTime = GeneralSearchTime + PrioSearchTime;
             return prioResult.Take(10).ToList();

@@ -22,8 +22,8 @@ namespace TrieImplementation
         /// <summary>
         /// The first Node in the Trie
         /// </summary>
-        [ProtoMember(3, AsReference = true)]
-        public TrieNode Root { get; set; }=new TrieNode(TrieNode.EmptyValue, TrieNode.NoParent, false);
+        [ProtoMember(2)]
+        public TrieNode Root { get; set; }=new TrieNode(Char.MinValue, null, false);
 
         #region Insertion
         

@@ -1,5 +1,4 @@
 ﻿using GalaSoft.MvvmLight.Messaging;
-using Gma.System.MouseKeyHook;
 using Serilog;
 using System;
 using System.Collections.Generic;
@@ -55,28 +54,7 @@ namespace RocketLaunch.Services
                 Trigger();
             }
         }
-
-        //private int skipWin = 0;
-        //private void CheckIfOtherKeyFollows(KeyState state)
-        //{
-        //    if (state.Key == Keys.LWin)
-        //    {
-        //        winDown = state.IsPressed;
-        //        return;
-        //    }
-        //    //if (skipWin > 0)
-        //    //{
-        //    //    skipWin--;
-
-        //    //    return;
-        //    //}
-        //    if (winDown)
-        //    {
-        //        skipWin = 2;
-        //        InputSimulator.Keyboard.ModifiedKeyStroke(VirtualKeyCode.LWIN, (VirtualKeyCode)state.Key);
-        //        Log.Debug("Send virtual Win+E");
-        //    }
-        //}
+        
     }
     public class KeyState
     {
