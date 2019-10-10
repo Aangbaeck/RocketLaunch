@@ -27,10 +27,17 @@ namespace RocketLaunch.Views
         private bool _isFocused;
 
         public RelayCommand OpenSettingsWindowCmd => new RelayCommand(() => { SelectedViewIndex = 1; });
+        public RelayCommand OpenAboutWindowCmd => new RelayCommand(() => { SelectedViewIndex = 2; });
         public RelayCommand ToggleDebugMode => new RelayCommand(() => { S.Settings.DebugMode = !S.Settings.DebugMode; });
-        public RelayCommand ExecuteFirstListViewItem => new RelayCommand(ExecuteSelectedListViewItem);
-        public RelayCommand CloseApplicationCmd => new RelayCommand(() => { System.Windows.Application.Current.Shutdown();});
-        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(ExecuteSelectedListViewItem);
+        public RelayCommand ExecuteFirstListViewItem => new RelayCommand(() => { ExecuteSelectedListViewItem(false); });
+        public RelayCommand ExecuteAsAdminCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(true); });
+        public RelayCommand ResetCounterCmd => new RelayCommand(ResetCounter );
+
+        
+
+        public RelayCommand OpenContaningFolderCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(openContainingFolder:true); });
+        public RelayCommand CloseApplicationCmd => new RelayCommand(() => { System.Windows.Application.Current.Shutdown(); });
+        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(false); });
         public RelayCommand ShowRightClickMenuCmd => new RelayCommand(() =>
         {
 
@@ -47,29 +54,7 @@ namespace RocketLaunch.Views
                 SelectedIndex--;
         });
 
-        private void ExecuteSelectedListViewItem()
-        {
-            try
-            {
-                Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
-                var index = 0;
-                if (StoredSelectedIndex > 0)
-                    index = StoredSelectedIndex;
-                if (SearchSuggestions.Count > 0)
-                {
-                    RunItemFactory.Start(SearchSuggestions[index]);
 
-                    Indexing.AddExecutedItem(SearchSuggestions[index]);
-                    Indexing.SavePrioTrie();
-                    SearchString = _searchString;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error(e, "Could not execute application");
-
-            }
-        }
         public int SelectedViewIndex
         {
             get { return _selectedViewIndex; }
@@ -139,6 +124,47 @@ namespace RocketLaunch.Views
         public BindingList<RunItem> SearchSuggestions { get; set; } = new BindingList<RunItem>();
         //public ObservableCollection<RunItem> SearchSuggestions { get; set; } = new ObservableCollection<RunItem>();
 
+
+        
+
+        private void ExecuteSelectedListViewItem(bool asAdmin = false, bool openContainingFolder = false)
+        {
+            try
+            {
+                Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
+                var index = 0;
+                if (StoredSelectedIndex > 0)
+                    index = StoredSelectedIndex;
+                if (SearchSuggestions.Count > 0)
+                {
+                    RunItemFactory.Start(SearchSuggestions[index], asAdmin, openContainingFolder);
+                    if (!openContainingFolder) //We didn't actually start the application. Just the folder. Ignore the counter
+                    {
+                        Indexing.AddExecutedItem(SearchSuggestions[index]);
+                        Indexing.SavePrioTrie();
+                    }
+
+                    SearchString = _searchString;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error(e, "Could not execute application");
+
+            }
+        }
+        private void ResetCounter()
+        {
+            var index = 0;
+            if (StoredSelectedIndex > 0)
+                index = StoredSelectedIndex;
+            if (SearchSuggestions.Count > 0)
+            {
+                Indexing.ResetItemRunCounter(SearchSuggestions[index]);
+                Indexing.SavePrioTrie();
+                SearchString = _searchString;
+            }
+        }
         public int SelectedIndex
         {
             get { return _selectedIndex; }
@@ -153,24 +179,14 @@ namespace RocketLaunch.Views
 
         public int StoredSelectedIndex { get; set; }
 
-        private static readonly PaletteHelper _paletteHelper = new PaletteHelper();
+        
 
 
         private string _searchString;
         private int _selectedIndex = -1;
         private int _selectedViewIndex = 0;
 
-        private static void ApplyBase(bool isDark)
-        {
-            ModifyTheme(theme => theme.SetBaseTheme(isDark ? Theme.Dark : Theme.Light));
-        }
-        private static void ModifyTheme(Action<ITheme> modificationAction)
-        {
-            PaletteHelper paletteHelper = new PaletteHelper();
-            ITheme theme = paletteHelper.GetTheme();
-            modificationAction?.Invoke(theme);
-            paletteHelper.SetTheme(theme);
-        }
+        
         /// <summary>
         /// Initializes a new instance of the MainViewModel class. IOC
         /// </summary>

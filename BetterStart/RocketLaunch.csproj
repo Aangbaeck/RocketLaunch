@@ -19,7 +19,7 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -29,9 +29,10 @@
     <WarningLevel>4</WarningLevel>
     <RunCodeAnalysis>true</RunCodeAnalysis>
     <LangVersion>8.0</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x64</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -39,6 +40,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>8.0</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Assets\rocket.ico</ApplicationIcon>
@@ -75,9 +77,6 @@
     <Compile Include="Helper\WindowPlacement.cs" />
     <Compile Include="Helper\WPFConverters.cs" />
     <Compile Include="Helper\ZipUnzip.cs" />
-    <Compile Include="Indexing\SuffixTree\CharComparer.cs" />
-    <Compile Include="Indexing\SuffixTree\ITrie.cs" />
-    <Compile Include="Indexing\SuffixTree\SearchType.cs" />
     <Compile Include="Indexing\SuffixTree\Trie.cs" />
     <Compile Include="Indexing\SuffixTree\TrieBase.cs" />
     <Compile Include="Indexing\SuffixTree\TrieNode.cs" />
@@ -90,6 +89,9 @@
     <Compile Include="InterceptKeys.cs" />
     <Compile Include="MessengerID.cs" />
     <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Views\AboutUserCtrl.xaml.cs">
+      <DependentUpon>AboutUserCtrl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\SettingsGeneralV.xaml.cs">
       <DependentUpon>SettingsGeneralV.xaml</DependentUpon>
     </Compile>
@@ -109,6 +111,10 @@
       <DependentUpon>TitlebarUserCtrl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\ViewModelLocator.cs" />
+    <Page Include="Views\AboutUserCtrl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\MainV.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -161,9 +167,6 @@
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
     <AppDesigner Include="Properties\" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets\CustomIcons\run_command.png" />
@@ -265,9 +268,13 @@
     <Resource Include="Assets\CustomIcons\workplace.png" />
     <Resource Include="Assets\CustomIcons\yourinfo.png" />
     <Resource Include="Assets\CustomIcons\turnoff.png" />
-    <Content Include="Assets\rocket.svg">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Resource Include="Assets\CustomIcons\hibernate.png" />
+    <Resource Include="Assets\CustomIcons\lock.png" />
+    <Resource Include="Assets\CustomIcons\lockcomputer.png" />
+    <Resource Include="Assets\CustomIcons\logoff.png" />
+    <Resource Include="Assets\CustomIcons\restart.png" />
+    <Resource Include="Assets\CustomIcons\sleep.png" />
+    <Resource Include="Assets\rocket.svg" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="AutoMapper">
@@ -278,6 +285,9 @@
     </PackageReference>
     <PackageReference Include="ConvertersWPF">
       <Version>1.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Costura.Fody">
+      <Version>4.1.0</Version>
     </PackageReference>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
       <Version>1.0.8</Version>

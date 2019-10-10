@@ -7,6 +7,7 @@
     xmlns:local="clr-namespace:RocketLaunch.Views"
     xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:convertersWpf="clr-namespace:ConvertersWPF;assembly=ConvertersWPF"
     d:DesignHeight="450"
     TextElement.FontSize="16"
     TextElement.FontWeight="Medium"
@@ -28,16 +29,19 @@
                     Content="Include windows settings"
                     IsChecked="{Binding S.Settings.IncludeWindowsSettings}"
                     ToolTip="Include windows settings in the results." />
-                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" IsEnabled="{convertersWpf:SwitchBinding IndexService.IndexingIsRunning, False, True}">
                     <Button
                         Margin="10"
                         Command="{Binding RefreshIndexingCmd}"
-                        Content="Refresh Indexing"
+                        Content="Refresh Indexing" 
+                        materialDesign:ButtonProgressAssist.IsIndeterminate="True"
+                        materialDesign:ButtonProgressAssist.IsIndicatorVisible="{Binding IndexService.IndexingIsRunning}"
+                        materialDesign:ButtonProgressAssist.Value="-1"
                         ToolTip="Search folders for new files" />
                     <Button
                         Margin="10"
                         Command="{Binding ResetFolderToDefaultCmd}"
-                        Content="Reset to default folders"
+                        Content="Reset to default folders" 
                         ToolTip="Remove all folders and set it back to default folders." />
 
                     <Button

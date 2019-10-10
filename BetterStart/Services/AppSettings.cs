@@ -35,7 +35,8 @@ namespace RocketLaunch.Services
         private bool _includeWindowsSettings = true;
         private string _windowsToOpenAtStart;
         private int _reindexingTime = 20;
-        private bool _autoStart;
+        private bool _autoStart = true;
+        private bool _darkTheme = true;
 
         public bool IncludeWindowsSettings
         {
@@ -49,6 +50,12 @@ namespace RocketLaunch.Services
         {
             get { return _reindexingTime; }
             set { _reindexingTime = value; RaisePropertyChanged(); }
+        }
+
+        public bool DarkTheme
+        {
+            get { return _darkTheme; }
+            set { _darkTheme = value; RaisePropertyChanged();}
         }
 
         public void ResetSearchDirectoriesToDefaultFolders()

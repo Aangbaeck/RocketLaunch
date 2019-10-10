@@ -38,7 +38,7 @@ namespace RocketLaunch.Indexing.SuffixTree
         public TrieNode ParentNode { get; set; }
 
         [ProtoMember(4)]
-        public Dictionary<char, TrieNode> Children { get; private set; } = new Dictionary<char, TrieNode>(new CharComparer(true));
+        public Dictionary<char, TrieNode> Children { get; private set; } = new Dictionary<char, TrieNode>();
 
         public int ChildrenCount
         {

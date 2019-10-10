@@ -18,6 +18,7 @@ namespace RocketLaunch.Services
         {
             Settings.ResetSearchDirectoriesToDefaultFolders();
             Load();
+            AutoStart = Settings.AutoStart;  //Make sure the settings are applied and there is a link in the startup folder.
             Settings.PropertyChanged += (sender, args) =>
             {
                 Save();
@@ -38,10 +39,10 @@ namespace RocketLaunch.Services
             set
             {
                 Settings.AutoStart = value;
+                File.Delete(_startupPath);  //Reset with new file if there is a new path or something
                 if (value)
-                    CreateShortCutInAutoStart();
-                else
-                    File.Delete(_startupPath);
+                    CreateShortCutInAutoStart();  
+                
                 RaisePropertyChanged();
             }
         }
@@ -64,17 +65,23 @@ namespace RocketLaunch.Services
         {
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(Common.SettingsPath) ?? "");
-                var json = File.ReadAllText(Common.SettingsPath);
-                AppSettings localAppsettings = JsonConvert.DeserializeObject<AppSettings>(json);
-
-                var config = new MapperConfiguration(cfg =>
+                if (File.Exists(Common.SettingsPath))
                 {
-                    cfg.CreateMap<AppSettings, AppSettings>();
-                });
+                    Directory.CreateDirectory(Path.GetDirectoryName(Common.SettingsPath) ?? "");
+                    var json = File.ReadAllText(Common.SettingsPath);
+                    AppSettings localAppsettings = JsonConvert.DeserializeObject<AppSettings>(json);
 
-                IMapper iMapper = config.CreateMapper();
-                iMapper.Map(localAppsettings,Settings);
+                    var config = new MapperConfiguration(cfg => { cfg.CreateMap<AppSettings, AppSettings>(); });
+
+                    IMapper iMapper = config.CreateMapper();
+                    iMapper.Map(localAppsettings, Settings);
+                }
+                else
+                {
+                    Log.Debug("First time starting application. Creating save files");
+                    Save();
+                }
+                
 
             }
 

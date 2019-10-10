@@ -1,29 +1,16 @@
 ﻿using System;
-using System.CodeDom;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
 using MaterialDesignThemes.Wpf;
-using Newtonsoft.Json;
 using RocketLaunch.Helper;
 using RocketLaunch.Model;
 using Serilog;
-using Serilog.Formatting.Json;
-using Path = System.IO.Path;
-using static RocketLaunch.App;
 using RocketLaunch.Services;
 
 namespace RocketLaunch.Views
@@ -32,42 +19,31 @@ namespace RocketLaunch.Views
     {
         public MainV()
         {
+            
             Application.Current.DispatcherUnhandledException += ThreadStuffUI;
             SimpleIoc.Default.Register<SettingsService>();
             S = SimpleIoc.Default.GetInstance<SettingsService>();
 
             Log.Information("STARTING APPLICATION...");
             InitializeComponent();
-            Messenger.Default.Register<Type>(this, MessengerID.MainWindowV, OpenAnotherWindow);
             Messenger.Default.Register<KeyState>(this, MessengerID.WinKeyPressed, HideShowWindow);
             Messenger.Default.Register<bool>(this, MessengerID.HideWindow, HideWindow);
             Closing += (s, e) =>
             {
                 Log.Information("CLOSING APPLICATION...");
                 this.SavePlacement();  //Saves this windows position
-                var listOfWindowsToOpenNextTime = new List<Type>();
-                var windows = Application.Current.Windows;  //Close every window individually to save their position
-                foreach (Window window in windows)
-                {
-                    var t = window.GetType();
-                    if (window == this || t.Name == "AdornerLayerWindow") continue;  //We will close this window below
-                    listOfWindowsToOpenNextTime.Add(window.GetType());
-                    window.Close();
-                }
-
-                var startWindows = JsonConvert.SerializeObject(listOfWindowsToOpenNextTime);
-                S.Settings.WindowsToOpenAtStart = startWindows;
                 ViewModelLocator.Cleanup();
             };
-
-
-
         }
         private void HideWindow(bool b)
         {
             //((Storyboard)FindResource("FadeOut")).Begin(this);
             //Wait(300);
+            this.Hide();
+            SearchTextBox.SelectAll();
+            Hide_PopupToolTip(null,null);
             this.WindowState = WindowState.Minimized;
+            
         }
 
         private void HideShowWindow(KeyState state)
@@ -100,64 +76,15 @@ namespace RocketLaunch.Views
             this.LoadPlacement();  //Sets the last position of the window
         }
 
-        private void OpenAnotherWindow(Type window)
-        {
-            //if (typeof(SettingsV) == window)
-            //{
-            //    if (IsWindowOpen<SettingsV>())  //If window is already open, why open another?
-            //        Application.Current.Windows.OfType<SettingsV>().First().Activate(); //Attempts to bring the current window to the foreground
-            //    else
-            //        new SettingsV() { Owner = this }.Show();
-            //}
-            //else if (typeof(AnotherV) == window)
-            //{
-            //    if (IsWindowOpen<AnotherV>())
-            //        Application.Current.Windows.OfType<AnotherV>().First().Activate(); //Attempts to bring the current window to the foreground
-            //    else
-            //        new AnotherV() { Owner = this }.Show();
-            //}
-        }
-
-
-        /// <summary>
-        /// This method will check for custom windows as well by specifying T to window type
-        /// </summary>
-        public static bool IsWindowOpen<T>(string name = "") where T : Window
-        {
-            return string.IsNullOrEmpty(name)
-                ? Application.Current.Windows.OfType<T>().Any()
-                : Application.Current.Windows.OfType<T>().Any(w => w.Name.Equals(name));
-        }
+        
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                var startWindows = JsonConvert.DeserializeObject<List<Type>>(S.Settings.WindowsToOpenAtStart);
-                foreach (var w in startWindows)
-                {
-                    try
-                    {
-                        OpenAnotherWindow(w);
-                    }
-                    catch
-                    {
-                        //ignore
-                    }
-
-                }
-            }
-            catch
-            {
-                Log.Error("Could not read window positions setting.");
-            }
-
             SearchTextBox.Focusable = true;
             Keyboard.Focus(SearchTextBox);
 
             var window = Window.GetWindow(this);
-            window.KeyDown += HandleKeyPress;
-
+            if (window != null) window.KeyDown += HandleKeyPress;
         }
 
         private void HandleKeyPress(object sender, KeyEventArgs e)
@@ -173,9 +100,7 @@ namespace RocketLaunch.Views
         {
             Log.Error(e.Exception, "Some UI Error!");
         }
-
-
-
+        
         //These mouse methods is used for normal window behavour and still it's a borderless stylable window
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -197,19 +122,6 @@ namespace RocketLaunch.Views
                 this.DragMove();
             }
 
-        }
-        private void MaximizeRestoreWindow(object sender, RoutedEventArgs e)
-        {
-            if (this.WindowState == WindowState.Maximized)
-            {
-                this.WindowState = WindowState.Normal;
-                this.ToolTip = "Maximize";
-            }
-            else if (this.WindowState == WindowState.Normal)
-            {
-                this.WindowState = WindowState.Maximized;
-                this.ToolTip = "Restore";
-            }
         }
         private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
@@ -237,24 +149,29 @@ namespace RocketLaunch.Views
             SearchTextBox.Focus();
         }
 
-
         private void ToogleWindowState(object sender, RoutedEventArgs e)
         {
             if (this.WindowState == WindowState.Minimized)
+            
             {
-                //Log.Debug("In");
+                this.Activate();
+                //this.Focus();
+                //Log.Debug("In");d
                 //this.Opacity = 0;
                 //((Storyboard)FindResource("FadeIn")).Begin(this);
                 this.WindowState = WindowState.Normal;
                 //Wait(300);
+                this.Show();
                 SearchTextBox.SelectAll();
+                SearchTextBox.Focus();
+                
             }
             else
             {
                 //Log.Debug("Out");
                 //((Storyboard) FindResource("FadeOut")).Begin(this);
                 //Wait(300);
-                this.WindowState = WindowState.Minimized;
+                HideWindow(true);
             }
         }
         private void Show_PopupToolTip(object sender, MouseEventArgs e)
@@ -279,5 +196,33 @@ namespace RocketLaunch.Views
             MyToolTip.IsOpen = false;
         }
 
+        private void HidePopupAndResetFocusOnTextBoox(object sender, MouseEventArgs e)
+        {
+            MyToolTip.IsOpen = false;
+            SearchTextBox.Focus();
+            
+        }
+        private void Hide_Window(object sender, MouseButtonEventArgs e)
+        {
+            HideWindow(true);
+        }
+        private void ListView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ListView listView = sender as ListView;
+            GridView gView = listView.View as GridView;
+
+            var workingWidth = listView.ActualWidth - SystemParameters.VerticalScrollBarWidth; // take into account vertical scrollbar
+            var col1 = 0.92;
+            var col2 = 0.07;
+            
+            gView.Columns[0].Width = workingWidth * col1;
+            gView.Columns[1].Width = workingWidth * col2;
+            
+        }
+
+        private void MainV_OnLostFocus(object sender, RoutedEventArgs e)
+        {
+            //HideWindow(true);
+        }
     }
 }

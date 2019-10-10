@@ -136,6 +136,11 @@ namespace RocketLaunch.Model
         ControlPanelSetting,
         Directory,
         RunDialog,
-        TurnOffComputer
+        TurnOffComputer,
+        RestartComputer,
+        LogOffComputer,
+        LockComputer,
+        Hibernate,
+        Sleep
     }
 }

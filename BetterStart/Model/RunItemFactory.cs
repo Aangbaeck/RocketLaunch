@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -9,29 +9,64 @@ namespace RocketLaunch.Model
 {
     public static class RunItemFactory
     {
-        public static void Start(RunItem item)
+        public static void Start(RunItem item, bool asAdmin, bool openContainingFolder)
         {
             switch (item.Type)
             {
                 case ItemType.File:
-                    System.Diagnostics.Process.Start(item.URI);
+                    if (asAdmin)
+                    {
+                        ExecuteAsAdmin(item.URI);
+                    }
+                    else if (openContainingFolder)
+                    {
+                        var dir = Path.GetDirectoryName(item.URI);
+                        if (dir != null) Process.Start(dir);
+                    }
+                    else  //The normal start
+                    {
+                        Process.Start(item.URI);
+                    }
                     break;
                 case ItemType.Directory:
-                    System.Diagnostics.Process.Start(item.URI);
+                    Process.Start(item.URI);
                     break;
                 case ItemType.RunDialog:
                     Task.Run(() => { RunFileDlg(IntPtr.Zero, IntPtr.Zero, null, null, null, 0); });  //Fire away this. We don't need to hold on to it...
                     break;
                 case ItemType.ControlPanelSetting:
-                    System.Diagnostics.Process.Start(item.Command);
+                    Process.Start(item.Command);
                     break;
                 case ItemType.TurnOffComputer:
                     Process.Start("shutdown", "/s /t 0");
                     break;
+                case ItemType.RestartComputer:
+                    Process.Start("shutdown","/r /t 0"); // the argument /r is to restart the computer
+                    break;
+                case ItemType.LogOffComputer:
+                    ExitWindowsEx(0, 0);
+                    break;
+                case ItemType.LockComputer:
+                    LockWorkStation();
+                    break;
+                case ItemType.Hibernate:
+                    SetSuspendState(true, true, true);
+                    break;
+                case ItemType.Sleep:
+                    SetSuspendState(false, true, true);
+                    break;
 
             }
         }
-
+        public static void ExecuteAsAdmin(string fileName)
+        {
+            Process proc = new Process();
+            proc.StartInfo.FileName = fileName;
+            proc.StartInfo.UseShellExecute = true;
+            if (Path.GetExtension(fileName) == ".exe") 
+                proc.StartInfo.Verb = "runas";  //This forces it to use admin rights
+            proc.Start();
+        }
         public static RunItem Setting(string name, List<string> keyWords, string description, string command, string customIcon)
         {
             return new RunItem() { Name = name, KeyWords = keyWords, URI = description, Type = ItemType.ControlPanelSetting, Command = command, CustomIconName = customIcon };
@@ -40,10 +75,37 @@ namespace RocketLaunch.Model
         {
             return new RunItem() { Name = "Run", URI = "Run file dialog Windows", Type = ItemType.RunDialog, CustomIconName = "run_command.png" };
         }
-        public static RunItem TurnOff()
+        public static RunItem TurnOffComputer()
         {
-            return new RunItem() { Name = "Turn off", URI = "Turn off windows", Type = ItemType.TurnOffComputer, CustomIconName = "turnoff.png" };
+            return new RunItem() { Name = "Turn off", URI = "Turn off computer", Type = ItemType.TurnOffComputer, CustomIconName = "turnoff.png" };
         }
+        public static RunItem RestartComputer()
+        {
+            return new RunItem() { Name = "Restart", URI = "Restart computer", Type = ItemType.RestartComputer, CustomIconName = "restart.png" };
+        }
+        public static RunItem LogOffWindows()
+        {
+            return new RunItem() { Name = "Log Off", URI = "Log out of windows", Type = ItemType.LogOffComputer, CustomIconName = "logoff.png" };
+        }
+        public static RunItem LockWindows()
+        {
+            return new RunItem() { Name = "Lock computer", URI = "Lock this computer", Type = ItemType.LockComputer, CustomIconName = "lockcomputer.png" };
+        }
+        public static RunItem HibernateWindows()
+        {
+            return new RunItem() { Name = "Hibernate computer", URI = "Hibernate this computer", Type = ItemType.Hibernate, CustomIconName = "hibernate.png" };
+        }
+        public static RunItem SleepWindows()
+        {
+            return new RunItem() { Name = "Sleep ZZzzz", URI = "Make computer sleep", Type = ItemType.Sleep, CustomIconName = "sleep.png" };
+        }
+
+        [DllImport("user32")]
+        public static extern void LockWorkStation();
+        [DllImport("user32")]
+        public static extern bool ExitWindowsEx(uint uFlags, uint dwReason);
+        [DllImport("PowrProf.dll", CharSet = CharSet.Auto, ExactSpelling = true)]
+        public static extern bool SetSuspendState(bool hiberate, bool forceCritical, bool disableWakeEvent);
 
 
         public static List<RunItem> Settings { get; } = new List<RunItem>()
@@ -101,8 +163,8 @@ namespace RocketLaunch.Model
             RunItemFactory.Setting("Family & other people", new List<string>(){"Accounts"}, "System Settings - Accounts","ms-settings:otherusers","otherusers.png"),
             RunItemFactory.Setting("Sync your settings", new List<string>(){"Accounts"}, "System Settings - Accounts","ms-settings:sync","sync.png"),
             
-            RunItemFactory.Setting("Date & time", new List<string>(){}, "System Settings - Time","ms-settings:dateandtime","dateandtime.png"),
-            RunItemFactory.Setting("Region & language", new List<string>(){}, "System Settings - Language","ms-settings:regionlanguage","regionlanguage.png"),
+            RunItemFactory.Setting("Date & time", new List<string>(), "System Settings - Time","ms-settings:dateandtime","dateandtime.png"),
+            RunItemFactory.Setting("Region & language", new List<string>(), "System Settings - Language","ms-settings:regionlanguage","regionlanguage.png"),
             RunItemFactory.Setting("Speech", new List<string>(){"Language"}, "System Settings - Language","ms-settings:speech","speech.png"),
             
             RunItemFactory.Setting("Game bar", new List<string>(){"Gaming"}, "System Settings - Gaming","ms-settings:gaming-gamebar","gaming-gamebar.png"),

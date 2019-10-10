@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,6 @@ using ProtoBuf;
 using Newtonsoft.Json.Serialization;
 using RocketLaunch.Indexing.SuffixTree;
 using Serilog;
-using Trie;
 using TrieImplementation;
 using File = System.IO.File;
 
@@ -36,7 +36,7 @@ namespace RocketLaunch.Services
         public IndexingService(SettingsService s)
         {
             S = s;
-            if (File.Exists(Common.Directory + "Matcher.trie") && File.Exists(Common.Directory + "PrioMatcher.trie"))
+            if (File.Exists(Common.Directory + "MatcherGeneral.trie") && File.Exists(Common.Directory + "MatcherPrio.trie"))
             {
                 LoadTries();
                 if (NrOfPaths == 0)
@@ -48,6 +48,7 @@ namespace RocketLaunch.Services
             else
                 RunIndexingFirstTime();
 
+            S.Settings.SearchDirectories.ListChanged += ListChanged;
 
             var timer = new Timer(s.Settings.ReindexingTime * 1000 * 60);
             timer.Start();
@@ -55,6 +56,35 @@ namespace RocketLaunch.Services
             {
                 RunIndexing();
             };
+        }
+
+        private void ListChanged(object sender, ListChangedEventArgs e)
+        {
+            try
+            {
+                if (e.ListChangedType == ListChangedType.ItemAdded)
+                {
+                    RunIndexingOnSingleFolder(S.Settings.SearchDirectories[e.NewIndex]);
+                }
+                else if (e.ListChangedType == ListChangedType.ItemChanged && e.PropertyDescriptor.Name != nameof(FolderSearch.NrOfFiles)) //We don't care if the count has changed
+                {
+                    RunIndexingOnSingleFolder(S.Settings.SearchDirectories[e.NewIndex]);
+                }
+                else if (e.ListChangedType == ListChangedType.ItemDeleted)
+                {
+                    RunIndexing();
+                }
+                else
+                {
+
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception, "Could not update indexes when search paths list changed");
+            }
+
+
         }
 
         private void RunIndexingFirstTime()
@@ -66,19 +96,19 @@ namespace RocketLaunch.Services
 
         public void CleanIndexes()
         {
-            if (File.Exists(Common.Directory + "Matcher.trie"))
-                File.Delete(Common.Directory + "Matcher.trie");
-            if (File.Exists(Common.Directory + "PrioMatcher.trie"))
-                File.Delete(Common.Directory + "PrioMatcher.trie");
-            Matcher = new Indexing.SuffixTree.Trie<RunItem>();
-            PrioMatcher = new Indexing.SuffixTree.Trie<RunItem>();
+            if (File.Exists(Common.Directory + "MatcherGeneral.trie"))
+                File.Delete(Common.Directory + "MatcherGeneral.trie");
+            if (File.Exists(Common.Directory + "MatcherPrio.trie"))
+                File.Delete(Common.Directory + "MatcherPrio.trie");
+            MatcherGeneral = new Indexing.SuffixTree.Trie<RunItem>();
+            MatcherPrio = new Indexing.SuffixTree.Trie<RunItem>();
             RunIndexingFirstTime();
         }
 
         //General file matcher
-        private Indexing.SuffixTree.Trie<RunItem> Matcher { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
+        private Indexing.SuffixTree.Trie<RunItem> MatcherGeneral { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
         //This matcher is for things that has been run before. They are of course more prioritized.
-        private Indexing.SuffixTree.Trie<RunItem> PrioMatcher { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
+        private Indexing.SuffixTree.Trie<RunItem> MatcherPrio { get; set; } = new Indexing.SuffixTree.Trie<RunItem>();
 
 
         public SettingsService S { get; set; }
@@ -91,21 +121,18 @@ namespace RocketLaunch.Services
             set { _nrOfPaths = value; RaisePropertyChanged(); }
         }
 
-
-
-        public void RunIndexing()
+        public void RunIndexingOnSingleFolder(FolderSearch dir)
         {
-
             Task.Run(() =>
             {
-                IndexingIsRunning = true;
-                var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
-                LastIndexed = DateTime.Now;
-                //Spread out the search on all directories on different tasks
-                //Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
-
-                foreach (var dir in S.Settings.SearchDirectories)
+                try
                 {
+                    if (IndexingIsRunning) return;
+                    IndexingIsRunning = true;
+
+                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+                    LastIndexed = DateTime.Now;
+
                     var tempBag = new ConcurrentDictionary<string, RunItem>();
                     ProcessDirectory(dir.Path, dir.SearchPattern, dir.SearchSubFolders, tempBag);
                     dir.NrOfFiles = tempBag.Count;
@@ -113,28 +140,101 @@ namespace RocketLaunch.Services
                     {
                         unorderedFiles.TryAdd(item.Key, item.Value);
                     }
+
+                    RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
+                    tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
+
+                    for (int i = 0; i < tempList.Length; i++)
+                    {
+                        Progress = i / tempList.Length * 100;
+                        MatcherGeneral.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                        //if (!string.IsNullOrEmpty(tempList[i].Group))
+                        //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
+                    }
+
+                    NrOfPaths = MatcherGeneral.DataDictionary.Count + MatcherPrio.DataDictionary.Count;
+                    SaveTries();
+
+                    IndexingIsRunning = false;
                 }
-
-
-                RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
-                tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
-                var temp = new Indexing.SuffixTree.Trie<RunItem>();
-                //var sw = new Stopwatch();
-                //sw.Start();
-                for (int i = 0; i < tempList.Length; i++)
+                catch (Exception e)
                 {
-                    Progress = i / tempList.Length * 100;
-                    temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
-                    //if (!string.IsNullOrEmpty(tempList[i].Group))
-                    //    TempMatcher.Insert(tempList[i].Group.ToLower(), tempList[i]);
+                    Log.Error(e, $"Could not search folder {dir.Path}");
                 }
 
-                NrOfPaths = temp.DataDictionary.Count;
-                Matcher = temp;
 
-                SaveTries();
+            });
+        }
+
+        public void RunIndexing()
+        {
+
+            Task.Run(() =>
+            {
+                try
+                {
+
+
+                    if (IndexingIsRunning) return;
+                    IndexingIsRunning = true;
+
+
+                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+                    LastIndexed = DateTime.Now;
+                    //Spread out the search on all directories on different tasks
+                    //Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
+
+                    foreach (FolderSearch dir in S.Settings.SearchDirectories)
+                    {
+                        var tempBag = new ConcurrentDictionary<string, RunItem>();
+                        ProcessDirectory(dir.Path, dir.SearchPattern, dir.SearchSubFolders, tempBag);
+                        dir.NrOfFiles = tempBag.Count;
+                        foreach (var item in tempBag)
+                        {
+                            unorderedFiles.TryAdd(item.Key, item.Value);
+                        }
+                    }
+
+
+                    RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
+                    tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
+                    var temp = new Indexing.SuffixTree.Trie<RunItem>();
+                    //var sw = new Stopwatch();
+                    //sw.Start();
+                    for (int i = 0; i < tempList.Length; i++)
+                    {
+                        try
+                        {
+                            Progress = i / tempList.Length * 100;
+                            temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
+                            if (Path.GetExtension(tempList[i].FileName) == ".exe")  //adding the containing folder as well
+                            {
+                                temp.Insert(new DirectoryInfo(Path.GetDirectoryName(tempList[i].URI)).Name.ToLower(), tempList[i]);
+                            }
+                            if(tempList[i].KeyWords != null && tempList[i].KeyWords.Count > 0)
+                                temp.Insert(tempList[i].KeyWords, tempList[i]);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Log.Error(e, "Could not add file to trie");
+                        }
+
+                    }
+
+                    MatcherGeneral = temp;
+                    NrOfPaths = MatcherGeneral.DataDictionary.Count + MatcherPrio.DataDictionary.Count;
+
+                    SaveTries();
+
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Werid error in indexing service");
+                }
                 IndexingIsRunning = false;
             });
+
         }
 
         public bool IndexingIsRunning
@@ -151,41 +251,37 @@ namespace RocketLaunch.Services
                 {
                     foreach (var setting in RunItemFactory.Settings)
                     {
-                        if (!PrioMatcher.DataDictionary.ContainsKey(setting.Name))
-                        {
-                            PrioMatcher.Insert(setting.Name.ToLower(), setting);
-                            foreach (var keyWord in setting.KeyWords)
-                            {
-                                PrioMatcher.Insert(keyWord, setting);
-                                PrioMatcher.Insert(setting.KeyWords, setting);
-                            }
-
-                        }
+                        AddItem(setting);
                     }
-
-                    var rundialog = RunItemFactory.RunDialog();
-                    if (!PrioMatcher.DataDictionary.ContainsKey(rundialog.Name))
-                    {
-                        PrioMatcher.Insert(rundialog.Name.ToLower(), rundialog);
-                    }
-                    var turnOff = RunItemFactory.TurnOff();
-                    if (!PrioMatcher.DataDictionary.ContainsKey(turnOff.Name))
-                    {
-                        PrioMatcher.Insert(turnOff.Name.ToLower(), turnOff);
-                    }
+                    AddItem(RunItemFactory.RunDialog());
+                    AddItem(RunItemFactory.TurnOffComputer());
+                    AddItem(RunItemFactory.HibernateWindows());
+                    AddItem(RunItemFactory.LockWindows());
+                    AddItem(RunItemFactory.LogOffWindows());
+                    AddItem(RunItemFactory.RestartComputer());
+                    AddItem(RunItemFactory.SleepWindows());
+                    AddItem(RunItemFactory.SleepWindows());
                 }
             });
 
         }
 
+        public void AddItem(RunItem item)
+        {
+            if (!MatcherPrio.DataDictionary.ContainsKey(item.Name))
+            {
+                MatcherPrio.Insert(item.Name.ToLower(), item);
+                MatcherPrio.Insert(item.KeyWords, item);
+            }
+        }
         public void SavePrioTrie()
         {
             try
             {
                 Log.Debug("Saving prio trie");
-                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "PrioMatcher.trie"), FileMode.Create))
+                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "MatcherPrio.trie"), FileMode.Create))
                 {
-                    Serializer.Serialize(fs, PrioMatcher);
+                    Serializer.Serialize(fs, MatcherPrio);
                     fs.Flush();
                 }
 
@@ -202,9 +298,9 @@ namespace RocketLaunch.Services
             try
             {
                 Log.Debug("Saving general trie");
-                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "Matcher.trie"), FileMode.Create))
+                using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "MatcherGeneral.trie"), FileMode.Create))
                 {
-                    Serializer.Serialize(fs, Matcher);
+                    Serializer.Serialize(fs, MatcherGeneral);
                     fs.Flush();
                 }
                 SavePrioTrie();
@@ -221,17 +317,17 @@ namespace RocketLaunch.Services
             try
             {
                 Log.Debug("Loading general trie");
-                using (var file = File.OpenRead(Common.Directory + "Matcher.trie"))
+                using (var file = File.OpenRead(Common.Directory + "MatcherGeneral.trie"))
                 {
-                    Matcher = Serializer.Deserialize<Trie<RunItem>>(file);
+                    MatcherGeneral = Serializer.Deserialize<Trie<RunItem>>(file);
                 }
 
-                NrOfPaths = Matcher.DataDictionary.Count;
+                NrOfPaths = MatcherGeneral.DataDictionary.Count;
 
                 Log.Debug("Loading prio trie");
-                using (var file = File.OpenRead(Common.Directory + "PrioMatcher.trie"))
+                using (var file = File.OpenRead(Common.Directory + "MatcherPrio.trie"))
                 {
-                    PrioMatcher = Serializer.Deserialize<Trie<RunItem>>(file);
+                    MatcherPrio = Serializer.Deserialize<Trie<RunItem>>(file);
                 }
             }
             catch (Exception e)
@@ -272,12 +368,12 @@ namespace RocketLaunch.Services
             var fileList = new List<RunItem>();
             var sw = new Stopwatch();
             sw.Start();
-            ICollection<RunItem> generalResult = Matcher.Search(s.ToLower(), SearchType.Substring, nrOfHits);
+            ICollection<RunItem> generalResult = MatcherGeneral.Search(s.ToLower(), nrOfHits);
             GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
             var count = nrOfHits;
-            if (s == "") count = Math.Min(PrioMatcher.DataDictionary.Count, 50);
-            ICollection<RunItem> prioResult = PrioMatcher.Search(s.ToLower(), SearchType.Substring, count);
+            if (s == "") count = Math.Min(MatcherPrio.DataDictionary.Count, 50);
+            ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower(), count);
             prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
             prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
             prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.First()).ToList();  //remove potential duplicates
@@ -341,6 +437,7 @@ namespace RocketLaunch.Services
                             item.Type = ItemType.File;
                             item.URI = new StringBuilder(uri).Replace("/", "\\").Replace("//", "\\").ToString();
                             item.Name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                            item.KeyWords = new List<string>() { Path.GetFileName(item.URI) };
                             theBag.TryAdd(item.URI, item);
                         }
                     }
@@ -388,9 +485,18 @@ namespace RocketLaunch.Services
 
         public void AddExecutedItem(RunItem exItem)
         {
-            Matcher.Remove(exItem);
+            MatcherGeneral.Remove(exItem);
             exItem.RunNrOfTimes++;
-            PrioMatcher.Insert(exItem.Name, exItem);
+            MatcherPrio.Insert(exItem.Name, exItem);
+        }
+        public void ResetItemRunCounter(RunItem exItem)
+        {
+            exItem.RunNrOfTimes = 0;
+            if (exItem.Type == ItemType.File || exItem.Type == ItemType.Directory)  //Move it back to general list. Settings and other stuff will always be in the priolist.
+            {
+                MatcherPrio.Remove(exItem);
+                MatcherGeneral.Insert(exItem.Name, exItem);
+            }
         }
 
 

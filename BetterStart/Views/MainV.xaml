@@ -23,6 +23,7 @@
     PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
     PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
     PreviewMouseMove="OnMouseMove"
+    ShowInTaskbar="False" 
     SizeChanged="WindowStateChanged"
     Style="{StaticResource WindowStyle}"
     TextElement.FontSize="16"
@@ -130,16 +131,17 @@
                             Orientation="Horizontal">
                             <TextBlock
                                 HorizontalAlignment="Center"
-                                FontSize="15"
-                                FontWeight="Bold"
+                                FontSize="15" TextElement.FontSize="16"
+                                Foreground="{DynamicResource MaterialDesignBody}"
+                                FontWeight="Medium"
                                 Text="RocketLaunch" />
-                            <materialDesign:PackIcon Margin="5,0,0,0" Kind="Rocket" />
+                            <materialDesign:PackIcon Margin="5,0,0,0" Foreground="{DynamicResource MaterialDesignBody}" Kind="Rocket" />
                         </StackPanel>
                         <CheckBox
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
                             Content="Autostart"
-                            FontSize="15"
+                            FontSize="15" Foreground="{DynamicResource MaterialDesignBody}"
                             IsChecked="{Binding S.AutoStart}"
                             ToolTip="Autostart with windows"
                             ToolTipService.HorizontalOffset="20"
@@ -151,11 +153,11 @@
                             Command="{Binding CloseApplicationCmd}"
                             ToolTip="Close RocketLaunch"
                             ToolTipService.HorizontalOffset="20"
-                            ToolTipService.Placement="Right"
+                            ToolTipService.Placement="Right" 
                             ToolTipService.VerticalOffset="0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Close" />
-                                <materialDesign:PackIcon Margin="10,0,0,0" Kind="Rocket" />
+                                <TextBlock Text="Close" Foreground="{DynamicResource MaterialDesignBody}" />
+                                <materialDesign:PackIcon Margin="10,0,0,0" Kind="Rocket" Foreground="{DynamicResource MaterialDesignBody}" />
                             </StackPanel>
                         </Button>
 
@@ -204,18 +206,30 @@
                                     <!--<Image Source="../Assets/rocket.png"></Image>-->
                                     <svgc:SvgViewbox
                                         AutoSize="False"
-                                        Source="/Assets/rocket.svg"
-                                        ToolTip="Icons made by www.flaticon.com"
-                                        ToolTipService.InitialShowDelay="8000" />
+                                        Source="pack://application:,,,/Assets/rocket.svg"
+                                        ToolTip="{convertersWpf:SwitchBinding Indexing.IndexingIsRunning,
+                                                                              RocketLaunch - Indexing...,
+                                                                              RocketLaunch}" />
                                 </Button>
-                                <Button
+                                <StackPanel
                                     HorizontalAlignment="Right"
                                     VerticalAlignment="Top"
-                                    Command="{Binding OpenSettingsWindowCmd}"
-                                    Style="{StaticResource MaterialDesignIconForegroundButton}"
-                                    ToolTip="Settings">
-                                    <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
-                                </Button>
+                                    Orientation="Horizontal">
+                                    <Button
+                                        Margin="1"
+                                        Command="{Binding OpenSettingsWindowCmd}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="Settings">
+                                        <materialDesign:PackIcon Foreground="Gray" Kind="Settings" />
+                                    </Button>
+                                    <Button
+                                        Margin="1"
+                                        Command="{Binding OpenAboutWindowCmd}"
+                                        Style="{StaticResource MaterialDesignIconForegroundButton}"
+                                        ToolTip="About">
+                                        <materialDesign:PackIcon Foreground="Gray" Kind="InformationCircleOutline" />
+                                    </Button>
+                                </StackPanel>
                             </Grid>
 
                             <Grid>
@@ -252,31 +266,53 @@
 
                             </Grid>
 
-                            <Popup  Height="Auto" Width="Auto" Name="MyToolTip" StaysOpen="True" AllowsTransparency="True"  >
+                            <Popup
+                                Name="MyToolTip"
+                                Width="Auto"
+                                Height="Auto"
+                                AllowsTransparency="True"
+                                StaysOpen="True">
                                 <Grid>
-                                    <materialDesign:Card Margin="10" materialDesign:ShadowAssist.ShadowDepth="Depth2" >
-                                    <ListBox>
-                                        <TextBlock>
-                                            Plain
-                                        </TextBlock>
-                                        <TextBlock>
-                                            Old
-                                        </TextBlock>
-                                        <TextBlock>
-                                            ListBox
-                                        </TextBlock>
-                                        <TextBlock>
-                                            Full of junk
-                                        </TextBlock>
-                                    </ListBox>
-                                </materialDesign:Card>
+                                    <materialDesign:Card Margin="10" materialDesign:ShadowAssist.ShadowDepth="Depth2">
+                                        <ListBox>
+                                            <TextBlock MouseDown="Hide_Window" Text="Open containing folder">
+                                                <i:Interaction.Triggers>
+                                                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                                                        <i:InvokeCommandAction Command="{Binding OpenContaningFolderCmd}" />
+                                                    </i:EventTrigger>
+                                                </i:Interaction.Triggers>
+                                            </TextBlock>
+                                            <TextBlock MouseDown="Hide_Window" Text="Open as administrator">
+                                                <i:Interaction.Triggers>
+                                                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                                                        <i:InvokeCommandAction Command="{Binding ExecuteAsAdminCmd}" />
+                                                    </i:EventTrigger>
+                                                </i:Interaction.Triggers>
+
+                                            </TextBlock>
+                                            <TextBlock MouseDown="HidePopupAndResetFocusOnTextBoox" Text="Reset counter">
+                                                <TextBlock.ToolTip>
+                                                    <TextBlock>
+                                                        This resets the counter for the current item and lessens it's ranking when searching.
+                                                    </TextBlock>
+                                                </TextBlock.ToolTip>
+                                                <i:Interaction.Triggers>
+                                                    <i:EventTrigger EventName="MouseLeftButtonDown">
+                                                        <i:InvokeCommandAction Command="{Binding ResetCounterCmd}" />
+                                                    </i:EventTrigger>
+                                                </i:Interaction.Triggers>
+
+                                            </TextBlock>
+                                        </ListBox>
+                                    </materialDesign:Card>
                                 </Grid>
                             </Popup>
 
                             <ListView
                                 Margin="10,0,10,10"
                                 ItemsSource="{Binding SearchSuggestions}"
-                                SelectedIndex="{Binding SelectedIndex}">
+                                SelectedIndex="{Binding SelectedIndex}"
+                                SizeChanged="ListView_SizeChanged">
                                 <i:Interaction.Triggers>
                                     <i:EventTrigger EventName="MouseDoubleClick">
                                         <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
@@ -285,15 +321,24 @@
                                 <ListView.ItemContainerStyle>
                                     <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
                                         <!--<Setter Property="Focusable" Value="false" />-->
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
                                         <Setter Property="VerticalContentAlignment" Value="Center" />
                                         <Setter Property="VerticalAlignment" Value="Center" />
                                         <EventSetter Event="Mouse.PreviewMouseDown" Handler="Show_PopupToolTip" />
-                                        <EventSetter Event="Mouse.PreviewMouseUpOutsideCapturedElement" Handler="Hide_PopupToolTip"/>
+                                        <EventSetter Event="Mouse.PreviewMouseUpOutsideCapturedElement" Handler="Hide_PopupToolTip" />
+
                                     </Style>
 
 
 
                                 </ListView.ItemContainerStyle>
+
+                                <!--<ListView.Resources>
+                                    <Style TargetType="ListViewItem">
+
+                                    </Style>
+                                </ListView.Resources>-->
                                 <ListView.View>
                                     <GridView>
                                         <!--  This is index column. Dont't want that right now  -->
@@ -301,26 +346,20 @@
                             Width="100"
                             DisplayMemberBinding="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type ListViewItem}}, Converter={StaticResource IndexConverter}}"
                              />-->
+
                                         <GridViewColumn>
                                             <GridViewColumn.CellTemplate>
                                                 <DataTemplate>
-                                                    <Image
-                                                        Width="32"
-                                                        Source="{Binding Icon}"
-                                                        ToolTip="{Binding URI}">
-                                                        <!--<Image.Effect>
-                                            <grayscaleEffect:GrayscaleEffect x:Name="grayscaleEffect" />
-                                        </Image.Effect>-->
-                                                    </Image>
-                                                </DataTemplate>
-                                            </GridViewColumn.CellTemplate>
-                                        </GridViewColumn>
-                                        <GridViewColumn Width="500">
-                                            <GridViewColumn.CellTemplate>
-                                                <DataTemplate>
-                                                    <StackPanel ToolTip="{Binding URI}">
+                                                    <Grid HorizontalAlignment="Stretch" ToolTip="{Binding URI}">
 
-                                                        <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
+                                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                            <Image
+                                                                Width="32"
+                                                                Margin="0,0,20,0"
+                                                                Source="{Binding Icon}" />
+                                                            <StackPanel>
+
+                                                                <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">
                                             <rich:RichTextEditor.Text>
                                                 <MultiBinding Converter="{StaticResource RichTextConverter}">
                                                     <Binding ElementName="{Binding Name}" Mode="TwoWay" UpdateSourceTrigger="PropertyChanged"></Binding>
@@ -329,22 +368,31 @@
                                             </rich:RichTextEditor.Text>
 
                                         </rich:RichTextEditor>-->
-                                                        <TextBlock FontSize="14" Text="{Binding Name}" />
-                                                        <TextBlock
-                                                            FontSize="9" 
-                                                            Foreground="LightGray"
-                                                            Text="{Binding URI}" />
+                                                                <TextBlock FontSize="14" Text="{Binding Name}" />
+                                                                <TextBlock
+                                                                    FontSize="9"
+                                                                    Foreground="LightGray"
+                                                                    Text="{Binding URI}" />
 
-                                                    </StackPanel>
+                                                            </StackPanel>
+                                                        </StackPanel>
+
+                                                    </Grid>
                                                 </DataTemplate>
                                             </GridViewColumn.CellTemplate>
                                         </GridViewColumn>
 
                                         <!--  l:GridViewColumnVisibilityManager.IsVisible="{Binding S.Settings.DebugMode}"  -->
-                                        <GridViewColumn 
-                                            Width="Auto"
-                                            DisplayMemberBinding="{Binding RunNrOfTimes}"
-                                            ToolTipService.ToolTip="Nr of runs" />
+                                        <GridViewColumn>
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock
+                                                        Text="{Binding RunNrOfTimes}"
+                                                        TextAlignment="Right"
+                                                        ToolTip="Nr of runs" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
                                     </GridView>
                                 </ListView.View>
 
@@ -381,9 +429,20 @@
             </materialDesign:TransitionerSlide>
             <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">
 
-                <Views:SettingsV Margin="10" PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
-                                 PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
-                                 PreviewMouseMove="OnMouseMove"  />
+                <Views:SettingsV
+                    Margin="10"
+                    PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
+                    PreviewMouseMove="OnMouseMove" />
+
+            </materialDesign:TransitionerSlide>
+            <materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=SlideInFromTop}">
+
+                <Views:AboutUserCtrl
+                    Margin="10"
+                    PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
+                    PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
+                    PreviewMouseMove="OnMouseMove" />
 
             </materialDesign:TransitionerSlide>
             <!--<materialDesign:TransitionerSlide OpeningEffect="{materialDesign:TransitionEffect Kind=FadeIn}">

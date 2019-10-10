@@ -57,7 +57,7 @@
                         <Style.Triggers>
                             <Trigger Property="IsSelected" Value="True">
                                 <Setter Property="FontWeight" Value="Bold" />
-                                <Setter Property="Foreground" Value="#FF519AD4" />
+                                <Setter Property="Foreground" Value="{DynamicResource PrimaryHueMidBrush}" />
                             </Trigger>
                         </Style.Triggers>
                     </Style>

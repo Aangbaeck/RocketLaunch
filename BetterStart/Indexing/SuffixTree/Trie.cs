@@ -29,9 +29,12 @@ namespace RocketLaunch.Indexing.SuffixTree
         /// <param name="value"></param>
         public void Insert(IEnumerable<string> keys, T value)
         {
-            foreach (var key in keys)
+            if (keys != null)
             {
-                Insert(key,value);
+                foreach (var key in keys)
+                {
+                    Insert(key.ToLower(), value);
+                }
             }
         }
 
@@ -71,7 +74,6 @@ namespace RocketLaunch.Indexing.SuffixTree
 
             return false;
         }
-        
 
         public bool Contains(T item)
         {
@@ -85,27 +87,20 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public ICollection<T> Search(T item, int nrOfHits)
         {
-            return this.Search(item.GetHashCode().ToString(), SearchType.Substring, nrOfHits);
+            return this.Search(item.GetHashCode().ToString(), nrOfHits);
         }
 
-        public ICollection<T> Search(string filter, SearchType searchType, int nrOfHits)
+        public ICollection<T> Search(string filter, int nrOfHits)
         {
             var sw = new Stopwatch();
             sw.Start();
-            ICollection<string> strResults = this.TrieBase.Search(filter, searchType, nrOfHits);
+            ICollection<string> strResults = this.TrieBase.Search(filter, nrOfHits);
             var t = sw.ElapsedMilliseconds;
             ICollection<T> tResults = this.GetValuesFromKeys(strResults, nrOfHits);
             var t2 = sw.ElapsedMilliseconds;
             return tResults;
         }
-
-        //public ICollection<RunItem> FindAll()
-        //{
-        //    ICollection<string> allKeys = this.InnerTrie.FindAll();
-        //    ICollection<RunItem> all = this.GetValuesFromKeys(allKeys);
-
-        //    return all;
-        //}
+        
         private ICollection<T> GetValuesFromKeys(ICollection<string> keys, int nrOfHits)
         {
             List<T> result = new List<T>();
@@ -124,30 +119,5 @@ namespace RocketLaunch.Indexing.SuffixTree
 
             return result;
         }
-
-
-
-        //#region IEnumerable<T> Members
-
-        //public IEnumerator<RunItem> GetEnumerator()
-        //{
-        //    ICollection<RunItem> all = this.FindAll();
-
-        //    foreach (RunItem item in all)
-        //    {
-        //        yield return item;
-        //    }
-        //}
-
-        //#endregion
-
-        //#region IEnumerable Members
-
-        ////System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        ////{
-        ////    return this.GetEnumerator();
-        ////}
-
-        //#endregion
     }
 }
