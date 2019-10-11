@@ -41,7 +41,7 @@
                         </Style>
                     </StackPanel.Resources>
                     <TextBlock Margin="0,0,0,0" Text="RocketLaunch" />
-                    <TextBlock Margin="0,0,0,20" Text="Version 1.1.1" />
+                    <TextBlock Margin="0,0,0,20" Text="{Binding AssemblyVersion}" />
 
 
                     <TextBlock Text="Made by:" />

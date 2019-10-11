@@ -70,7 +70,13 @@ namespace RocketLaunch.Views
             modificationAction?.Invoke(theme);
             paletteHelper.SetTheme(theme);
         }
-
+        public Version AssemblyVersion
+        {
+            get
+            {
+                return Assembly.GetEntryAssembly().GetName().Version;
+            }
+        }
         public int SelectedViewIndex
         {
             get { return _selectedViewIndex; }

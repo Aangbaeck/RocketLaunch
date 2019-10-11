@@ -47,6 +47,7 @@ namespace RocketLaunch.Views
         public MainVM MainVM => ServiceLocator.Current.GetInstance<MainVM>();
         public SettingsVM SettingsVM => ServiceLocator.Current.GetInstance<SettingsVM>();
 
+
         /// <summary>
         /// Cleans up all the resources.
         /// </summary>

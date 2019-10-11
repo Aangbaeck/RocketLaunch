@@ -131,10 +131,15 @@ namespace RocketLaunch.Views
         {
             try
             {
-                Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
                 var index = 0;
-                if (StoredSelectedIndex > 0)
-                    index = StoredSelectedIndex;
+                if (SelectedIndex != -1)
+                    index = SelectedIndex;
+                else
+                {
+
+                }
+                Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
+                
                 if (SearchSuggestions.Count > 0)
                 {
                     RunItemFactory.Start(SearchSuggestions[index], asAdmin, openContainingFolder);
@@ -156,8 +161,12 @@ namespace RocketLaunch.Views
         private void ResetCounter()
         {
             var index = 0;
-            if (StoredSelectedIndex > 0)
-                index = StoredSelectedIndex;
+            if (SelectedIndex != -1)
+                index = SelectedIndex;
+            else
+            {
+                
+            }
             if (SearchSuggestions.Count > 0)
             {
                 Indexing.ResetItemRunCounter(SearchSuggestions[index]);
@@ -170,14 +179,12 @@ namespace RocketLaunch.Views
             get { return _selectedIndex; }
             set
             {
-                if (value != -1)
-                    StoredSelectedIndex = value;
                 _selectedIndex = value;
                 RaisePropertyChanged();
             }
         }
 
-        public int StoredSelectedIndex { get; set; }
+        
 
         
 
