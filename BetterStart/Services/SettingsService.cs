@@ -2,16 +2,18 @@
 using System.IO;
 using System.Windows.Forms;
 using AutoMapper;
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using IWshRuntimeLibrary;
 using Newtonsoft.Json;
 using RocketLaunch.Helper;
+using RocketLaunch.Views;
 using Serilog;
 using File = System.IO.File;
 
 namespace RocketLaunch.Services
 {
-    public class SettingsService: ViewModelBase
+    public class SettingsService : ViewModelBase
     {
         public AppSettings Settings { get; set; } = new AppSettings();
         public SettingsService()
@@ -41,13 +43,28 @@ namespace RocketLaunch.Services
                 Settings.AutoStart = value;
                 File.Delete(_startupPath);  //Reset with new file if there is a new path or something
                 if (value)
-                    CreateShortCutInAutoStart();  
-                
+                    CreateShortCutInAutoStart();
+
                 RaisePropertyChanged();
             }
         }
 
+        public bool ReleaseWinKey
+        {
+            get { return Settings.ReleaseWinKey; }
+            set
+            {
+                Settings.ReleaseWinKey = value;
+                var keyboard = ServiceLocator.Current.GetInstance<KeyBoardHandlerService>();
+                if (value)
+                    keyboard.ReleaseControlOfWinKey();
+                else
+                    keyboard.TakeControlOfWinKey();
+            }
+        }
+
         private readonly string _startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup) + "\\" + "RocketLaunch.lnk";
+
         private void CreateShortCutInAutoStart()
         {
             WshShell wshShell = new WshShell();
@@ -81,7 +98,7 @@ namespace RocketLaunch.Services
                     Log.Debug("First time starting application. Creating save files");
                     Save();
                 }
-                
+
 
             }
 

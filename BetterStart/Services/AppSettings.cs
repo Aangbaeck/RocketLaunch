@@ -37,6 +37,7 @@ namespace RocketLaunch.Services
         private int _reindexingTime = 20;
         private bool _autoStart = true;
         private bool _darkTheme = true;
+        private bool _releaseWinKey;
 
         public bool IncludeWindowsSettings
         {
@@ -57,6 +58,11 @@ namespace RocketLaunch.Services
             get { return _darkTheme; }
             set { _darkTheme = value; RaisePropertyChanged();}
         }
+        public bool ReleaseWinKey
+        {
+            get { return _releaseWinKey; }
+            set { _releaseWinKey = value; RaisePropertyChanged(); }
+        }
 
         public void ResetSearchDirectoriesToDefaultFolders()
         {
@@ -73,19 +79,21 @@ namespace RocketLaunch.Services
         public BindingList<FolderSearch> SearchDirectories { get; set; } = new BindingList<FolderSearch>();
         public static BindingList<FolderSearch> DefaultFolders => new BindingList<FolderSearch>()
         {
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu), SearchPattern = "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), SearchPattern = "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop), SearchPattern = "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.AdminTools), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Downloads).Path, SearchPattern =  "*.*", SearchSubFolders = true },
-            //new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Contacts).Path, SearchPattern =  "*.*", SearchSubFolders = true },
-            //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Personal), SearchPattern =  "*.*", SearchSubFolders = true },
-            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Startup), SearchPattern =  "*.*", SearchSubFolders = true },
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Desktop)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.AdminTools)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.CommonPictures)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)},
+            new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Downloads).Path},
+            //new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Contacts).Path},
+            //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer)},
+            //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Personal)},
+            new FolderSearch() {Path = "C:\\Program Files\\WindowsApps", SearchPattern =  "*.exe", IncludeFoldersInSearch = false},
         };
+
+        
     }
 }

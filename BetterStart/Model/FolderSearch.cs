@@ -9,10 +9,11 @@ namespace RocketLaunch.Model
 {
     public class FolderSearch : ViewModelBase
     {
-        private bool _searchSubFolders;
-        private string _searchPattern;
+        private bool _searchSubFolders = true;
+        private string _searchPattern = "*.*";
         private string _path;
         private int _nrOfFiles;
+        private bool _includeFoldersInSearch = true;
 
         public string Path
         {
@@ -26,10 +27,19 @@ namespace RocketLaunch.Model
             set { _searchPattern = value; RaisePropertyChanged(); }
         }
 
+        /// <summary>
+        /// Search the subfolders of the current folder
+        /// </summary>
         public bool SearchSubFolders
         {
             get { return _searchSubFolders; }
             set { _searchSubFolders = value; RaisePropertyChanged(); }
+        }
+
+        public bool IncludeFoldersInSearch
+        {
+            get { return _includeFoldersInSearch; }
+            set { _includeFoldersInSearch = value; RaisePropertyChanged(); }
         }
 
         public int NrOfFiles

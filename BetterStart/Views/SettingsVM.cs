@@ -53,7 +53,7 @@ namespace RocketLaunch.Views
             if (dlg.ShowDialog() == true)
             {
                 string path = dlg.SelectedPath;
-                S.Settings.SearchDirectories.Add(new FolderSearch() { Path = path, SearchPattern = "*.*", SearchSubFolders = true });
+                S.Settings.SearchDirectories.Add(new FolderSearch() { Path = path});
             }
 
         });

@@ -23,7 +23,7 @@
     PreviewMouseLeftButtonDown="OnMouseLeftButtonDown"
     PreviewMouseLeftButtonUp="OnMouseLeftButtonUp"
     PreviewMouseMove="OnMouseMove"
-    ShowInTaskbar="False" 
+    ShowInTaskbar="False"
     SizeChanged="WindowStateChanged"
     Style="{StaticResource WindowStyle}"
     TextElement.FontSize="16"
@@ -86,13 +86,6 @@
 
     </Window.Resources>
 
-
-    <!--<i:Interaction.Triggers>
-        <i:EventTrigger EventName="KeyDown">
-            <i:InvokeCommandAction Command="{Binding AnyKeyPressedCmd}" />
-        </i:EventTrigger>
-    </i:Interaction.Triggers>-->
-    <!--<Viewbox>-->
     <Grid>
 
         <tb:TaskbarIcon
@@ -102,21 +95,19 @@
             TrayLeftMouseDown="ToogleWindowState"
             Visibility="Visible">
 
-            <!--<tb:TaskbarIcon.TrayToolTip>
+            <tb:TaskbarIcon.TrayToolTip>
                 <Border
-                    Width="160"
-                    Height="40"
+                    Padding="3"
                     Background="White"
-                    BorderBrush="Orange"
-                    BorderThickness="2"
-                    CornerRadius="4"
+                    BorderBrush="Gray"
+                    BorderThickness="1"
                     Opacity="0.8">
                     <TextBlock
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
-                        Text="hello world" />
+                        Text="RocketLaunch" />
                 </Border>
-            </tb:TaskbarIcon.TrayToolTip>-->
+            </tb:TaskbarIcon.TrayToolTip>
             <tb:TaskbarIcon.TrayPopup>
                 <materialDesign:Card Margin="10" Padding="10">
 
@@ -131,33 +122,54 @@
                             Orientation="Horizontal">
                             <TextBlock
                                 HorizontalAlignment="Center"
-                                FontSize="15" TextElement.FontSize="16"
-                                Foreground="{DynamicResource MaterialDesignBody}"
+                                FontSize="15"
                                 FontWeight="Medium"
-                                Text="RocketLaunch" />
-                            <materialDesign:PackIcon Margin="5,0,0,0" Foreground="{DynamicResource MaterialDesignBody}" Kind="Rocket" />
+                                Foreground="{DynamicResource MaterialDesignBody}"
+                                Text="RocketLaunch"
+                                TextElement.FontSize="16" />
+                            <materialDesign:PackIcon
+                                Margin="5,0,0,0"
+                                Foreground="{DynamicResource MaterialDesignBody}"
+                                Kind="Rocket" />
                         </StackPanel>
-                        <CheckBox
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center"
-                            Content="Autostart"
-                            FontSize="15" Foreground="{DynamicResource MaterialDesignBody}"
-                            IsChecked="{Binding S.AutoStart}"
-                            ToolTip="Autostart with windows"
-                            ToolTipService.HorizontalOffset="20"
-                            ToolTipService.Placement="Right"
-                            ToolTipService.VerticalOffset="0" />
+                        <StackPanel HorizontalAlignment="Center">
+                            <CheckBox
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Content="Autostart"
+                                FontSize="15"
+                                Foreground="{DynamicResource MaterialDesignBody}"
+                                IsChecked="{Binding S.AutoStart}"
+                                ToolTip="Autostart with windows"
+                                ToolTipService.HorizontalOffset="20"
+                                ToolTipService.Placement="Right"
+                                ToolTipService.VerticalOffset="0" />
+                            <CheckBox
+                                HorizontalAlignment="Left"
+                                VerticalAlignment="Center"
+                                Content="Release WinKey"
+                                FontSize="15"
+                                Foreground="{DynamicResource MaterialDesignBody}"
+                                IsChecked="{Binding S.ReleaseWinKey}"
+                                ToolTip="Release windows key override"
+                                ToolTipService.HorizontalOffset="20"
+                                ToolTipService.Placement="Right"
+                                ToolTipService.VerticalOffset="0" />
+                        </StackPanel>
 
                         <Button
-                            Margin="20"
+                            Margin="10,20"
                             Command="{Binding CloseApplicationCmd}"
                             ToolTip="Close RocketLaunch"
                             ToolTipService.HorizontalOffset="20"
-                            ToolTipService.Placement="Right" 
+                            ToolTipService.Placement="Right"
                             ToolTipService.VerticalOffset="0">
                             <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="Close" Foreground="{DynamicResource MaterialDesignBody}" />
-                                <materialDesign:PackIcon Margin="10,0,0,0" Kind="Rocket" Foreground="{DynamicResource MaterialDesignBody}" />
+                                <TextBlock Foreground="{DynamicResource MaterialDesignBody}" Text="Close" />
+                                <materialDesign:PackIcon
+                                    Margin="10,0,0,0"
+                                    Foreground="{DynamicResource MaterialDesignBody}"
+                                    Kind="Rocket" />
                             </StackPanel>
                         </Button>
 

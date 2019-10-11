@@ -26,7 +26,7 @@ namespace RocketLaunch.Views
 
             Log.Information("STARTING APPLICATION...");
             InitializeComponent();
-            Messenger.Default.Register<KeyState>(this, MessengerID.WinKeyPressed, HideShowWindow);
+            Messenger.Default.Register<bool>(this, MessengerID.WinKeyPressed, HideShowWindow);
             Messenger.Default.Register<bool>(this, MessengerID.HideWindow, HideWindow);
             Closing += (s, e) =>
             {
@@ -46,13 +46,10 @@ namespace RocketLaunch.Views
             
         }
 
-        private void HideShowWindow(KeyState state)
+        private void HideShowWindow(bool state)
         {
+            Application.Current.Dispatcher.BeginInvoke(new Action(() => { ToogleWindowState(null, null); }));
 
-            if (state.Key == System.Windows.Forms.Keys.LWin && !state.IsDown)
-            {
-                ToogleWindowState(null, null);
-            }
         }
         private void Wait(double milliseconds)
         {

@@ -134,7 +134,7 @@ namespace RocketLaunch.Services
                     LastIndexed = DateTime.Now;
 
                     var tempBag = new ConcurrentDictionary<string, RunItem>();
-                    ProcessDirectory(dir.Path, dir.SearchPattern, dir.SearchSubFolders, tempBag);
+                    ProcessDirectory(dir, tempBag);
                     dir.NrOfFiles = tempBag.Count;
                     foreach (var item in tempBag)
                     {
@@ -178,6 +178,7 @@ namespace RocketLaunch.Services
                     if (IndexingIsRunning) return;
                     IndexingIsRunning = true;
 
+                    foreach (var dir in S.Settings.SearchDirectories) { dir.NrOfFiles = 0; } //Resetting this so it looks nice when gui is propagating the new info..
 
                     var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
                     LastIndexed = DateTime.Now;
@@ -187,7 +188,7 @@ namespace RocketLaunch.Services
                     foreach (FolderSearch dir in S.Settings.SearchDirectories)
                     {
                         var tempBag = new ConcurrentDictionary<string, RunItem>();
-                        ProcessDirectory(dir.Path, dir.SearchPattern, dir.SearchSubFolders, tempBag);
+                        ProcessDirectory(dir, tempBag);
                         dir.NrOfFiles = tempBag.Count;
                         foreach (var item in tempBag)
                         {
@@ -211,7 +212,7 @@ namespace RocketLaunch.Services
                             {
                                 temp.Insert(new DirectoryInfo(Path.GetDirectoryName(tempList[i].URI)).Name.ToLower(), tempList[i]);
                             }
-                            if(tempList[i].KeyWords != null && tempList[i].KeyWords.Count > 0)
+                            if (tempList[i].KeyWords != null && tempList[i].KeyWords.Count > 0)
                                 temp.Insert(tempList[i].KeyWords, tempList[i]);
 
                         }
@@ -374,42 +375,41 @@ namespace RocketLaunch.Services
             var count = nrOfHits;
             if (s == "") count = Math.Min(MatcherPrio.DataDictionary.Count, 50);
             ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower(), count);
-            prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
             prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
             prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.First()).ToList();  //remove potential duplicates
-                                                                                                               //for (int i = 0; i < UPPER; i++)
-                                                                                                               //{
-
-            //}
-
+            prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
 
             PrioSearchTime = (int)sw.ElapsedTicks;
             TotalSearchTime = GeneralSearchTime + PrioSearchTime;
             return prioResult.Take(10).ToList();
         }
 
-        public static void ProcessDirectory(string targetDirectory, string searchPattern, bool searchsubDirectories, ConcurrentDictionary<string, RunItem> theBag)
+        public static void ProcessDirectory(FolderSearch dir, ConcurrentDictionary<string, RunItem> theBag)
         {
             try
             {
-                if (Directory.Exists(targetDirectory))
+
+                if (Directory.Exists(dir.Path))
                 {
-                    var dir = new RunItem()
+                    if (dir.IncludeFoldersInSearch)
                     {
-                        Name = new DirectoryInfo(targetDirectory).Name,
-                        URI = new StringBuilder(targetDirectory).Replace("/", "\\").Replace("//", "\\").ToString(),
-                        Type = ItemType.Directory
-                    };
-                    theBag.TryAdd(dir.URI, dir);
+                        var folder = new RunItem()
+                        {
+                            Name = new DirectoryInfo(dir.Path).Name,
+                            URI = new StringBuilder(dir.Path).Replace("/", "\\").Replace("//", "\\").ToString(),
+                            Type = ItemType.Directory
+                        };
+                        theBag.TryAdd(folder.URI, folder);
+                    }
                 }
                 else
                 {
-                    Log.Error($"{targetDirectory} does not exist...");
+                    Log.Error($"{dir.Path} does not exist...");
                     return;
                 }
                 //var t = theBag.ContainsKey(dir.URI);
                 // Process the list of files found in the directory.
-                string[] fileEntries = Directory.GetFiles(targetDirectory, searchPattern);
+                string[] fileEntries = Directory.GetFiles(dir.Path, dir.SearchPattern);
                 foreach (string fileName in fileEntries)
                 {
                     var sb = new StringBuilder();
@@ -457,27 +457,27 @@ namespace RocketLaunch.Services
             }
             catch (Exception)
             {
-                Log.Debug($"Could not search {targetDirectory}");
+                Log.Debug($"Could not search {dir.Path}");
             }
-            if (searchsubDirectories)
+            if (dir.SearchSubFolders)
             {
                 try
                 {
                     // Recurse into subdirectories of this directory.
-                    string[] subdirectoryEntries = Directory.GetDirectories(targetDirectory);
+                    string[] subdirectoryEntries = Directory.GetDirectories(dir.Path);
                     foreach (string subdirectory in subdirectoryEntries)
                         try
                         {
-                            ProcessDirectory(subdirectory, searchPattern, true, theBag);
+                            ProcessDirectory(new FolderSearch() { Path = subdirectory, IncludeFoldersInSearch = dir.IncludeFoldersInSearch, SearchPattern = dir.SearchPattern, SearchSubFolders = dir.SearchSubFolders }, theBag);
                         }
-                        catch (Exception)
+                        catch (Exception e)
                         {
-                            Log.Debug($"Could not search {subdirectory}");
+                            Log.Debug(e.Message);
                         }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    Log.Debug($"Could not get subdirectoryEntries for {targetDirectory}");
+                    Log.Error(e.Message);
                 }
             }
         }
