@@ -209,6 +209,7 @@ namespace RocketLaunch.Views
             {
                 SelectedViewIndex = 0;
             });
+            SearchString = "";
         }
 
         public SettingsService S { get; set; }

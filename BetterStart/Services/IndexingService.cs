@@ -372,11 +372,17 @@ namespace RocketLaunch.Services
             ICollection<RunItem> generalResult = MatcherGeneral.Search(s.ToLower(), nrOfHits);
             GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
-            var count = nrOfHits;
-            if (s == "") count = Math.Min(MatcherPrio.DataDictionary.Count, 50);
-            ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower(), count);
+            //Console.WriteLine($"    ");
+            
+            ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower(), 2000);
+            
             prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
-            prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.First()).ToList();  //remove potential duplicates
+            //foreach (var runItem in prioResult)
+            //{
+            //    Console.WriteLine($"{runItem.Name}, {runItem.RunNrOfTimes}");
+
+            //}
+            //prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.OrderBy(p=>p.RunNrOfTimes).First()).ToList();  //remove potential duplicates
             prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
 
             PrioSearchTime = (int)sw.ElapsedTicks;
@@ -485,18 +491,20 @@ namespace RocketLaunch.Services
 
         public void AddExecutedItem(RunItem exItem)
         {
-            MatcherGeneral.Remove(exItem);
+            MatcherGeneral.Remove(exItem.Name);
             exItem.RunNrOfTimes++;
             MatcherPrio.Insert(exItem.Name, exItem);
+            SaveTries();
         }
         public void ResetItemRunCounter(RunItem exItem)
         {
             exItem.RunNrOfTimes = 0;
             if (exItem.Type == ItemType.File || exItem.Type == ItemType.Directory)  //Move it back to general list. Settings and other stuff will always be in the priolist.
             {
-                MatcherPrio.Remove(exItem);
+                MatcherPrio.Remove(exItem.Name);
                 MatcherGeneral.Insert(exItem.Name, exItem);
             }
+            SaveTries();
         }
 
 

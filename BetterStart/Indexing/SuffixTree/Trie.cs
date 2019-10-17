@@ -15,12 +15,12 @@ namespace RocketLaunch.Indexing.SuffixTree
         public TrieBase TrieBase { get; set; } = new TrieBase();
 
         [ProtoMember(2)]
-        public Dictionary<string, HashSet<T>> DataDictionary { get; set; } = new Dictionary<string, HashSet<T>>(true ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
+        public SortedDictionary<string, HashSet<T>> DataDictionary { get; set; } = new SortedDictionary<string, HashSet<T>>();
 
         public void Insert(string key, T value)
         {
-            this.InsertToDictionary(key, value);
-            this.TrieBase.Insert(key);
+            this.InsertToDictionary(key.ToLower(), value);
+            this.TrieBase.Insert(key.ToLower());
         }
         /// <summary>
         /// Inserts same value with multiple keys. Some things have similar keywords - lets add all of them.
@@ -51,29 +51,29 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public bool Remove(string key)
         {
-            if (this.DataDictionary.ContainsKey(key))
+            if (this.DataDictionary.ContainsKey(key.ToLower()))
             {
-                this.DataDictionary.Remove(key);
+                this.DataDictionary.Remove(key.ToLower());
                 return true;
             }
 
             return false;
         }
 
-        public bool Remove(T item)
-        {
-            return this.Remove(item.GetHashCode().ToString(), item);
-        }
+        //public bool Remove(T item)
+        //{
+        //    return this.Remove(item.GetHashCode().ToString(), item);
+        //}
 
-        public bool Remove(string key, T item)
-        {
-            if (this.DataDictionary.ContainsKey(key))
-            {
-                return this.DataDictionary[key].Remove(item);
-            }
+        //public bool Remove(string key, T item)
+        //{
+        //    if (this.DataDictionary.ContainsKey(key))
+        //    {
+        //        return this.DataDictionary[key].Remove(item);
+        //    }
 
-            return false;
-        }
+        //    return false;
+        //}
 
         public bool Contains(T item)
         {
@@ -82,7 +82,7 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public bool Contains(string key)
         {
-            return this.TrieBase.Contains(key);
+            return this.TrieBase.Contains(key.ToLower());
         }
 
         public ICollection<T> Search(T item, int nrOfHits)

@@ -420,6 +420,10 @@
                                     <TextBlock Text="{Binding Indexing.GeneralSearchTime}" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="SelectedIndex: " />
+                                    <TextBlock Text="{Binding SelectedIndex}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="Prio search time: " />
                                     <TextBlock Text="{Binding Indexing.PrioSearchTime}" />
                                 </StackPanel>
