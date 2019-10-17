@@ -15,7 +15,9 @@ namespace RocketLaunch.Indexing.SuffixTree
         public TrieBase TrieBase { get; set; } = new TrieBase();
 
         [ProtoMember(2)]
-        public SortedDictionary<string, HashSet<T>> DataDictionary { get; set; } = new SortedDictionary<string, HashSet<T>>();
+        public Dictionary<string, HashSet<T>> DataDictionary { get; set; } = new Dictionary<string, HashSet<T>>();
+
+        public int Count => DataDictionary.Count;
 
         public void Insert(string key, T value)
         {
@@ -48,7 +50,11 @@ namespace RocketLaunch.Indexing.SuffixTree
             this.DataDictionary[key].Add(value);
 
         }
-
+        /// <summary>
+        /// Returns true if we where able to remove item.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
         public bool Remove(string key)
         {
             if (this.DataDictionary.ContainsKey(key.ToLower()))
@@ -60,6 +66,11 @@ namespace RocketLaunch.Indexing.SuffixTree
             return false;
         }
 
+        public void Replace(string key, T value)
+        {
+            Remove(key);
+            Insert(key.ToLower(),value);
+        }
         //public bool Remove(T item)
         //{
         //    return this.Remove(item.GetHashCode().ToString(), item);
@@ -74,23 +85,13 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         //    return false;
         //}
-
-        public bool Contains(T item)
-        {
-            return this.Contains(item.GetHashCode().ToString());
-        }
-
+        
         public bool Contains(string key)
         {
             return this.TrieBase.Contains(key.ToLower());
         }
 
-        public ICollection<T> Search(T item, int nrOfHits)
-        {
-            return this.Search(item.GetHashCode().ToString(), nrOfHits);
-        }
-
-        public ICollection<T> Search(string filter, int nrOfHits)
+        public ICollection<T> Search(string filter, int nrOfHits = int.MaxValue)
         {
             var sw = new Stopwatch();
             sw.Start();
@@ -119,5 +120,7 @@ namespace RocketLaunch.Indexing.SuffixTree
 
             return result;
         }
+
+        
     }
 }

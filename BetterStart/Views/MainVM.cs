@@ -7,6 +7,7 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -31,17 +32,14 @@ namespace RocketLaunch.Views
         public RelayCommand ToggleDebugMode => new RelayCommand(() => { S.Settings.DebugMode = !S.Settings.DebugMode; });
         public RelayCommand ExecuteFirstListViewItem => new RelayCommand(() => { ExecuteSelectedListViewItem(false); });
         public RelayCommand ExecuteAsAdminCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(true); });
-        public RelayCommand ResetCounterCmd => new RelayCommand(ResetCounter );
+        public RelayCommand ResetCounterCmd => new RelayCommand(ResetCounter);
 
-        
 
-        public RelayCommand OpenContaningFolderCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(openContainingFolder:true); });
+
+        public RelayCommand OpenContaningFolderCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(openContainingFolder: true); });
         public RelayCommand CloseApplicationCmd => new RelayCommand(() => { System.Windows.Application.Current.Shutdown(); });
-        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(false); });
-        public RelayCommand ShowRightClickMenuCmd => new RelayCommand(() =>
-        {
+        public RelayCommand DoubleClickOnItemCmd => new RelayCommand(() => { ExecuteSelectedListViewItem(); });
 
-        });
 
         public RelayCommand DownKeyPressedCmd => new RelayCommand(() =>
               {
@@ -64,7 +62,7 @@ namespace RocketLaunch.Views
         public RelayCommand OpenLogFile => new RelayCommand(() =>
         {
             var directory = Path.GetDirectoryName(Common.LogfilesPath);
-            if (directory != null)
+            if (directory != null && Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
 
@@ -78,31 +76,14 @@ namespace RocketLaunch.Views
                     }
                 }
             }
+            else
+            {
+                Log.Error($"Directory {directory} does not exist.");
+            }
         });
 
-        public string SearchString
-        {
-            get { return _searchString; }
-            set
-            {
-                var sw = new Stopwatch();
-                sw.Start();
-                _searchString = value;
-                SelectedIndex = -1;
-                List<RunItem> list = Indexing.Search(value);
-                SearchSuggestions.RaiseListChangedEvents = false;
-                SearchSuggestions.Clear();
-                foreach (var item in list)
-                {
-                    SearchSuggestions.Add(item);
-                }
-                SearchSuggestions.RaiseListChangedEvents = true;
-                SearchSuggestions.ResetBindings();
-                sw.Stop();
-                RenderingTime = (int)sw.ElapsedMilliseconds;
-
-            }
-        }
+        public string SearchString { get; set; }
+        
         private int _renderingTime;
 
         public int RenderingTime
@@ -122,10 +103,6 @@ namespace RocketLaunch.Views
         }
 
         public BindingList<RunItem> SearchSuggestions { get; set; } = new BindingList<RunItem>();
-        //public ObservableCollection<RunItem> SearchSuggestions { get; set; } = new ObservableCollection<RunItem>();
-
-
-        
 
         private void ExecuteSelectedListViewItem(bool asAdmin = false, bool openContainingFolder = false)
         {
@@ -139,17 +116,17 @@ namespace RocketLaunch.Views
 
                 }
                 Messenger.Default.Send<bool>(true, MessengerID.HideWindow);
-                
+
                 if (SearchSuggestions.Count > 0)
                 {
                     RunItemFactory.Start(SearchSuggestions[index], asAdmin, openContainingFolder);
                     if (!openContainingFolder) //We didn't actually start the application. Just the folder. Ignore the counter
                     {
                         Indexing.AddExecutedItem(SearchSuggestions[index]);
-                        Indexing.SavePrioTrie();
+                        Indexing.SaveTries();
                     }
 
-                    SearchString = _searchString;
+                    forceNewSearch = true;
                 }
             }
             catch (Exception e)
@@ -165,13 +142,13 @@ namespace RocketLaunch.Views
                 index = SelectedIndex;
             else
             {
-                
+
             }
             if (SearchSuggestions.Count > 0)
             {
                 Indexing.ResetItemRunCounter(SearchSuggestions[index]);
-                Indexing.SavePrioTrie();
-                SearchString = _searchString;
+                Indexing.SaveTries();
+                forceNewSearch = true;
             }
         }
         public int SelectedIndex
@@ -184,16 +161,16 @@ namespace RocketLaunch.Views
             }
         }
 
-        
+
+
+
+
 
         
-
-
-        private string _searchString;
         private int _selectedIndex = -1;
         private int _selectedViewIndex = 0;
 
-        
+
         /// <summary>
         /// Initializes a new instance of the MainViewModel class. IOC
         /// </summary>
@@ -209,7 +186,47 @@ namespace RocketLaunch.Views
             {
                 SelectedViewIndex = 0;
             });
-            SearchString = "";
+            forceNewSearch = true;
+
+            var searchTimer = new System.Timers.Timer(100);
+            searchTimer.Start();
+            searchTimer.Elapsed += (_, __) =>
+            {
+                CheckNewSearchString();  //there is no need to check faster than 100 ms.
+            };
+        }
+
+        private string localSearchString;
+        private bool currentlySearching;
+        private bool forceNewSearch;
+        private void CheckNewSearchString() 
+        {
+            if (forceNewSearch || SearchString != localSearchString && !currentlySearching)
+            {
+                forceNewSearch = false;
+                currentlySearching = true;
+                localSearchString = SearchString;
+                var sw = new Stopwatch();
+                sw.Start();
+                SelectedIndex = -1;
+                List<RunItem> list = Indexing.Search(localSearchString);
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    SearchSuggestions.RaiseListChangedEvents = false;
+                    SearchSuggestions.Clear();
+                    foreach (var item in list)
+                    {
+                        SearchSuggestions.Add(item);
+                    }
+
+                    SearchSuggestions.RaiseListChangedEvents = true;
+                    SearchSuggestions.ResetBindings();
+                });
+                
+                sw.Stop();
+                RenderingTime = (int) sw.ElapsedMilliseconds;
+                currentlySearching = false;
+            }
         }
 
         public SettingsService S { get; set; }

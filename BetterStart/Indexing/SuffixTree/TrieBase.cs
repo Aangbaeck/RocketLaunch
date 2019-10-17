@@ -118,10 +118,10 @@ namespace TrieImplementation
         }
 
         /// <summary>
-        /// Searches for word inside the Trie with the specified SearchType
+        /// Searches for word inside the Trie. Will only return nrOfHits. This goes much faster than returning all words
         /// </summary>
-        /// <param name="word"></param>
-        /// <param name="searchType"></param>
+        /// <param name="word">The actual word</param>
+        /// <param name="nrOfHits">The nr of hits we want returned</param>
         /// <returns>All words meeting the criteria</returns>
         public ICollection<string> Search(string word, int nrOfHits)
         {
@@ -137,7 +137,7 @@ namespace TrieImplementation
         public ICollection<string> FindAll(int nrOfHits)
         {
             List<string> words = new List<string>();
-            this.DfsForAllWords(this.Root, new StringBuilder(string.Empty), words, nrOfHits);
+            this.DepthFirstSearchAllWords(this.Root, new StringBuilder(string.Empty), words, nrOfHits);
             return words;
         }
 
@@ -146,7 +146,7 @@ namespace TrieImplementation
         /// </summary>
         /// <param name="word">Word to search</param>
         /// <param name="results"></param>
-        protected virtual void SubstringSearchCore(string word, ICollection<string> results, int nrOfHits)
+        private void SubstringSearchCore(string word, ICollection<string> results, int nrOfHits)
         {
             int currentPositionInWord = 0;
             if (this.Nodes.ContainsKey(word[currentPositionInWord]))
@@ -210,7 +210,7 @@ namespace TrieImplementation
                 if (results.Count > nrOfHits)
                     return;
 
-                this.DfsForAllWords(nodeValue, new StringBuilder(builtWord), results, nrOfHits);
+                this.DepthFirstSearchAllWords(nodeValue, new StringBuilder(builtWord), results, nrOfHits);
             }
         }
 
@@ -247,7 +247,7 @@ namespace TrieImplementation
         /// <summary>
         /// Using a Depth first search (http://en.wikipedia.org/wiki/Depth-first_search) to find all words under the current node.
         /// </summary>
-        protected virtual void DfsForAllWords(TrieNode currentNode, StringBuilder word, ICollection<string> results, int nrOfHits)
+        protected virtual void DepthFirstSearchAllWords(TrieNode currentNode, StringBuilder word, ICollection<string> results, int nrOfHits)
         {
             if (results.Count > nrOfHits)
                 return;
@@ -264,7 +264,7 @@ namespace TrieImplementation
                     results.Add(word.ToString());
                 }
 
-                this.DfsForAllWords(node, word, results, nrOfHits);
+                this.DepthFirstSearchAllWords(node, word, results, nrOfHits);
                 word.Length--;
             }
         }

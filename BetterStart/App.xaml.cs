@@ -25,7 +25,7 @@ namespace RocketLaunch
     /// </summary>
     public partial class App : Application
     {
-
+        
         static App()
         {
             Log.Logger = new LoggerConfiguration()

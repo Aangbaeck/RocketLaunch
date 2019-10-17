@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +13,8 @@ using RocketLaunch.Model;
 using GalaSoft.MvvmLight;
 using Newtonsoft.Json;
 using System.IO.Compression;
+using System.Management;
+using System.Management.Automation;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using IWshRuntimeLibrary;
@@ -20,6 +23,7 @@ using ProtoBuf;
 using Newtonsoft.Json.Serialization;
 using RocketLaunch.Indexing.SuffixTree;
 using Serilog;
+using Shell32;
 using TrieImplementation;
 using File = System.IO.File;
 
@@ -49,6 +53,8 @@ namespace RocketLaunch.Services
                 RunIndexingFirstTime();
 
             S.Settings.SearchDirectories.ListChanged += ListChanged;
+
+
 
             var timer = new Timer(s.Settings.ReindexingTime * 1000 * 60);
             timer.Start();
@@ -166,6 +172,43 @@ namespace RocketLaunch.Services
             });
         }
 
+        private void AddWindows10Apps(ConcurrentDictionary<string, RunItem> tempBag)
+        {
+            using (PowerShell PowerShellInstance = PowerShell.Create())
+            {
+                // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
+                // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
+                PowerShellInstance.AddScript("get-appxpackage");
+
+                // invoke execution on the pipeline (collecting output)
+                Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
+                // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
+                //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
+                foreach (PSObject outputItem in PSOutput)
+                {
+                    //TODO: handle/process the output items if required
+                    var item = outputItem.BaseObject;
+                    
+                    
+                    var propertyInfo = item.GetType().GetProperty("NonRemovable");
+                    var NonRemovable = (bool)propertyInfo.GetValue(item, null);
+                    propertyInfo = item.GetType().GetProperty("IsFramework");
+                    var IsFramework = (bool)propertyInfo.GetValue(item, null);
+                    //var cast = (Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage)
+
+                    if (!NonRemovable && !IsFramework)
+                    {
+                        propertyInfo = item.GetType().GetProperty("PackageFamilyName");
+                        var packageFamily = (string)propertyInfo.GetValue(item, null);
+                        //tempBag.TryAdd()
+                        Console.WriteLine(packageFamily);
+                    }
+                    
+                }
+            }
+
+        }
+
         public void RunIndexing()
         {
 
@@ -184,10 +227,16 @@ namespace RocketLaunch.Services
                     LastIndexed = DateTime.Now;
                     //Spread out the search on all directories on different tasks
                     //Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
+                    var tempBag = new ConcurrentDictionary<string, RunItem>();
+                    AddWindows10Apps(tempBag);
+                    foreach (var item in tempBag)
+                    {
+                        unorderedFiles.TryAdd(item.Key, item.Value);
+                    }
 
                     foreach (FolderSearch dir in S.Settings.SearchDirectories)
                     {
-                        var tempBag = new ConcurrentDictionary<string, RunItem>();
+                        tempBag = new ConcurrentDictionary<string, RunItem>();
                         ProcessDirectory(dir, tempBag);
                         dir.NrOfFiles = tempBag.Count;
                         foreach (var item in tempBag)
@@ -279,7 +328,8 @@ namespace RocketLaunch.Services
         {
             try
             {
-                Log.Debug("Saving prio trie");
+                if (S.Settings.DebugMode)
+                    Log.Debug("Saving prio trie");
                 using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "MatcherPrio.trie"), FileMode.Create))
                 {
                     Serializer.Serialize(fs, MatcherPrio);
@@ -298,7 +348,8 @@ namespace RocketLaunch.Services
         {
             try
             {
-                Log.Debug("Saving general trie");
+                if (S.Settings.DebugMode)
+                    Log.Debug("Saving general trie");
                 using (var fs = new FileStream(Path.GetFullPath(Common.Directory + "MatcherGeneral.trie"), FileMode.Create))
                 {
                     Serializer.Serialize(fs, MatcherGeneral);
@@ -366,6 +417,8 @@ namespace RocketLaunch.Services
 
         public List<RunItem> Search(string s, int nrOfHits = 10)
         {
+            if (s == null) s = "";
+            s = s.Trim();
             var fileList = new List<RunItem>();
             var sw = new Stopwatch();
             sw.Start();
@@ -373,24 +426,24 @@ namespace RocketLaunch.Services
             GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
             //Console.WriteLine($"    ");
-            
-            ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower(), 2000);
-            
+
+            ICollection<RunItem> prioResult = MatcherPrio.Search(s.ToLower());  //Get all results from indexing
+
             prioResult = prioResult.Concat(generalResult).ToList();  //put the rest of the results on the stack
             //foreach (var runItem in prioResult)
             //{
             //    Console.WriteLine($"{runItem.Name}, {runItem.RunNrOfTimes}");
 
             //}
-            //prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.OrderBy(p=>p.RunNrOfTimes).First()).ToList();  //remove potential duplicates
+            prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.OrderBy(p => p.RunNrOfTimes).First()).ToList();  //remove potential duplicates
             prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
 
             PrioSearchTime = (int)sw.ElapsedTicks;
             TotalSearchTime = GeneralSearchTime + PrioSearchTime;
             return prioResult.Take(10).ToList();
         }
-
-        public static void ProcessDirectory(FolderSearch dir, ConcurrentDictionary<string, RunItem> theBag)
+        
+        public void ProcessDirectory(FolderSearch dir, ConcurrentDictionary<string, RunItem> theBag)
         {
             try
             {
@@ -413,57 +466,83 @@ namespace RocketLaunch.Services
                     Log.Error($"{dir.Path} does not exist...");
                     return;
                 }
+
+
+                //ManagementObjectSearcher searcher = new ManagementObjectSearcher("SELECT * FROM Win32_Product");
+                //foreach (ManagementObject mgmtObjectin in searcher.Get())
+                //{
+                //    Console.WriteLine(mgmtObjectin["Name"]);
+                //    Console.WriteLine(mgmtObjectin.Path);
+                //}
+                
+
+                
+
                 //var t = theBag.ContainsKey(dir.URI);
                 // Process the list of files found in the directory.
                 string[] fileEntries = Directory.GetFiles(dir.Path, dir.SearchPattern);
                 foreach (string fileName in fileEntries)
                 {
-                    var sb = new StringBuilder();
 
-                    if (Path.GetExtension(fileName) == ".lnk")
+
+
+                    try
                     {
-                        var item = new RunItem();
 
-                        WshShell shell = new WshShell(); //Create a new WshShell Interface
-                        IWshShortcut link = (IWshShortcut)shell.CreateShortcut(fileName); //Link the interface to our shortcut
-                        var uri = link.TargetPath;
 
-                        if (!System.IO.File.Exists(uri))  //It sometimes mixes up the program files folder. Lets check both.
+
+
+                        if (Path.GetExtension(fileName) == ".lnk")
                         {
-                            if (uri.Contains("Program Files (x86)"))
+                            var item = new RunItem();
+                            WshShell shell = new WshShell(); //Create a new WshShell Interface
+                            IWshShortcut link = (IWshShortcut)shell.CreateShortcut(fileName); //Link the interface to our shortcut
+                            var uri = link.TargetPath;
+                            item.Arguments = link.Arguments;
+                            var t = link.FullName;
+
+                            if (!System.IO.File.Exists(uri))  //It sometimes mixes up the program files folder. Lets check both.
                             {
-                                uri = new StringBuilder(uri).Replace("Program Files (x86)", "Program Files").ToString();
+                                if (uri.Contains("Program Files (x86)"))
+                                {
+                                    uri = new StringBuilder(uri).Replace("Program Files (x86)", "Program Files").ToString();
+                                }
+                                if (!File.Exists(uri) && uri.Contains("Program Files"))
+                                    uri = new StringBuilder(uri).Replace("Program Files", "Program Files (x86)").ToString();
                             }
-                            if (!File.Exists(uri) && uri.Contains("Program Files"))
-                                uri = new StringBuilder(uri).Replace("Program Files", "Program Files (x86)").ToString();
-                        }
 
-                        if (System.IO.File.Exists(uri) && !uri.Contains("C:\\Windows\\Installer\\"))  //No reason to add a broken link.
+                            if (System.IO.File.Exists(uri) && !uri.Contains("C:\\Windows\\Installer\\"))  //No reason to add a broken link.
+                            {
+                                item.Type = ItemType.File;
+                                item.URI = new StringBuilder(uri).Replace("/", "\\").Replace("//", "\\").ToString();
+                                item.Name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+                                item.KeyWords = new List<string>() { Path.GetFileName(uri) };
+                                theBag.TryAdd(item.URI, item);
+                            }
+                        }
+                        else
                         {
+                            var item = new RunItem();
                             item.Type = ItemType.File;
-                            item.URI = new StringBuilder(uri).Replace("/", "\\").Replace("//", "\\").ToString();
-                            item.Name = System.IO.Path.GetFileNameWithoutExtension(fileName);
-                            item.KeyWords = new List<string>() { Path.GetFileName(item.URI) };
-                            theBag.TryAdd(item.URI, item);
+                            item.URI = new StringBuilder(fileName).Replace("/", "\\").Replace("//", "\\").ToString();
+                            item.Name = item.FileName;
+                            if (!theBag.ContainsKey(item.URI))
+                                theBag.TryAdd(item.URI, item);
                         }
                     }
-                    else
+                    catch (Exception e)
                     {
-                        var item = new RunItem();
-                        item.Type = ItemType.File;
-                        item.URI = new StringBuilder(fileName).Replace("/", "\\").Replace("//", "\\").ToString();
-                        item.Name = item.FileName;
-                        if (!theBag.ContainsKey(item.URI))
-                            theBag.TryAdd(item.URI, item);
+                        if (S.Settings.DebugMode)
+                            Log.Error(e,$"Could not index {fileName}");
                     }
-
 
 
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Log.Debug($"Could not search {dir.Path}");
+                if(S.Settings.DebugMode)
+                    Log.Debug($"Could not search {dir.Path}");
             }
             if (dir.SearchSubFolders)
             {
@@ -487,13 +566,29 @@ namespace RocketLaunch.Services
                 }
             }
         }
+        [STAThread]
+        public static string GetShortcutTargetFile(string shortcutFilename)
+        {
+            string pathOnly = System.IO.Path.GetDirectoryName(shortcutFilename);
+            string filenameOnly = System.IO.Path.GetFileName(shortcutFilename);
 
+            Shell shell = new Shell();
+            Shell32.Folder folder = shell.NameSpace(pathOnly);
+            FolderItem folderItem = folder.ParseName(filenameOnly);
+            if (folderItem != null)
+            {
+                Shell32.ShellLinkObject link = (Shell32.ShellLinkObject)folderItem.GetLink;
+                return link.Path;
+            }
+
+            return string.Empty;
+        }
 
         public void AddExecutedItem(RunItem exItem)
         {
-            MatcherGeneral.Remove(exItem.Name);
+            MatcherGeneral.Remove(exItem.Name.ToLower());
             exItem.RunNrOfTimes++;
-            MatcherPrio.Insert(exItem.Name, exItem);
+            MatcherPrio.Replace(exItem.Name, exItem);
             SaveTries();
         }
         public void ResetItemRunCounter(RunItem exItem)
@@ -501,8 +596,8 @@ namespace RocketLaunch.Services
             exItem.RunNrOfTimes = 0;
             if (exItem.Type == ItemType.File || exItem.Type == ItemType.Directory)  //Move it back to general list. Settings and other stuff will always be in the priolist.
             {
-                MatcherPrio.Remove(exItem.Name);
-                MatcherGeneral.Insert(exItem.Name, exItem);
+                MatcherPrio.Remove(exItem.Name.ToLower());
+                MatcherGeneral.Insert(exItem.Name.ToLower(), exItem);
             }
             SaveTries();
         }

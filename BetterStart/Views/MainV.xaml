@@ -330,6 +330,9 @@
                                         <i:InvokeCommandAction Command="{Binding DoubleClickOnItemCmd}" />
                                     </i:EventTrigger>
                                 </i:Interaction.Triggers>
+                                <ListView.InputBindings>
+                                    <KeyBinding Key="Enter" Command="{Binding DoubleClickOnItemCmd}" />
+                                </ListView.InputBindings>
                                 <ListView.ItemContainerStyle>
                                     <Style BasedOn="{StaticResource MaterialDesignGridViewItem}" TargetType="{x:Type ListViewItem}">
                                         <!--<Setter Property="Focusable" Value="false" />-->
@@ -381,10 +384,20 @@
 
                                         </rich:RichTextEditor>-->
                                                                 <TextBlock FontSize="14" Text="{Binding Name}" />
-                                                                <TextBlock
-                                                                    FontSize="9"
-                                                                    Foreground="LightGray"
-                                                                    Text="{Binding URI}" />
+                                                                <StackPanel Orientation="Horizontal">
+                                                                    <TextBlock
+                                                                        FontSize="9"
+                                                                        Foreground="LightGray"
+                                                                        Text="{Binding URI}" />
+                                                                    <TextBlock
+                                                                        FontSize="9"
+                                                                        Foreground="LightGray"
+                                                                        Text=" " />
+                                                                    <TextBlock
+                                                                        FontSize="9"
+                                                                        Foreground="LightGray"
+                                                                        Text="{Binding Arguments}" />
+                                                                </StackPanel>
 
                                                             </StackPanel>
                                                         </StackPanel>

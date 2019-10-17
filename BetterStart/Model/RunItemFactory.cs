@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Serilog;
@@ -14,70 +13,66 @@ namespace RocketLaunch.Model
         {
             try
             {
-                switch (item.Type)
-                {
-                    case ItemType.File:
-                        if (asAdmin)
-                        {
-                            ExecuteAsAdmin(item.URI);
-                        }
-                        else if (openContainingFolder)
-                        {
-                            string args = string.Format("/e, /select, \"{0}\"", item.URI);
-                            ProcessStartInfo info = new ProcessStartInfo();
-                            info.FileName = "explorer";
-                            info.Arguments = args;
-                            Process.Start(info);
-                        }
-                        else  //The normal start
-                        {
+                //Fire away. We don't need to hold on to it...
+                Task.Run(() =>
+                {  
+                    switch (item.Type)
+                    {
+                        case ItemType.File:
+                            if (asAdmin)
+                            {
+                                WindowHelper.BringProcessToFrontOrStartIt(item.URI, item.Arguments, asAdmin: true);
+                            }
+                            else if (openContainingFolder)
+                            {
+                                string args = string.Format("/e, /select, \"{0}\"", item.URI);
+                                ProcessStartInfo info = new ProcessStartInfo();
+                                info.FileName = "explorer";
+                                info.Arguments = args;
+                                Process.Start(info);
+                            }
+                            else  //The normal start
+                            {
+                                WindowHelper.BringProcessToFrontOrStartIt(item.URI,item.Arguments, asAdmin:false);
+                            }
+                            break;
+                        case ItemType.Directory:
                             Process.Start(item.URI);
-                        }
-                        break;
-                    case ItemType.Directory:
-                        Process.Start(item.URI);
-                        break;
-                    case ItemType.RunDialog:
-                        Task.Run(() => { RunFileDlg(IntPtr.Zero, IntPtr.Zero, null, null, null, 0); });  //Fire away this. We don't need to hold on to it...
-                        break;
-                    case ItemType.ControlPanelSetting:
-                        Process.Start(item.Command);
-                        break;
-                    case ItemType.TurnOffComputer:
-                        Process.Start("shutdown", "/s /t 0");
-                        break;
-                    case ItemType.RestartComputer:
-                        Process.Start("shutdown", "/r /t 0"); // the argument /r is to restart the computer
-                        break;
-                    case ItemType.LogOffComputer:
-                        ExitWindowsEx(0, 0);
-                        break;
-                    case ItemType.LockComputer:
-                        LockWorkStation();
-                        break;
-                    case ItemType.Hibernate:
-                        SetSuspendState(true, true, true);
-                        break;
-                    case ItemType.Sleep:
-                        SetSuspendState(false, true, true);
-                        break;
+                            break;
+                        case ItemType.RunDialog:
+                            RunFileDlg(IntPtr.Zero, IntPtr.Zero, null, null, null, 0);
+                            break;
+                        case ItemType.ControlPanelSetting:
+                            Process.Start(item.Command);
+                            break;
+                        case ItemType.TurnOffComputer:
+                            Process.Start("shutdown", "/s /t 0");
+                            break;
+                        case ItemType.RestartComputer:
+                            Process.Start("shutdown", "/r /t 0"); // the argument /r is to restart the computer
+                            break;
+                        case ItemType.LogOffComputer:
+                            ExitWindowsEx(0, 0);
+                            break;
+                        case ItemType.LockComputer:
+                            LockWorkStation();
+                            break;
+                        case ItemType.Hibernate:
+                            SetSuspendState(true, true, true);
+                            break;
+                        case ItemType.Sleep:
+                            SetSuspendState(false, true, true);
+                            break;
 
-                }
+                    }
+                });
             }
             catch (Exception e)
             {
                 Log.Error(e, "Could not execute this command");
             }
         }
-        public static void ExecuteAsAdmin(string fileName)
-        {
-            Process proc = new Process();
-            proc.StartInfo.FileName = fileName;
-            proc.StartInfo.UseShellExecute = true;
-            if (Path.GetExtension(fileName) == ".exe")
-                proc.StartInfo.Verb = "runas";  //This forces it to use admin rights
-            proc.Start();
-        }
+        
         public static RunItem Setting(string name, List<string> keyWords, string description, string command, string customIcon)
         {
             return new RunItem() { Name = name, KeyWords = keyWords, URI = description, Type = ItemType.ControlPanelSetting, Command = command, CustomIconName = customIcon };
@@ -238,6 +233,7 @@ namespace RocketLaunch.Model
             [In] string title,
             [In] string prompt,
             [In] uint flags);
-    }
 
+        
+    }
 }
