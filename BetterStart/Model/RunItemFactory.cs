@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Management.Automation;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Serilog;
@@ -39,6 +41,9 @@ namespace RocketLaunch.Model
                         case ItemType.Directory:
                             Process.Start(item.URI);
                             break;
+                        case ItemType.Win10App:
+                            StartWin10App(item);
+                            break;
                         case ItemType.RunDialog:
                             RunFileDlg(IntPtr.Zero, IntPtr.Zero, null, null, null, 0);
                             break;
@@ -72,38 +77,63 @@ namespace RocketLaunch.Model
                 Log.Error(e, "Could not execute this command");
             }
         }
-        
+
+        private static void StartWin10App(RunItem item)
+        {
+            try
+            {
+                using (PowerShell PowerShellInstance = PowerShell.Create())
+                {
+                    // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
+                    // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
+                    PowerShellInstance.AddScript($@"explorer.exe shell:appsFolder\{item.Command}!App");
+
+                    // invoke execution on the pipeline (collecting output)
+                    PowerShellInstance.Invoke();
+                    // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
+                    //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
+
+                }
+
+            }
+            catch (Exception e)
+            {
+                Log.Error(e,$"Could not run win10 app {item.Name}");
+            }
+            
+        }
+
         public static RunItem Setting(string name, List<string> keyWords, string description, string command, string customIcon)
         {
-            return new RunItem() { Name = name, KeyWords = keyWords, URI = description, Type = ItemType.ControlPanelSetting, Command = command, CustomIconName = customIcon };
+            return new RunItem() { Name = name, KeyWords = keyWords, URI = description, Type = ItemType.ControlPanelSetting, Command = command, IconName = customIcon };
         }
         public static RunItem RunDialog()
         {
-            return new RunItem() { Name = "Run", URI = "Run file dialog Windows", Type = ItemType.RunDialog, CustomIconName = "run_command.png" };
+            return new RunItem() { Name = "Run", URI = "Run file dialog Windows", Type = ItemType.RunDialog, IconName = "run_command.png" };
         }
         public static RunItem TurnOffComputer()
         {
-            return new RunItem() { Name = "Turn off", URI = "Turn off computer", Type = ItemType.TurnOffComputer, CustomIconName = "turnoff.png" };
+            return new RunItem() { Name = "Turn off", URI = "Turn off computer", Type = ItemType.TurnOffComputer, IconName = "turnoff.png" };
         }
         public static RunItem RestartComputer()
         {
-            return new RunItem() { Name = "Restart", URI = "Restart computer", Type = ItemType.RestartComputer, CustomIconName = "restart.png" };
+            return new RunItem() { Name = "Restart", URI = "Restart computer", Type = ItemType.RestartComputer, IconName = "restart.png" };
         }
         public static RunItem LogOffWindows()
         {
-            return new RunItem() { Name = "Log Off", URI = "Log out of windows", Type = ItemType.LogOffComputer, CustomIconName = "logoff.png" };
+            return new RunItem() { Name = "Log Off", URI = "Log out of windows", Type = ItemType.LogOffComputer, IconName = "logoff.png" };
         }
         public static RunItem LockWindows()
         {
-            return new RunItem() { Name = "Lock computer", URI = "Lock this computer", Type = ItemType.LockComputer, CustomIconName = "lockcomputer.png" };
+            return new RunItem() { Name = "Lock computer", URI = "Lock this computer", Type = ItemType.LockComputer, IconName = "lockcomputer.png" };
         }
         public static RunItem HibernateWindows()
         {
-            return new RunItem() { Name = "Hibernate computer", URI = "Hibernate this computer", Type = ItemType.Hibernate, CustomIconName = "hibernate.png" };
+            return new RunItem() { Name = "Hibernate computer", URI = "Hibernate this computer", Type = ItemType.Hibernate, IconName = "hibernate.png" };
         }
         public static RunItem SleepWindows()
         {
-            return new RunItem() { Name = "Sleep ZZzzz", URI = "Make computer sleep", Type = ItemType.Sleep, CustomIconName = "sleep.png" };
+            return new RunItem() { Name = "Sleep ZZzzz", URI = "Make computer sleep", Type = ItemType.Sleep, IconName = "sleep.png" };
         }
 
         [DllImport("user32")]

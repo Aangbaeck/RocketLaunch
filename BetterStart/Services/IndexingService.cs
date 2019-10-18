@@ -17,6 +17,8 @@ using System.Management;
 using System.Management.Automation;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using IWshRuntimeLibrary;
 using Newtonsoft.Json.Bson;
 using ProtoBuf;
@@ -172,8 +174,9 @@ namespace RocketLaunch.Services
             });
         }
 
-        private void AddWindows10Apps(ConcurrentDictionary<string, RunItem> tempBag)
+        private List<RunItem> AddWindows10Apps()
         {
+            var list = new List<RunItem>();
             using (PowerShell PowerShellInstance = PowerShell.Create())
             {
                 // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
@@ -188,8 +191,8 @@ namespace RocketLaunch.Services
                 {
                     //TODO: handle/process the output items if required
                     var item = outputItem.BaseObject;
-                    
-                    
+
+
                     var propertyInfo = item.GetType().GetProperty("NonRemovable");
                     var NonRemovable = (bool)propertyInfo.GetValue(item, null);
                     propertyInfo = item.GetType().GetProperty("IsFramework");
@@ -198,15 +201,61 @@ namespace RocketLaunch.Services
 
                     if (!NonRemovable && !IsFramework)
                     {
+                        var runItem = new RunItem() { Type = ItemType.Win10App };
+
                         propertyInfo = item.GetType().GetProperty("PackageFamilyName");
                         var packageFamily = (string)propertyInfo.GetValue(item, null);
-                        //tempBag.TryAdd()
-                        Console.WriteLine(packageFamily);
+                        runItem.Command = packageFamily;
+
+                        propertyInfo = item.GetType().GetProperty("Name");
+                        var names = ((string)propertyInfo.GetValue(item, null)).Split('.').ToList();
+                        runItem.Name = names.Last();
+
+                        names.Remove(names.Last());
+                        runItem.URI = string.Join(".", names.ToArray());
+
+                        propertyInfo = item.GetType().GetProperty("InstallLocation");
+                        var installLocation = (string)propertyInfo.GetValue(item, null);
+                        var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
+                        runItem.IconName = icon.icon;
+                        runItem.IconBackGround = icon.background;
+                        list.Add(runItem);
+                        //Console.WriteLine(packageFamily);
                     }
-                    
+
                 }
             }
 
+            return list;
+
+        }
+
+        private (string icon, string background) GetWin10Icon(string installLocation)
+        {
+            XmlDocument doc = new XmlDocument();
+            if (File.Exists(installLocation))
+            {
+                try
+                {
+                    var data = File.ReadAllLines(installLocation).ToList();
+                    data.RemoveAt(0);
+
+                    XmlDocument xml = new XmlDocument();
+                    xml.LoadXml(string.Join("",data.ToArray()));
+
+                    XmlNodeList node = xml.GetElementsByTagName("uap:VisualElements");
+                    var Square44x44Logo =node.Item(0).Attributes["Square44x44Logo"].Value;
+                    var path = Path.GetDirectoryName(installLocation)+ File.fileSquare44x44Logo.
+
+                    var background = node.Item(0).Attributes["BackgroundColor"].Value;
+                    return (Square44x44Logo, background);
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e,"Broken xml file");
+                }
+            }
+            return ("","");
         }
 
         public void RunIndexing()
@@ -216,27 +265,47 @@ namespace RocketLaunch.Services
             {
                 try
                 {
-
-
                     if (IndexingIsRunning) return;
                     IndexingIsRunning = true;
 
+                    var tempTrie = new Indexing.SuffixTree.Trie<RunItem>();
+
                     foreach (var dir in S.Settings.SearchDirectories) { dir.NrOfFiles = 0; } //Resetting this so it looks nice when gui is propagating the new info..
 
-                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+
                     LastIndexed = DateTime.Now;
                     //Spread out the search on all directories on different tasks
-                    //Task.WaitAll(S.SearchDirectories.Select(d => ProcessDirectory(d.Path, d.SearchPattern, d.SearchSubFolders, unorderedFiles)).ToArray());
-                    var tempBag = new ConcurrentDictionary<string, RunItem>();
-                    AddWindows10Apps(tempBag);
-                    foreach (var item in tempBag)
+
+
+                    try
                     {
-                        unorderedFiles.TryAdd(item.Key, item.Value);
+                        var win10List = AddWindows10Apps();
+                        foreach (var item in win10List)
+                        {
+                            tempTrie.Insert(item.Name, item);
+                            tempTrie.Insert(item.URI, item);
+                        }
                     }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Could not add Windows10 store apps.");
+                    }
+
+                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+                    //Task.WaitAll(S.Settings.SearchDirectories.Select(dir => new Task(() =>
+                    //{
+                    //    var tempBag = new ConcurrentDictionary<string, RunItem>();
+                    //    ProcessDirectory(dir, tempBag);
+                    //    dir.NrOfFiles = tempBag.Count;
+                    //    foreach (var item in tempBag)
+                    //    {
+                    //        unorderedFiles.TryAdd(item.Key, item.Value);
+                    //    }
+                    //})).ToArray());
 
                     foreach (FolderSearch dir in S.Settings.SearchDirectories)
                     {
-                        tempBag = new ConcurrentDictionary<string, RunItem>();
+                        var tempBag = new ConcurrentDictionary<string, RunItem>();
                         ProcessDirectory(dir, tempBag);
                         dir.NrOfFiles = tempBag.Count;
                         foreach (var item in tempBag)
@@ -245,24 +314,25 @@ namespace RocketLaunch.Services
                         }
                     }
 
-
                     RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
                     tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
-                    var temp = new Indexing.SuffixTree.Trie<RunItem>();
+
                     //var sw = new Stopwatch();
                     //sw.Start();
                     for (int i = 0; i < tempList.Length; i++)
                     {
                         try
                         {
-                            Progress = i / tempList.Length * 100;
-                            temp.Insert(tempList[i].Name.ToLower(), tempList[i]);
-                            if (Path.GetExtension(tempList[i].FileName) == ".exe")  //adding the containing folder as well
-                            {
-                                temp.Insert(new DirectoryInfo(Path.GetDirectoryName(tempList[i].URI)).Name.ToLower(), tempList[i]);
-                            }
+                            //Progress = i / tempList.Length * 100;
+
+                            tempTrie.Insert(tempList[i].Name.ToLower(), tempList[i]);
+
+                            if (tempList[i].Type == ItemType.File)
+                                tempTrie.Insert(tempList[i].FileName.ToLower(), tempList[i]);
+                            if (tempList[i].Type == ItemType.Win10App)
+                                tempTrie.Insert(tempList[i].URI.ToLower(), tempList[i]);
                             if (tempList[i].KeyWords != null && tempList[i].KeyWords.Count > 0)
-                                temp.Insert(tempList[i].KeyWords, tempList[i]);
+                                tempTrie.Insert(tempList[i].KeyWords, tempList[i]);
 
                         }
                         catch (Exception e)
@@ -272,7 +342,7 @@ namespace RocketLaunch.Services
 
                     }
 
-                    MatcherGeneral = temp;
+                    MatcherGeneral = tempTrie;
                     NrOfPaths = MatcherGeneral.DataDictionary.Count + MatcherPrio.DataDictionary.Count;
 
                     SaveTries();
@@ -442,7 +512,7 @@ namespace RocketLaunch.Services
             TotalSearchTime = GeneralSearchTime + PrioSearchTime;
             return prioResult.Take(10).ToList();
         }
-        
+
         public void ProcessDirectory(FolderSearch dir, ConcurrentDictionary<string, RunItem> theBag)
         {
             try
@@ -474,9 +544,9 @@ namespace RocketLaunch.Services
                 //    Console.WriteLine(mgmtObjectin["Name"]);
                 //    Console.WriteLine(mgmtObjectin.Path);
                 //}
-                
 
-                
+
+
 
                 //var t = theBag.ContainsKey(dir.URI);
                 // Process the list of files found in the directory.
@@ -533,7 +603,7 @@ namespace RocketLaunch.Services
                     catch (Exception e)
                     {
                         if (S.Settings.DebugMode)
-                            Log.Error(e,$"Could not index {fileName}");
+                            Log.Error(e, $"Could not index {fileName}");
                     }
 
 
@@ -541,7 +611,7 @@ namespace RocketLaunch.Services
             }
             catch (Exception e)
             {
-                if(S.Settings.DebugMode)
+                if (S.Settings.DebugMode)
                     Log.Debug($"Could not search {dir.Path}");
             }
             if (dir.SearchSubFolders)
