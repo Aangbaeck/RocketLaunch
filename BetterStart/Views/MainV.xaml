@@ -368,10 +368,12 @@
                                                     <Grid HorizontalAlignment="Stretch" ToolTip="{Binding URI}">
 
                                                         <StackPanel Grid.Column="0" Orientation="Horizontal">
-                                                            <Image
+                                                            <Grid
                                                                 Width="32"
                                                                 Margin="0,0,20,0"
-                                                                Source="{Binding Icon}" />
+                                                                Background="{Binding IconBackGround}">
+                                                                <Image Width="32" Source="{Binding Icon}" />
+                                                            </Grid>
                                                             <StackPanel>
 
                                                                 <!--<rich:RichTextEditor FontSize="14" Foreground="LightGray">

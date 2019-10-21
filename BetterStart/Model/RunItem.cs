@@ -27,7 +27,7 @@ namespace RocketLaunch.Model
         [ProtoMember(3)] public ItemType Type { get; set; }  //The way we take a decision on what to do with this type
         [ProtoMember(4)] public string Command { get; set; } //The actual command to run for settings
         [ProtoMember(5)] public string IconName { get; set; } //manually customized icons
-        [ProtoMember(6)] public string IconBackGround { get; set; } //manually customized icons
+        [ProtoMember(6)] public string IconBackGround { get; set; } = "Transparent"; //manually customized icons
         [ProtoMember(7)] public string URI { get; set; } //The file path or website or specific text that should be written underneath the Name in the UI.
         [ProtoMember(8)] public string Arguments { get; set; } //The arguments to run with the URI
         [ProtoMember(9)] public int RunNrOfTimes { get; set; } = 0;
@@ -76,7 +76,7 @@ namespace RocketLaunch.Model
         {
             get
             {
-
+                
                 BitmapSource icon = null;
                 try
                 {
@@ -93,7 +93,7 @@ namespace RocketLaunch.Model
                     }
                     if (Type == ItemType.Win10App)
                     {
-                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
+                        var uri = new Uri(IconName);
                         return new BitmapImage(uri);
                     }
 
