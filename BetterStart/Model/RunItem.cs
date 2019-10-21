@@ -91,6 +91,11 @@ namespace RocketLaunch.Model
                         var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
                         return new BitmapImage(uri);
                     }
+                    if (Type == ItemType.Win10App)
+                    {
+                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
+                        return new BitmapImage(uri);
+                    }
 
                     var sw = new Stopwatch();
                     sw.Start();

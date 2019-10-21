@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
+using Serilog;
 
 namespace RocketLaunch.Helper
 {
@@ -46,12 +47,14 @@ namespace RocketLaunch.Helper
             IEnumerable<FileInfo> files = dir.EnumerateFiles();
             return files.Where(f => extensions.Contains(f.Extension));
         }
+
         [SuppressUnmanagedCodeSecurity]
         internal static class SafeNativeMethods
         {
             [DllImport("shlwapi.dll", CharSet = CharSet.Unicode)]
             public static extern int StrCmpLogicalW(string psz1, string psz2);
         }
+
         /// <summary>
         /// Use this as a comparer to get natural file name sorting (aka windows style)
         /// </summary>
@@ -62,18 +65,20 @@ namespace RocketLaunch.Helper
                 return SafeNativeMethods.StrCmpLogicalW(a.Name, b.Name);
             }
         }
+
         public static string LogfilesPath { get; set; } = Directory + "Logfiles/";
         public static string SettingsPath { get; set; } = Directory + "Settings/Settings.json";
         public static string WindowPositionsPath { get; set; } = Directory + "WindowPositions/";
-        public static string Directory => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + "//";
-        
+        public static string Directory => Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "//";
+
 
     }
 
     public static class FocusExtension
     {
         public static readonly DependencyProperty IsFocusedProperty =
-            DependencyProperty.RegisterAttached("IsFocused", typeof(bool?), typeof(FocusExtension), new FrameworkPropertyMetadata(IsFocusedChanged) { BindsTwoWayByDefault = true });
+            DependencyProperty.RegisterAttached("IsFocused", typeof(bool?), typeof(FocusExtension),
+                new FrameworkPropertyMetadata(IsFocusedChanged) {BindsTwoWayByDefault = true});
 
         public static bool? GetIsFocused(DependencyObject element)
         {
@@ -82,7 +87,7 @@ namespace RocketLaunch.Helper
                 throw new ArgumentNullException("element");
             }
 
-            return (bool?)element.GetValue(IsFocusedProperty);
+            return (bool?) element.GetValue(IsFocusedProperty);
         }
 
         public static void SetIsFocused(DependencyObject element, bool? value)
@@ -97,7 +102,7 @@ namespace RocketLaunch.Helper
 
         private static void IsFocusedChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var fe = (FrameworkElement)d;
+            var fe = (FrameworkElement) d;
 
             if (e.OldValue == null)
             {
@@ -110,7 +115,7 @@ namespace RocketLaunch.Helper
                 fe.IsVisibleChanged += new DependencyPropertyChangedEventHandler(fe_IsVisibleChanged);
             }
 
-            if ((bool)e.NewValue)
+            if ((bool) e.NewValue)
             {
                 fe.Focus();
             }
@@ -118,8 +123,8 @@ namespace RocketLaunch.Helper
 
         private static void fe_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            var fe = (FrameworkElement)sender;
-            if (fe.IsVisible && (bool)((FrameworkElement)sender).GetValue(IsFocusedProperty))
+            var fe = (FrameworkElement) sender;
+            if (fe.IsVisible && (bool) ((FrameworkElement) sender).GetValue(IsFocusedProperty))
             {
                 fe.IsVisibleChanged -= fe_IsVisibleChanged;
                 fe.Focus();
@@ -128,16 +133,55 @@ namespace RocketLaunch.Helper
 
         private static void FrameworkElement_GotFocus(object sender, RoutedEventArgs e)
         {
-            ((FrameworkElement)sender).SetValue(IsFocusedProperty, true);
+            ((FrameworkElement) sender).SetValue(IsFocusedProperty, true);
         }
 
         private static void FrameworkElement_LostFocus(object sender, RoutedEventArgs e)
         {
-            ((FrameworkElement)sender).SetValue(IsFocusedProperty, false);
+            ((FrameworkElement) sender).SetValue(IsFocusedProperty, false);
         }
+
+        public static IEnumerable<string> GetFiles(this string path, string searchPattern)
+        {
+            Queue<string> queue = new Queue<string>();
+            queue.Enqueue(path);
+            while (queue.Count > 0)
+            {
+                path = queue.Dequeue();
+                try
+                {
+                    foreach (string subDir in Directory.GetDirectories(path))
+                    {
+                        queue.Enqueue(subDir);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "");
+                }
+
+                string[] files = null;
+                try
+                {
+                    files = Directory.GetFiles(path, searchPattern);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, "");
+                }
+
+                if (files != null)
+                {
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        yield return files[i];
+                    }
+                }
+            }
+        }
+
+
+
+
     }
-
-    
-
-
 }

@@ -241,23 +241,61 @@ namespace RocketLaunch.Services
                     data.RemoveAt(0);
 
                     XmlDocument xml = new XmlDocument();
-                    xml.LoadXml(string.Join("",data.ToArray()));
+                    xml.LoadXml(string.Join("", data.ToArray()));
 
                     XmlNodeList node = xml.GetElementsByTagName("uap:VisualElements");
-                    var Square44x44Logo =node.Item(0).Attributes["Square44x44Logo"].Value;
-                    var path = Path.GetDirectoryName(installLocation)+ File.fileSquare44x44Logo.
+                    if (node.Count == 0)
+                        node = xml.GetElementsByTagName("VisualElements");
+                    if (node.Count > 0)
+                    {
+                        var logoNode = node.Item(0).Attributes["Square44x44Logo"];
+                        if (logoNode == null)
+                        {
+                            logoNode = node.Item(0).Attributes["Logo"];
+                        }
+                        if (logoNode != null)
+                        {
+                            var assetDirectory =
+                                Path.GetDirectoryName(installLocation) + "\\" + Path.GetDirectoryName(logoNode.Value);
+                            var extension = Path.GetExtension(logoNode.Value);
+                            var files = new List<string>();
+                            foreach (var file in assetDirectory.GetFiles($"*{extension}")) { files.Add(file);}
+                            
+                            
+                            var fileName = Path.GetFileNameWithoutExtension(logoNode.Value);
 
-                    var background = node.Item(0).Attributes["BackgroundColor"].Value;
-                    return (Square44x44Logo, background);
+
+
+                            var path = files.Where(s => s.ToLower().Contains(fileName.ToLower()));
+
+                            if (path.Any(p => p.Contains("44")))
+                                path = path.Where(p => p.Contains("44"));
+                            if (path.Any(p => p.Contains("light")))
+                                path = path.Where(p => p.Contains("light"));
+
+                            string logoPath = path.First();
+
+                            string background = node.Item(0).Attributes["BackgroundColor"].Value;
+                            return (logoPath, background);
+                        }
+                        else
+                        {
+                            Log.Debug($"Could not find Icon name in {installLocation}");
+                        }
+                    }
+                    else
+                    {
+                        Log.Debug($"Could not find VisualElements for icon in {installLocation}");
+                    }
                 }
                 catch (Exception e)
                 {
-                    Log.Error(e,"Broken xml file");
+                    Log.Error(e, "Broken xml file");
                 }
             }
-            return ("","");
+            return ("", "");
         }
-
+        
         public void RunIndexing()
         {
 
