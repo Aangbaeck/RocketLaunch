@@ -16,17 +16,20 @@ AppSupportURL=http://www.angback.se/
 AppUpdatesURL=http://www.angback.se/
 DefaultDirName={pf}\RocketLaunch
 DefaultGroupName=RocketLaunch
-OutputDir=C:\Projekt\StartMenu2.0\Installer
+OutputDir=C:\Projekt\RocketLaunch\Installer
 OutputBaseFilename=RocketLauncherInstallerV{#Version}
-SetupIconFile=C:\Projekt\StartMenu2.0\BetterStart\Assets\rocket.ico
+SetupIconFile=C:\Projekt\RocketLaunch\RocketLaunch\Assets\rocket.ico
 Compression=lzma
 SolidCompression=yes
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
+[Dirs]
+Name: "{app}"; Permissions: everyone-full
+
 [Files]
-Source: "C:\Projekt\StartMenu2.0\BetterStart\bin\Release\RocketLaunch.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\Projekt\RocketLaunch\RocketLaunch\bin\Release\RocketLaunch.exe"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs;  Permissions: everyone-full
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

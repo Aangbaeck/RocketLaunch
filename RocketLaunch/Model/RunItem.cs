@@ -93,33 +93,20 @@ namespace RocketLaunch.Model
                     }
                     if (Type == ItemType.Win10App)
                     {
-                        var uri = new Uri(IconName);
-                        return new BitmapImage(uri);
+                        if (IconName != null)
+                        {
+                            var uri = new Uri(IconName);
+                            return new BitmapImage(uri);
+                        }
                     }
-
-                    var sw = new Stopwatch();
-                    sw.Start();
-                    var t = sw.ElapsedTicks;
                     if (System.IO.File.Exists(URI))
                     {
-                        
-                        var path = URI;
-                        using (System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(path))
+                        using (System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI))
                         {
                             var handle = (int)sysicon.Handle;
                             icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
-                            //if (handle == 441650415)   //This 441650415 handle means that it uses a standard icon.
-                            //{
-                            //    ImageSource sysIcon = IconManager.FindIconForFilename(URI, true);  //Fail silently with 'as'. All we can do is try...
-                            //    if (sysIcon != null)
-                            //    {
-                            //        t = sw.ElapsedTicks;
-                            //        return sysIcon;
-                            //    }
-                            //}
                         }
                     }
-                    
                 }
                 catch (Exception e)
                 {
@@ -127,13 +114,7 @@ namespace RocketLaunch.Model
                 }
 
                 return icon;
-                //}
-                //if(Type == ItemType.Directory)
-
-                //else return null;
             }
-
-
         }
     }
 

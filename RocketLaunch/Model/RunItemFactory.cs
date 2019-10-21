@@ -84,9 +84,10 @@ namespace RocketLaunch.Model
             {
                 using (PowerShell PowerShellInstance = PowerShell.Create())
                 {
+                    item.Command=item.Command.Replace(@"\\", @"\").Replace(@"{", @"""{").Replace(@"}", @"}""");
                     // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
                     // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
-                    PowerShellInstance.AddScript($@"explorer.exe shell:appsFolder\{item.Command}!App");
+                    PowerShellInstance.AddScript($@"start shell:appsFolder\{item.Command}");
 
                     // invoke execution on the pipeline (collecting output)
                     PowerShellInstance.Invoke();
@@ -253,7 +254,74 @@ namespace RocketLaunch.Model
             RunItemFactory.Setting("Mixed reality", new List<string>(){"Mixed reality"}, "System Settings - Mixed reality","ms-settings:holographic","holographic.png"),
             RunItemFactory.Setting("Audio and speech", new List<string>(){"Mixed reality"}, "System Settings - Mixed reality","ms-settings:holographic-audio","holographic-audio.png"),
 
+            //3D Builder  com.microsoft.builder3d:
+            //Action Center   ms-actioncenter:
+            //Alarms & Clock  ms-clock:
+            //Available Networks  ms-availablenetworks:
+            //Calculator  calculator:
+            //Calendar    outlookcal:
+            //Camera  microsoft.windows.camera:
+            //Candy Crush Soda Saga   candycrushsodasaga:
+            //Connect ms-projection:
+            //Cortana ms-cortana:
+            //Cortana Connected Services
+            //ms-cortana://notebook/?ConnectedServices
+            //Cortana Personal Information
+            //ms-cortana://settings/ManageBingProfile
+            //Device Discovery    ms-settings-connectabledevices:devicediscovery
+            //Drawboard PDF   drawboardpdf:
+            //Facebook    fb:
+            //Feedback Hub    feedback-hub:
+            //Get Help    ms-contact-support:
+            //Groove Music    mswindowsmusic:
+            //Mail    outlookmail:
+            //Maps    bingmaps:
+            //ms-drive-to:
+            //ms-walk-to:
+            //Messaging   ms-chat:
+            //Microsoft Edge  microsoft-edge:
+            //Microsoft News  bingnews:
+            //Microsoft Solitaire Collection  xboxliveapp-1297287741:
+            //Microsoft Store ms-windows-store:
+            //Microsoft Store - Music
+            //microsoftmusic:
+            //Microsoft Store - Movies & TV
+            //microsoftvideo:
+            //Microsoft Whiteboard    ms-whiteboard-cmd:
+            //Minecraft: Windows 10 Edition   minecraft:
+            //Mixed Reality Camera    ms-holocamera:
+            //Mixed Reality Portal    ms-holographicfirstrun:
+            //Movies & TV mswindowsvideo:
+            //OneNote onenote:
+            //Paint 3D    ms-paint:
+            //People  ms-people:
+            //Photos  ms-photos:
+            //Project Display ms-settings-displays-topology:projection
+            //Settings    ms-settings:
+            //Tips    ms-get-started:
+            //Twitter twitter:
+            //View 3D Preview com.microsoft.3dviewer:
+            //Voice Recorder  ms-callrecording:
+            //Weather bingweather:
+            //Windows Mixed Reality Environments  ms-environment-builder:
+            //Windows Parental Controls   ms-wpc:
+            //Windows Security    windowsdefender:
+            //Xbox    xbox:
+            //Xbox - Friends list
+            //xbox-friendfinder:
+            //Xbox - Profile page
+            //xbox-profile:
+            //Xbox - Network settings
+            //xbox-network:
+            //Xbox - Settings
+            //xbox-settings:
+            //Xbox One SmartGlass smartglass:
+
+
+
         };
+
+        
 
         [DllImport("shell32.dll", EntryPoint = "#61", CharSet = CharSet.Unicode)]
         private static extern int RunFileDlg(

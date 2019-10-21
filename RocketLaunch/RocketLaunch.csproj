@@ -45,6 +45,15 @@
   <PropertyGroup>
     <ApplicationIcon>Assets\rocket.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <GenerateManifests>false</GenerateManifests>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="AutoHotkey.Interop">
       <HintPath>.\AutoHotkey.Interop.dll</HintPath>
@@ -75,6 +84,7 @@
     <Compile Include="Helper\GridViewColumnVisibilityManager.cs" />
     <Compile Include="Helper\IconManager.cs" />
     <Compile Include="Helper\KeepOneItemInListViewSelected.cs" />
+    <Compile Include="Helper\KnownFolderIDLookup.cs" />
     <Compile Include="Helper\ListViewIndexConverter.cs" />
     <Compile Include="Helper\SvgViewboxAttachedProperties.cs" />
     <Compile Include="Helper\WindowPlacement.cs" />
@@ -166,6 +176,7 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

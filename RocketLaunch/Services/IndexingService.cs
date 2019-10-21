@@ -230,6 +230,65 @@ namespace RocketLaunch.Services
 
         }
 
+        private List<RunItem> AddWindows10AppsBetterWay()
+        {
+            var list = new List<RunItem>();
+            using (PowerShell PowerShellInstance = PowerShell.Create())
+            {
+                // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
+                // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
+                PowerShellInstance.AddScript("Get-StartApps");
+
+                // invoke execution on the pipeline (collecting output)
+                Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
+                // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
+                //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
+                foreach (PSObject outputItem in PSOutput)
+                {
+                    //TODO: handle/process the output items if required
+                    var item = outputItem.ToString();
+
+                    //var propertyInfo = item.GetType().GetProperty("NonRemovable");
+                    //var NonRemovable = (bool)propertyInfo.GetValue(item, null);
+                    //propertyInfo = item.GetType().GetProperty("IsFramework");
+                    //var IsFramework = (bool)propertyInfo.GetValue(item, null);
+                    //var cast = (Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage)
+
+                    //if (!NonRemovable && !IsFramework)
+                    //{
+                    var runItem = new RunItem() {Type = ItemType.Win10App};
+
+                    var split = item.Split('=');
+                    var name = split[1].Split(';')[0];
+                    var appID = split[2].Substring(0, split[2].Length-1);
+                    //var t = item.TypeNames;
+                    //var packageFamily = (string)appID.GetValue(item, null);
+                    runItem.Command = appID;
+
+                    
+                    
+                    runItem.Name = name;
+
+                    //names.Remove(names.Last());
+                    //runItem.URI = string.Join(".", names.ToArray());
+
+                    //propertyInfo = item.GetType().GetProperty("InstallLocation");
+                    //var installLocation = (string)propertyInfo.GetValue(item, null);
+                    //var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
+                    //runItem.IconName = icon.icon;
+                    //runItem.IconBackGround = icon.background;
+                    list.Add(runItem);
+                    //Console.WriteLine(packageFamily);
+                    //}
+
+                }
+            }
+
+            return list;
+
+        }
+
+
         private (string icon, string background) GetWin10Icon(string installLocation)
         {
             XmlDocument doc = new XmlDocument();
@@ -259,9 +318,9 @@ namespace RocketLaunch.Services
                                 Path.GetDirectoryName(installLocation) + "\\" + Path.GetDirectoryName(logoNode.Value);
                             var extension = Path.GetExtension(logoNode.Value);
                             var files = new List<string>();
-                            foreach (var file in assetDirectory.GetFiles($"*{extension}")) { files.Add(file);}
-                            
-                            
+                            foreach (var file in assetDirectory.GetFiles($"*{extension}")) { files.Add(file); }
+
+
                             var fileName = Path.GetFileNameWithoutExtension(logoNode.Value);
 
 
@@ -295,7 +354,7 @@ namespace RocketLaunch.Services
             }
             return ("", "");
         }
-        
+
         public void RunIndexing()
         {
 
@@ -314,32 +373,22 @@ namespace RocketLaunch.Services
                     LastIndexed = DateTime.Now;
                     //Spread out the search on all directories on different tasks
 
-
-                    try
-                    {
-                        var win10List = AddWindows10Apps();
-                        foreach (var item in win10List)
-                        {
-                            tempTrie.Insert(item.Name, item);
-                            tempTrie.Insert(item.URI, item);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, "Could not add Windows10 store apps.");
-                    }
+                    //try
+                    //{
+                    //    var win10List = AddWindows10AppsBetterWay();
+                    //    foreach (var item in win10List)
+                    //    {
+                    //        tempTrie.Insert(item.Name, item);
+                    //        tempTrie.Insert(item.URI, item);
+                    //    }
+                    //}
+                    //catch (Exception e)
+                    //{
+                    //    Log.Error(e, "Could not add Windows10 store apps.");
+                    //}
 
                     var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
-                    //Task.WaitAll(S.Settings.SearchDirectories.Select(dir => new Task(() =>
-                    //{
-                    //    var tempBag = new ConcurrentDictionary<string, RunItem>();
-                    //    ProcessDirectory(dir, tempBag);
-                    //    dir.NrOfFiles = tempBag.Count;
-                    //    foreach (var item in tempBag)
-                    //    {
-                    //        unorderedFiles.TryAdd(item.Key, item.Value);
-                    //    }
-                    //})).ToArray());
+
 
                     foreach (FolderSearch dir in S.Settings.SearchDirectories)
                     {
@@ -419,6 +468,23 @@ namespace RocketLaunch.Services
                     AddItem(RunItemFactory.RestartComputer());
                     AddItem(RunItemFactory.SleepWindows());
                     AddItem(RunItemFactory.SleepWindows());
+                }
+                try
+                {
+
+
+                    var win10List = AddWindows10AppsBetterWay();
+                    foreach (var item in win10List)
+                    {
+                        if (!MatcherPrio.DataDictionary.ContainsKey(item.Name))
+                        {
+                            MatcherPrio.Insert(item.Name.ToLower(), item);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error(e, "Could not add Windows10 store apps.");
                 }
             });
 
@@ -543,7 +609,7 @@ namespace RocketLaunch.Services
             //    Console.WriteLine($"{runItem.Name}, {runItem.RunNrOfTimes}");
 
             //}
-            prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.OrderBy(p => p.RunNrOfTimes).First()).ToList();  //remove potential duplicates
+            prioResult = prioResult.GroupBy(x => x.Name + x.URI + x.Command).Select(x => x.OrderByDescending(p => p.RunNrOfTimes).First()).ToList();  //remove potential duplicates
             prioResult = prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes).ToList();  //sort prioresults since they will always have at least one runtime
 
             PrioSearchTime = (int)sw.ElapsedTicks;
