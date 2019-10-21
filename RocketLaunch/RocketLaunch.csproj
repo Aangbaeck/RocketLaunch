@@ -1,0 +1,368 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{49D339D3-4BDC-4E87-8410-FBE127A48C15}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RocketLaunch</RootNamespace>
+    <AssemblyName>RocketLaunch</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <LangVersion>8.0</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <LangVersion>8.0</LangVersion>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Assets\rocket.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AutoHotkey.Interop">
+      <HintPath>.\AutoHotkey.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Management" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Helper\Common.cs" />
+    <Compile Include="Helper\DeepCopyByExpressionTrees.cs" />
+    <Compile Include="Helper\GridViewColumnVisibilityManager.cs" />
+    <Compile Include="Helper\IconManager.cs" />
+    <Compile Include="Helper\KeepOneItemInListViewSelected.cs" />
+    <Compile Include="Helper\ListViewIndexConverter.cs" />
+    <Compile Include="Helper\SvgViewboxAttachedProperties.cs" />
+    <Compile Include="Helper\WindowPlacement.cs" />
+    <Compile Include="Helper\WPFConverters.cs" />
+    <Compile Include="Helper\ZipUnzip.cs" />
+    <Compile Include="Indexing\SuffixTree\Trie.cs" />
+    <Compile Include="Indexing\SuffixTree\TrieBase.cs" />
+    <Compile Include="Indexing\SuffixTree\TrieNode.cs" />
+    <Compile Include="Model\FolderSearch.cs" />
+    <Compile Include="Model\RunItem.cs" />
+    <Compile Include="Model\RunItemFactory.cs" />
+    <Compile Include="Helper\WindowHelper.cs" />
+    <Compile Include="Services\AppSettings.cs" />
+    <Compile Include="Services\IndexingService.cs" />
+    <Compile Include="Services\KeyBoardHandlerService.cs" />
+    <Compile Include="InterceptKeys.cs" />
+    <Compile Include="MessengerID.cs" />
+    <Compile Include="Services\SettingsService.cs" />
+    <Compile Include="Views\AboutUserCtrl.xaml.cs">
+      <DependentUpon>AboutUserCtrl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsGeneralV.xaml.cs">
+      <DependentUpon>SettingsGeneralV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsPathsV.xaml.cs">
+      <DependentUpon>SettingsPathsV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsV.xaml.cs">
+      <DependentUpon>SettingsV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\MainVM.cs">
+      <DependentUpon>MainV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SettingsVM.cs">
+      <DependentUpon>SettingsV.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\UserControls\TitlebarUserCtrl.xaml.cs">
+      <DependentUpon>TitlebarUserCtrl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\ViewModelLocator.cs" />
+    <Page Include="Views\AboutUserCtrl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\MainV.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Views\MainV.xaml.cs">
+      <DependentUpon>MainV.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Views\SettingsGeneralV.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SettingsPathsV.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SettingsV.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\UserControls\TitlebarUserCtrl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\CustomIcons\run_command.png" />
+    <Resource Include="Assets\CustomIcons\settings3.png" />
+    <Resource Include="Assets\rocket.png" />
+    <Resource Include="Assets\CustomIcons\folder.png" />
+    <Resource Include="Assets\folder.ico" />
+    <Resource Include="Assets\rocket.ico" />
+    <Resource Include="Assets\CustomIcons\about.png" />
+    <Resource Include="Assets\CustomIcons\battery.png" />
+    <Resource Include="Assets\CustomIcons\display.png" />
+    <Resource Include="Assets\CustomIcons\mindmap.png" />
+    <Resource Include="Assets\CustomIcons\multitasking.png" />
+    <Resource Include="Assets\CustomIcons\notifications.png" />
+    <Resource Include="Assets\CustomIcons\power.png" />
+    <Resource Include="Assets\CustomIcons\project.png" />
+    <Resource Include="Assets\CustomIcons\storage.png" />
+    <Resource Include="Assets\CustomIcons\tablet.png" />
+    <Resource Include="Assets\CustomIcons\activation.png" />
+    <Resource Include="Assets\CustomIcons\appsfeatures.png" />
+    <Resource Include="Assets\CustomIcons\appsforwebsites.png" />
+    <Resource Include="Assets\CustomIcons\autoplay.png" />
+    <Resource Include="Assets\CustomIcons\backup.png" />
+    <Resource Include="Assets\CustomIcons\bluetooth.png" />
+    <Resource Include="Assets\CustomIcons\colors.png" />
+    <Resource Include="Assets\CustomIcons\datausage.png" />
+    <Resource Include="Assets\CustomIcons\dateandtime.png" />
+    <Resource Include="Assets\CustomIcons\defaultapps.png" />
+    <Resource Include="Assets\CustomIcons\developers.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-closedcaptioning.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-highcontrast.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-keyboard.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-magnifier.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-mouse.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-narrator.png" />
+    <Resource Include="Assets\CustomIcons\easeofaccess-otheroptions.png" />
+    <Resource Include="Assets\CustomIcons\emailandaccounts.png" />
+    <Resource Include="Assets\CustomIcons\findmydevice.png" />
+    <Resource Include="Assets\CustomIcons\gaming-broadcasting.png" />
+    <Resource Include="Assets\CustomIcons\gaming-gamebar.png" />
+    <Resource Include="Assets\CustomIcons\gaming-gamedvr.png" />
+    <Resource Include="Assets\CustomIcons\gaming-gamemode.png" />
+    <Resource Include="Assets\CustomIcons\holographic-audio.png" />
+    <Resource Include="Assets\CustomIcons\holographic.png" />
+    <Resource Include="Assets\CustomIcons\lockscreen.png" />
+    <Resource Include="Assets\CustomIcons\maps.png" />
+    <Resource Include="Assets\CustomIcons\mouse.png" />
+    <Resource Include="Assets\CustomIcons\network-airplanemode.png" />
+    <Resource Include="Assets\CustomIcons\network-cellular.png" />
+    <Resource Include="Assets\CustomIcons\network-dialup.png" />
+    <Resource Include="Assets\CustomIcons\network-ethernet.png" />
+    <Resource Include="Assets\CustomIcons\network-mobilehotspot.png" />
+    <Resource Include="Assets\CustomIcons\network-proxy.png" />
+    <Resource Include="Assets\CustomIcons\network-status.png" />
+    <Resource Include="Assets\CustomIcons\network-wifi.png" />
+    <Resource Include="Assets\CustomIcons\optionalfeatures.png" />
+    <Resource Include="Assets\CustomIcons\otherusers.png" />
+    <Resource Include="Assets\CustomIcons\pen.png" />
+    <Resource Include="Assets\CustomIcons\personalization-background.png" />
+    <Resource Include="Assets\CustomIcons\personalization-start.png" />
+    <Resource Include="Assets\CustomIcons\printers.png" />
+    <Resource Include="Assets\CustomIcons\privacy-accountinfo.png" />
+    <Resource Include="Assets\CustomIcons\privacy-appdiagnostics.png" />
+    <Resource Include="Assets\CustomIcons\privacy-backgroundapps.png" />
+    <Resource Include="Assets\CustomIcons\privacy-calendar.png" />
+    <Resource Include="Assets\CustomIcons\privacy-callhistory.png" />
+    <Resource Include="Assets\CustomIcons\privacy-contacts.png" />
+    <Resource Include="Assets\CustomIcons\privacy-customdevices.png" />
+    <Resource Include="Assets\CustomIcons\privacy-email.png" />
+    <Resource Include="Assets\CustomIcons\privacy-feedback.png" />
+    <Resource Include="Assets\CustomIcons\privacy-location.png" />
+    <Resource Include="Assets\CustomIcons\privacy-messaging.png" />
+    <Resource Include="Assets\CustomIcons\privacy-microphone.png" />
+    <Resource Include="Assets\CustomIcons\privacy-notifications.png" />
+    <Resource Include="Assets\CustomIcons\privacy-radios.png" />
+    <Resource Include="Assets\CustomIcons\privacy-speechtyping.png" />
+    <Resource Include="Assets\CustomIcons\privacy-tasks.png" />
+    <Resource Include="Assets\CustomIcons\privacy-webcam.png" />
+    <Resource Include="Assets\CustomIcons\privacy.png" />
+    <Resource Include="Assets\CustomIcons\recovery.png" />
+    <Resource Include="Assets\CustomIcons\regionlanguage.png" />
+    <Resource Include="Assets\CustomIcons\signinoptions.png" />
+    <Resource Include="Assets\CustomIcons\speech.png" />
+    <Resource Include="Assets\CustomIcons\sync.png" />
+    <Resource Include="Assets\CustomIcons\taskbar.png" />
+    <Resource Include="Assets\CustomIcons\themes.png" />
+    <Resource Include="Assets\CustomIcons\touchpad.png" />
+    <Resource Include="Assets\CustomIcons\troubleshoot.png" />
+    <Resource Include="Assets\CustomIcons\typing.png" />
+    <Resource Include="Assets\CustomIcons\usb.png" />
+    <Resource Include="Assets\CustomIcons\vpn.png" />
+    <Resource Include="Assets\CustomIcons\windowsdefender.png" />
+    <Resource Include="Assets\CustomIcons\windowsinsider.png" />
+    <Resource Include="Assets\CustomIcons\windowsupdate-action.png" />
+    <Resource Include="Assets\CustomIcons\windowsupdate-history.png" />
+    <Resource Include="Assets\CustomIcons\windowsupdate-options.png" />
+    <Resource Include="Assets\CustomIcons\windowsupdate-restartoptions.png" />
+    <Resource Include="Assets\CustomIcons\windowsupdate.png" />
+    <Resource Include="Assets\CustomIcons\workplace.png" />
+    <Resource Include="Assets\CustomIcons\yourinfo.png" />
+    <Resource Include="Assets\CustomIcons\turnoff.png" />
+    <Resource Include="Assets\CustomIcons\hibernate.png" />
+    <Resource Include="Assets\CustomIcons\lock.png" />
+    <Resource Include="Assets\CustomIcons\lockcomputer.png" />
+    <Resource Include="Assets\CustomIcons\logoff.png" />
+    <Resource Include="Assets\CustomIcons\restart.png" />
+    <Resource Include="Assets\CustomIcons\sleep.png" />
+    <Resource Include="Assets\rocket.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="AutoMapper">
+      <Version>9.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="CommonServiceLocator">
+      <Version>2.0.4</Version>
+    </PackageReference>
+    <PackageReference Include="ConvertersWPF">
+      <Version>1.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Costura.Fody">
+      <Version>4.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf">
+      <Version>1.0.8</Version>
+    </PackageReference>
+    <PackageReference Include="InputSimulatorPlus">
+      <Version>1.0.7</Version>
+    </PackageReference>
+    <PackageReference Include="MaterialDesignColors">
+      <Version>1.2.0</Version>
+    </PackageReference>
+    <PackageReference Include="MaterialDesignThemes">
+      <Version>2.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="MouseKeyHook">
+      <Version>5.6.0</Version>
+    </PackageReference>
+    <PackageReference Include="MvvmLightLibs">
+      <Version>5.4.1.1</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json.Bson">
+      <Version>1.0.2</Version>
+    </PackageReference>
+    <PackageReference Include="Ookii.Dialogs.Wpf">
+      <Version>1.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="protobuf-net">
+      <Version>2.4.1</Version>
+    </PackageReference>
+    <PackageReference Include="Serilog.Sinks.File">
+      <Version>4.1.0</Version>
+    </PackageReference>
+    <PackageReference Include="SharpVectors.Reloaded">
+      <Version>1.4.0</Version>
+    </PackageReference>
+    <PackageReference Include="Syroot.Windows.IO.KnownFolders">
+      <Version>1.2.1</Version>
+    </PackageReference>
+    <PackageReference Include="System.Management.Automation.dll">
+      <Version>10.0.10586</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+    <COMReference Include="Shell32">
+      <Guid>{50A7E9B0-70EF-11D1-B75A-00A0C90564FE}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
