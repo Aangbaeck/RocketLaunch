@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using RocketLaunch.Helper;
 using Serilog;
 
 namespace RocketLaunch.Model
@@ -84,10 +85,10 @@ namespace RocketLaunch.Model
             {
                 using (PowerShell PowerShellInstance = PowerShell.Create())
                 {
-                    item.Command=item.Command.Replace(@"\\", @"\").Replace(@"{", @"""{").Replace(@"}", @"}""");
+                    var command=item.Command.Replace(@"\\", @"\").Replace(@"{", @"""{").Replace(@"}", @"}""");  //This adds "" to the GUID. Otherwise we cant start it from powershell
                     // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
                     // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
-                    PowerShellInstance.AddScript($@"start shell:appsFolder\{item.Command}");
+                    PowerShellInstance.AddScript($@"start shell:appsFolder\{command}");
 
                     // invoke execution on the pipeline (collecting output)
                     PowerShellInstance.Invoke();

@@ -2,11 +2,10 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Serilog;
 using System.Management;
+using Serilog;
 
-namespace RocketLaunch.Model
+namespace RocketLaunch.Helper
 {
     public static class WindowHelper
     {

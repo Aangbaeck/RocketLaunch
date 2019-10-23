@@ -104,8 +104,13 @@ namespace RocketLaunch.Model
                         using (System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI))
                         {
                             var handle = (int)sysicon.Handle;
-                            icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
+                            return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions());
                         }
+                    }
+                    else
+                    {
+                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/file.png");
+                        return new BitmapImage(uri);
                     }
                 }
                 catch (Exception e)
@@ -115,6 +120,11 @@ namespace RocketLaunch.Model
 
                 return icon;
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{Name}, {URI}, {Type}, {Command}";
         }
     }
 

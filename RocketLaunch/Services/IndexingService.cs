@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -17,6 +18,9 @@ using System.Management;
 using System.Management.Automation;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
+using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 using System.Xml;
 using System.Xml.Linq;
 using IWshRuntimeLibrary;
@@ -232,6 +236,8 @@ namespace RocketLaunch.Services
 
         private List<RunItem> AddWindows10AppsBetterWay()
         {
+            var win10AppList = AddWindows10Apps();
+
             var list = new List<RunItem>();
             using (PowerShell PowerShellInstance = PowerShell.Create())
             {
@@ -243,44 +249,79 @@ namespace RocketLaunch.Services
                 Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
                 // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
                 //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
+
+                var dirs = Directory.GetDirectories("C:\\Program Files\\WindowsApps");
                 foreach (PSObject outputItem in PSOutput)
                 {
+
+
+
                     //TODO: handle/process the output items if required
                     var item = outputItem.ToString();
+                    try
+                    {
+                        var runItem = new RunItem() { Type = ItemType.Win10App };
 
-                    //var propertyInfo = item.GetType().GetProperty("NonRemovable");
-                    //var NonRemovable = (bool)propertyInfo.GetValue(item, null);
-                    //propertyInfo = item.GetType().GetProperty("IsFramework");
-                    //var IsFramework = (bool)propertyInfo.GetValue(item, null);
-                    //var cast = (Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage)
+                        var split = item.Split('=');
+                        var name = split[1].Split(';')[0];
+                        var appID = split[2].Substring(0, split[2].Length - 1);
+                        runItem.Command = appID;
+                        runItem.Name = name;
+                        var uri = appID;
+                        int count = uri.Count(f => f == '{');
 
-                    //if (!NonRemovable && !IsFramework)
-                    //{
-                    var runItem = new RunItem() {Type = ItemType.Win10App};
+                        if (count > 0)
+                        {
+                            for (int i = 0; i < count; i++)
+                            {
+                                var startIndex = uri.IndexOf("{", StringComparison.Ordinal);
+                                var endIndex = uri.IndexOf("}", StringComparison.Ordinal);
+                                string guids = uri.Substring(startIndex + 1, endIndex - startIndex - 1);
+                                var guid = new Guid(guids);
+                                var knownFolder = KnownFolderFinder.GetFolderFromKnownFolderGUID(guid);
+                                if (knownFolder != null)
+                                    uri = uri.Replace($"{{{guids}}}", knownFolder);
 
-                    var split = item.Split('=');
-                    var name = split[1].Split(';')[0];
-                    var appID = split[2].Substring(0, split[2].Length-1);
-                    //var t = item.TypeNames;
-                    //var packageFamily = (string)appID.GetValue(item, null);
-                    runItem.Command = appID;
+                            }
 
-                    
-                    
-                    runItem.Name = name;
 
-                    //names.Remove(names.Last());
-                    //runItem.URI = string.Join(".", names.ToArray());
 
-                    //propertyInfo = item.GetType().GetProperty("InstallLocation");
-                    //var installLocation = (string)propertyInfo.GetValue(item, null);
-                    //var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
-                    //runItem.IconName = icon.icon;
-                    //runItem.IconBackGround = icon.background;
-                    list.Add(runItem);
-                    //Console.WriteLine(packageFamily);
-                    //}
+                        }
+                        runItem.URI = uri;
+                        if (!File.Exists(runItem.URI))
+                            runItem.URI = "Win 10 app";
+                            
 
+
+
+
+                        //propertyInfo = item.GetType().GetProperty("InstallLocation");
+                        //var installLocation = (string)propertyInfo.GetValue(item, null);
+                        //var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
+
+
+                        try
+                        {
+                            var hit = win10AppList.FirstOrDefault(p => p.Command.Contains(uri.Split('!')[0]));
+                            if (hit != null)
+                            {
+                                runItem.IconName = hit.IconName;
+                                runItem.IconBackGround = hit.IconBackGround;
+                            }
+                        }
+                        catch (Exception e)
+                        {
+
+
+                        }
+
+
+                        list.Add(runItem);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error($"Could not add win 10 app {item}");
+                    }
                 }
             }
 

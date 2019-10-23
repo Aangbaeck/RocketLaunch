@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using GalaSoft.MvvmLight.Ioc;
 using GalaSoft.MvvmLight.Messaging;
@@ -34,6 +35,8 @@ namespace RocketLaunch.Views
                 this.SavePlacement();  //Saves this windows position
                 ViewModelLocator.Cleanup();
             };
+
+            Timeline.DesiredFrameRateProperty.OverrideMetadata(typeof(Timeline),new FrameworkPropertyMetadata { DefaultValue = 60 });
         }
         private void HideWindow(bool b)
         {

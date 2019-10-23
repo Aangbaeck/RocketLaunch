@@ -89,9 +89,9 @@ namespace RocketLaunch.Services
             new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures)},
             new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Downloads).Path},
             //new FolderSearch() {Path =  new KnownFolder(KnownFolderType.Contacts).Path},
-            //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer)},
+            new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer)},
             //new FolderSearch() {Path = Environment.GetFolderPath(Environment.SpecialFolder.Personal)},
-            new FolderSearch() {Path = "C:\\Program Files\\WindowsApps", SearchPattern =  "*.exe", IncludeFoldersInSearch = false},
+            //new FolderSearch() {Path = "C:\\Program Files\\WindowsApps", SearchPattern =  "*.exe", IncludeFoldersInSearch = false},
         };
 
         

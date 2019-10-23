@@ -179,6 +179,7 @@ namespace TrieImplementation
 
                     if (contains || word.Length == 1)
                     {
+                        if(currentStartNode.IsWord) results.Add(word);
                         this.BuildResultsFromSubstring(currentStartNode, results, nrOfHits);
 
                     }
