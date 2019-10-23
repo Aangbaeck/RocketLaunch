@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using Serilog;
 using SharpVectors.Converters;
@@ -9,10 +8,15 @@ namespace RocketLaunch.Helper
 {
     public class SvgViewboxAttachedProperties : DependencyObject
     {
+        public static readonly DependencyProperty SourceProperty =
+            DependencyProperty.RegisterAttached("Source",
+                typeof(string), typeof(SvgViewboxAttachedProperties),
+                // default value: null
+                new PropertyMetadata(null, OnSourceChanged));
 
         public static string GetSource(DependencyObject obj)
         {
-            return (string)obj.GetValue(SourceProperty);
+            return (string) obj.GetValue(SourceProperty);
         }
 
         public static void SetSource(DependencyObject obj, string value)
@@ -25,7 +29,7 @@ namespace RocketLaunch.Helper
             var svgControl = obj as SvgViewbox;
             if (svgControl != null)
             {
-                string s = (string)e.NewValue;
+                string s = (string) e.NewValue;
                 try
                 {
                     Uri uri;
@@ -50,13 +54,5 @@ namespace RocketLaunch.Helper
                 }
             }
         }
-
-        public static readonly DependencyProperty SourceProperty =
-            DependencyProperty.RegisterAttached("Source",
-                typeof(string), typeof(SvgViewboxAttachedProperties),
-                // default value: null
-                new PropertyMetadata(null, OnSourceChanged));
     }
-
 }
-

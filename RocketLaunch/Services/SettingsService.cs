@@ -7,7 +7,6 @@ using GalaSoft.MvvmLight;
 using IWshRuntimeLibrary;
 using Newtonsoft.Json;
 using RocketLaunch.Helper;
-using RocketLaunch.Views;
 using Serilog;
 using File = System.IO.File;
 
@@ -15,33 +14,28 @@ namespace RocketLaunch.Services
 {
     public class SettingsService : ViewModelBase
     {
-        public AppSettings Settings { get; set; } = new AppSettings();
+        private readonly string _startupPath =
+            Environment.GetFolderPath(Environment.SpecialFolder.Startup) + "\\" + "RocketLaunch.lnk";
+
         public SettingsService()
         {
             Settings.ResetSearchDirectoriesToDefaultFolders();
             Load();
-            AutoStart = Settings.AutoStart;  //Make sure the settings are applied and there is a link in the startup folder.
-            Settings.PropertyChanged += (sender, args) =>
-            {
-                Save();
-            };
-            Settings.SearchDirectories.ListChanged += (sender, args) =>
-            {
-                Save();
-            };
+            AutoStart = Settings
+                .AutoStart; //Make sure the settings are applied and there is a link in the startup folder.
+            Settings.PropertyChanged += (sender, args) => { Save(); };
+            Settings.SearchDirectories.ListChanged += (sender, args) => { Save(); };
         }
 
-        public void ResetFolderPaths()
-        {
-            Settings.ResetSearchDirectoriesToDefaultFolders();
-        }
+        public AppSettings Settings { get; set; } = new AppSettings();
+
         public bool AutoStart
         {
             get { return Settings.AutoStart; }
             set
             {
                 Settings.AutoStart = value;
-                File.Delete(_startupPath);  //Reset with new file if there is a new path or something
+                File.Delete(_startupPath); //Reset with new file if there is a new path or something
                 if (value)
                     CreateShortCutInAutoStart();
 
@@ -63,13 +57,16 @@ namespace RocketLaunch.Services
             }
         }
 
-        private readonly string _startupPath = Environment.GetFolderPath(Environment.SpecialFolder.Startup) + "\\" + "RocketLaunch.lnk";
+        public void ResetFolderPaths()
+        {
+            Settings.ResetSearchDirectoriesToDefaultFolders();
+        }
 
         private void CreateShortCutInAutoStart()
         {
             WshShell wshShell = new WshShell();
             // Create the shortcut
-            IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)wshShell.CreateShortcut(_startupPath);
+            IWshShortcut shortcut = (IWshShortcut) wshShell.CreateShortcut(_startupPath);
 
             shortcut.TargetPath = Application.ExecutablePath;
             shortcut.WorkingDirectory = Application.StartupPath;
@@ -98,8 +95,6 @@ namespace RocketLaunch.Services
                     Log.Debug("First time starting application. Creating save files");
                     Save();
                 }
-
-
             }
 
             catch (Exception e)
@@ -123,6 +118,4 @@ namespace RocketLaunch.Services
             }
         }
     }
-
-
 }

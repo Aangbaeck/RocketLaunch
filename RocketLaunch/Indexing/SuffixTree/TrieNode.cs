@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Text;
 using ProtoBuf;
 
 namespace RocketLaunch.Indexing.SuffixTree
@@ -12,18 +11,16 @@ namespace RocketLaunch.Indexing.SuffixTree
         /// <param name="isWord">Defines whether this node marks the ending of a word</param>
         public TrieNode(char value, TrieNode parent, bool isWord)
         {
-            this.Value = value;
-            this.ParentNode = parent;
-            this.IsWord = isWord;
+            Value = value;
+            ParentNode = parent;
+            IsWord = isWord;
         }
 
         public TrieNode()
         {
-
         }
 
-        [ProtoMember(1)]
-        public char Value { get; set; }
+        [ProtoMember(1)] public char Value { get; set; }
 
         /// <summary>
         /// Marks if this is a ending of a word.
@@ -37,19 +34,18 @@ namespace RocketLaunch.Indexing.SuffixTree
         [ProtoMember(3)]
         public TrieNode ParentNode { get; set; }
 
-        [ProtoMember(4)]
-        public Dictionary<char, TrieNode> Children { get; private set; } = new Dictionary<char, TrieNode>();
+        [ProtoMember(4)] public Dictionary<char, TrieNode> Children { get; } = new Dictionary<char, TrieNode>();
 
         public int ChildrenCount
         {
-            get { return this.Children.Keys.Count; }
+            get { return Children.Keys.Count; }
         }
 
         public void AddChild(TrieNode node)
         {
-            if (!this.Children.ContainsKey(node.Value))
+            if (!Children.ContainsKey(node.Value))
             {
-                this.Children.Add(node.Value, node);
+                Children.Add(node.Value, node);
             }
         }
 
@@ -67,9 +63,8 @@ namespace RocketLaunch.Indexing.SuffixTree
                 word = currentNode.Value + word;
                 currentNode = currentNode.ParentNode;
             }
+
             return word;
         }
-
-
     }
 }

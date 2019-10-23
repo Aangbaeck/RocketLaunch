@@ -11,7 +11,6 @@
 
 using CommonServiceLocator;
 using GalaSoft.MvvmLight.Ioc;
-using RocketLaunch.Model;
 using RocketLaunch.Services;
 
 namespace RocketLaunch.Views
@@ -45,6 +44,7 @@ namespace RocketLaunch.Views
             "CA1822:MarkMembersAsStatic",
             Justification = "This non-static member is needed for data binding purposes.")]
         public MainVM MainVM => ServiceLocator.Current.GetInstance<MainVM>();
+
         public SettingsVM SettingsVM => ServiceLocator.Current.GetInstance<SettingsVM>();
 
 

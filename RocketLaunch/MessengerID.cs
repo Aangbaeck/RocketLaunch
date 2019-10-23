@@ -10,7 +10,5 @@
         public static string WindowDeactivated { get; set; } = "WindowDeactivated";
         public static string KeyDown { get; set; } = "KeyDown";
         public static string ReturnToSearchWindow { get; set; } = "ReturnToSearchWindow";
-
-        
     }
 }

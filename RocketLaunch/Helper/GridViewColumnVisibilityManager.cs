@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -10,20 +6,22 @@ namespace RocketLaunch.Helper
 {
     public class GridViewColumnVisibilityManager
     {
-        static Dictionary<GridViewColumn, double> originalColumnWidths = new Dictionary<GridViewColumn, double>();
+        static readonly Dictionary<GridViewColumn, double> originalColumnWidths =
+            new Dictionary<GridViewColumn, double>();
+
+        public static readonly DependencyProperty IsVisibleProperty =
+            DependencyProperty.RegisterAttached("IsVisible", typeof(bool), typeof(GridViewColumnVisibilityManager),
+                new UIPropertyMetadata(true, OnIsVisibleChanged));
 
         public static bool GetIsVisible(DependencyObject obj)
         {
-            return (bool)obj.GetValue(IsVisibleProperty);
+            return (bool) obj.GetValue(IsVisibleProperty);
         }
 
         public static void SetIsVisible(DependencyObject obj, bool value)
         {
             obj.SetValue(IsVisibleProperty, value);
         }
-
-        public static readonly DependencyProperty IsVisibleProperty =
-            DependencyProperty.RegisterAttached("IsVisible", typeof(bool), typeof(GridViewColumnVisibilityManager), new UIPropertyMetadata(true, OnIsVisibleChanged));
 
         private static void OnIsVisibleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {

@@ -1,30 +1,33 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GalaSoft.MvvmLight;
+﻿using GalaSoft.MvvmLight;
 
 namespace RocketLaunch.Model
 {
     public class FolderSearch : ViewModelBase
     {
-        private bool _searchSubFolders = true;
-        private string _searchPattern = "*.*";
-        private string _path;
-        private int _nrOfFiles;
         private bool _includeFoldersInSearch = true;
+        private int _nrOfFiles;
+        private string _path;
+        private string _searchPattern = "*.*";
+        private bool _searchSubFolders = true;
 
         public string Path
         {
             get { return _path; }
-            set { _path = value; RaisePropertyChanged(); }
+            set
+            {
+                _path = value;
+                RaisePropertyChanged();
+            }
         }
 
         public string SearchPattern
         {
             get { return _searchPattern; }
-            set { _searchPattern = value; RaisePropertyChanged(); }
+            set
+            {
+                _searchPattern = value;
+                RaisePropertyChanged();
+            }
         }
 
         /// <summary>
@@ -33,13 +36,21 @@ namespace RocketLaunch.Model
         public bool SearchSubFolders
         {
             get { return _searchSubFolders; }
-            set { _searchSubFolders = value; RaisePropertyChanged(); }
+            set
+            {
+                _searchSubFolders = value;
+                RaisePropertyChanged();
+            }
         }
 
         public bool IncludeFoldersInSearch
         {
             get { return _includeFoldersInSearch; }
-            set { _includeFoldersInSearch = value; RaisePropertyChanged(); }
+            set
+            {
+                _includeFoldersInSearch = value;
+                RaisePropertyChanged();
+            }
         }
 
         public int NrOfFiles
@@ -47,7 +58,8 @@ namespace RocketLaunch.Model
             get { return _nrOfFiles; }
             set
             {
-                _nrOfFiles = value; RaisePropertyChanged();
+                _nrOfFiles = value;
+                RaisePropertyChanged();
             }
         }
     }

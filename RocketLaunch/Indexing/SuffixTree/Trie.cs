@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using ProtoBuf;
-using RocketLaunch.Model;
 using TrieImplementation;
 
 namespace RocketLaunch.Indexing.SuffixTree
@@ -11,8 +8,7 @@ namespace RocketLaunch.Indexing.SuffixTree
     [ProtoContract]
     public class Trie<T>
     {
-        [ProtoMember(1)]
-        public TrieBase TrieBase { get; set; } = new TrieBase();
+        [ProtoMember(1)] public TrieBase TrieBase { get; set; } = new TrieBase();
 
         [ProtoMember(2)]
         public Dictionary<string, HashSet<T>> DataDictionary { get; set; } = new Dictionary<string, HashSet<T>>();
@@ -21,9 +17,10 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         public void Insert(string key, T value)
         {
-            this.InsertToDictionary(key.ToLower(), value);
-            this.TrieBase.Insert(key.ToLower());
+            InsertToDictionary(key.ToLower(), value);
+            TrieBase.Insert(key.ToLower());
         }
+
         /// <summary>
         /// Inserts same value with multiple keys. Some things have similar keywords - lets add all of them.
         /// </summary>
@@ -43,13 +40,14 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         private void InsertToDictionary(string key, T value)
         {
-            if (!this.DataDictionary.ContainsKey(key))
+            if (!DataDictionary.ContainsKey(key))
             {
-                this.DataDictionary[key] = new HashSet<T>();
+                DataDictionary[key] = new HashSet<T>();
             }
-            this.DataDictionary[key].Add(value);
 
+            DataDictionary[key].Add(value);
         }
+
         /// <summary>
         /// Returns true if we where able to remove item.
         /// </summary>
@@ -57,9 +55,9 @@ namespace RocketLaunch.Indexing.SuffixTree
         /// <returns></returns>
         public bool Remove(string key)
         {
-            if (this.DataDictionary.ContainsKey(key.ToLower()))
+            if (DataDictionary.ContainsKey(key.ToLower()))
             {
-                this.DataDictionary.Remove(key.ToLower());
+                DataDictionary.Remove(key.ToLower());
                 return true;
             }
 
@@ -69,7 +67,7 @@ namespace RocketLaunch.Indexing.SuffixTree
         public void Replace(string key, T value)
         {
             Remove(key);
-            Insert(key.ToLower(),value);
+            Insert(key.ToLower(), value);
         }
         //public bool Remove(T item)
         //{
@@ -85,31 +83,27 @@ namespace RocketLaunch.Indexing.SuffixTree
 
         //    return false;
         //}
-        
+
         public bool Contains(string key)
         {
-            return this.TrieBase.Contains(key.ToLower());
+            return TrieBase.Contains(key.ToLower());
         }
 
         public ICollection<T> Search(string filter, int nrOfHits = int.MaxValue)
         {
-            var sw = new Stopwatch();
-            sw.Start();
-            ICollection<string> strResults = this.TrieBase.Search(filter, nrOfHits);
-            var t = sw.ElapsedMilliseconds;
-            ICollection<T> tResults = this.GetValuesFromKeys(strResults, nrOfHits);
-            var t2 = sw.ElapsedMilliseconds;
+            ICollection<string> strResults = TrieBase.Search(filter, nrOfHits);
+            ICollection<T> tResults = GetValuesFromKeys(strResults, nrOfHits);
             return tResults;
         }
-        
+
         private ICollection<T> GetValuesFromKeys(ICollection<string> keys, int nrOfHits)
         {
             List<T> result = new List<T>();
             foreach (string key in keys)
             {
-                if (this.DataDictionary.ContainsKey(key))
+                if (DataDictionary.ContainsKey(key))
                 {
-                    foreach (T value in this.DataDictionary[key])
+                    foreach (T value in DataDictionary[key])
                     {
                         if (nrOfHits < result.Count) return result;
                         else
@@ -120,7 +114,5 @@ namespace RocketLaunch.Indexing.SuffixTree
 
             return result;
         }
-
-        
     }
 }

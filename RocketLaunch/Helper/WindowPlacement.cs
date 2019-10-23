@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
 using Newtonsoft.Json;
-using RocketLaunch.Views;
 using Serilog;
 
 namespace RocketLaunch.Helper
 {
-
     // RECT structure required by WINDOWPLACEMENT structure
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]
@@ -47,6 +43,8 @@ namespace RocketLaunch.Helper
 
     public static class WindowPlacement
     {
+        private const int SW_SHOWNORMAL = 1;
+        private const int SW_SHOWMINIMIZED = 2;
 
 
         [DllImport("user32.dll")]
@@ -54,9 +52,6 @@ namespace RocketLaunch.Helper
 
         [DllImport("user32.dll")]
         private static extern bool GetWindowPlacement(IntPtr hWnd, out WINDOWPLACEMENT lpwndpl);
-
-        private const int SW_SHOWNORMAL = 1;
-        private const int SW_SHOWMINIMIZED = 2;
 
         public static void LoadPlacement(this Window window)
         {
@@ -82,7 +77,6 @@ namespace RocketLaunch.Helper
             {
                 Log.Error("Couldn't read position for " + className + e.Message + e.StackTrace);
             }
-
         }
 
         public static void SavePlacement(this Window window)
@@ -101,9 +95,5 @@ namespace RocketLaunch.Helper
                 Log.Error("Couldn't write position for " + className + e.Message + e.StackTrace);
             }
         }
-
-
     }
 }
-
-

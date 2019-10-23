@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows.Navigation;
 using ProtoBuf;
 using RocketLaunch.Indexing.SuffixTree;
 
@@ -14,9 +13,9 @@ namespace TrieImplementation
     [ProtoContract]
     public class TrieBase
     {
-
         [ProtoMember(1)]
         public Dictionary<char, List<TrieNode>> Nodes { get; set; } = new Dictionary<char, List<TrieNode>>();
+
         /// <summary>
         /// The first Node in the Trie
         /// </summary>
@@ -29,7 +28,7 @@ namespace TrieImplementation
         /// <param name="word"></param>
         public void Insert(string word)
         {
-            this.InsertCore(this.Root, 0, word);
+            InsertCore(Root, 0, word);
         }
 
         /// <summary>
@@ -40,7 +39,7 @@ namespace TrieImplementation
         {
             foreach (var word in words)
             {
-                this.Insert(word);
+                Insert(word);
             }
         }
 
@@ -49,12 +48,12 @@ namespace TrieImplementation
         /// </summary>
         protected virtual void AddNodeToCollection(char currentChar, TrieNode node)
         {
-            if (!this.Nodes.ContainsKey(currentChar))
+            if (!Nodes.ContainsKey(currentChar))
             {
-                this.Nodes[currentChar] = new List<TrieNode>();
+                Nodes[currentChar] = new List<TrieNode>();
             }
 
-            this.Nodes[currentChar].Add(node);
+            Nodes[currentChar].Add(node);
         }
 
         /// <summary>
@@ -66,13 +65,14 @@ namespace TrieImplementation
             {
                 return;
             }
+
             char currentChar = word[positionInWord];
-            TrieNode node = null;
+            TrieNode node;
             if (!currentNode.Children.ContainsKey(currentChar))
             {
                 bool isWord = positionInWord == word.Length - 1 ? true : false;
                 node = new TrieNode(currentChar, currentNode, isWord);
-                this.AddNodeToCollection(currentChar, node);
+                AddNodeToCollection(currentChar, node);
                 currentNode.AddChild(node);
             }
             else
@@ -80,7 +80,7 @@ namespace TrieImplementation
                 node = currentNode.Children[currentChar];
             }
 
-            this.InsertCore(node, ++positionInWord, word);
+            InsertCore(node, ++positionInWord, word);
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace TrieImplementation
         /// <returns>Whether the word was found</returns>
         public bool Contains(string word)
         {
-            return this.ContainsCore(this.Root, 0, word);
+            return ContainsCore(Root, 0, word);
         }
 
         /// <summary>
@@ -111,7 +111,7 @@ namespace TrieImplementation
             bool containsKey = currentNode.Children.ContainsKey(currentChar);
             if (containsKey)
             {
-                return this.ContainsCore(currentNode.Children[currentChar], ++currentPositionInWord, word);
+                return ContainsCore(currentNode.Children[currentChar], ++currentPositionInWord, word);
             }
 
             return false;
@@ -127,17 +127,18 @@ namespace TrieImplementation
         {
             if (word == string.Empty)
             {
-                return this.FindAll(nrOfHits);
+                return FindAll(nrOfHits);
             }
+
             ICollection<string> results = new HashSet<string>();
-            this.SubstringSearchCore(word, results, nrOfHits);
+            SubstringSearchCore(word, results, nrOfHits);
             return results;
         }
 
         public ICollection<string> FindAll(int nrOfHits)
         {
             List<string> words = new List<string>();
-            this.DepthFirstSearchAllWords(this.Root, new StringBuilder(string.Empty), words, nrOfHits);
+            DepthFirstSearchAllWords(Root, new StringBuilder(string.Empty), words, nrOfHits);
             return words;
         }
 
@@ -149,9 +150,9 @@ namespace TrieImplementation
         private void SubstringSearchCore(string word, ICollection<string> results, int nrOfHits)
         {
             int currentPositionInWord = 0;
-            if (this.Nodes.ContainsKey(word[currentPositionInWord]))
+            if (Nodes.ContainsKey(word[currentPositionInWord]))
             {
-                List<TrieNode> startNodes = this.Nodes[word[currentPositionInWord++]];
+                List<TrieNode> startNodes = Nodes[word[currentPositionInWord++]];
 
                 for (int i = 0; i < startNodes.Count; i++)
                 {
@@ -179,10 +180,10 @@ namespace TrieImplementation
 
                     if (contains || word.Length == 1)
                     {
-                        if(currentStartNode.IsWord) results.Add(word);
-                        this.BuildResultsFromSubstring(currentStartNode, results, nrOfHits);
-
+                        if (currentStartNode.IsWord) results.Add(word);
+                        BuildResultsFromSubstring(currentStartNode, results, nrOfHits);
                     }
+
                     if (results.Count > nrOfHits)
                         return;
                     currentPositionInWord = 1;
@@ -211,7 +212,7 @@ namespace TrieImplementation
                 if (results.Count > nrOfHits)
                     return;
 
-                this.DepthFirstSearchAllWords(nodeValue, new StringBuilder(builtWord), results, nrOfHits);
+                DepthFirstSearchAllWords(nodeValue, new StringBuilder(builtWord), results, nrOfHits);
             }
         }
 
@@ -248,7 +249,8 @@ namespace TrieImplementation
         /// <summary>
         /// Using a Depth first search (http://en.wikipedia.org/wiki/Depth-first_search) to find all words under the current node.
         /// </summary>
-        protected virtual void DepthFirstSearchAllWords(TrieNode currentNode, StringBuilder word, ICollection<string> results, int nrOfHits)
+        protected virtual void DepthFirstSearchAllWords(TrieNode currentNode, StringBuilder word,
+            ICollection<string> results, int nrOfHits)
         {
             if (results.Count > nrOfHits)
                 return;
@@ -261,11 +263,10 @@ namespace TrieImplementation
                 word.Append(node.Value);
                 if (node.IsWord)
                 {
-
                     results.Add(word.ToString());
                 }
 
-                this.DepthFirstSearchAllWords(node, word, results, nrOfHits);
+                DepthFirstSearchAllWords(node, word, results, nrOfHits);
                 word.Length--;
             }
         }

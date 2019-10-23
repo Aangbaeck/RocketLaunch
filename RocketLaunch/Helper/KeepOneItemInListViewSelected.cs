@@ -1,19 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Windows.Controls;
+using System.Windows.Interactivity;
 
 namespace RocketLaunch.Helper
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using System.Windows.Controls;
-    using System.Windows.Interactivity;
-
     namespace HWInterfaceChromaScan.Helper
     {
         /// <summary>
@@ -48,13 +37,14 @@ namespace RocketLaunch.Helper
             /// <param name="e">Selection changed information.</param>
             private void AssociatedObjectOnSelectionChanged(object sender, SelectionChangedEventArgs e)
             {
-                var listbox = ((ListBox)sender);
+                var listbox = ((ListBox) sender);
                 if (listbox.SelectedItem == null)
                 {
                     if (e.RemovedItems.Count > 0)
                     {
                         object itemToReselect = e.RemovedItems[0];
-                        if (listbox.Items.Contains(itemToReselect)) // only reselect if the item is still part of the list.
+                        if (listbox.Items.Contains(itemToReselect)
+                        ) // only reselect if the item is still part of the list.
                         {
                             listbox.SelectedItem = itemToReselect;
                         }
@@ -75,5 +65,4 @@ namespace RocketLaunch.Helper
             }
         }
     }
-
 }

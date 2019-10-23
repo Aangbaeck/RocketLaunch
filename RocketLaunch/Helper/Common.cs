@@ -1,16 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Timers;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using Serilog;
 
@@ -18,6 +13,10 @@ namespace RocketLaunch.Helper
 {
     public static class Common
     {
+        public static string LogfilesPath { get; set; } = Directory + "Logfiles/";
+        public static string SettingsPath { get; set; } = Directory + "Settings/Settings.json";
+        public static string WindowPositionsPath { get; set; } = Directory + "WindowPositions/";
+        public static string Directory => Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "//";
 
         /// <summary>
         /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush
@@ -65,13 +64,6 @@ namespace RocketLaunch.Helper
                 return SafeNativeMethods.StrCmpLogicalW(a.Name, b.Name);
             }
         }
-
-        public static string LogfilesPath { get; set; } = Directory + "Logfiles/";
-        public static string SettingsPath { get; set; } = Directory + "Settings/Settings.json";
-        public static string WindowPositionsPath { get; set; } = Directory + "WindowPositions/";
-        public static string Directory => Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "//";
-
-
     }
 
     public static class FocusExtension
@@ -179,9 +171,5 @@ namespace RocketLaunch.Helper
                 }
             }
         }
-
-
-
-
     }
 }

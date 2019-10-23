@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Data;
 
@@ -13,7 +9,7 @@ namespace RocketLaunch.Helper
     {
         public object Convert(object value, Type TargetType, object parameter, CultureInfo culture)
         {
-            var item = (ListViewItem)value;
+            var item = (ListViewItem) value;
             var listView = ItemsControl.ItemsControlFromItemContainer(item) as ListView;
             int index = listView.ItemContainerGenerator.IndexFromContainer(item) + 1;
             return index.ToString();
@@ -25,4 +21,3 @@ namespace RocketLaunch.Helper
         }
     }
 }
-

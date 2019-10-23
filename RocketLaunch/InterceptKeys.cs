@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RocketLaunch
@@ -68,7 +64,6 @@ namespace RocketLaunch
             public readonly int Flags;
             public readonly int Time;
             public readonly IntPtr Extra;
-
         }
     }
 }

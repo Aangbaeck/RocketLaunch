@@ -1,16 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace RocketLaunch.Helper
 {
     public static class KnownFolderFinder
     {
-        private static readonly Guid CommonDocumentsGuid = new Guid("ED4824AF-DCE4-45A8-81E2-FC7965083634");
-
         [Flags]
         public enum KnownFolderFlag : uint
         {
@@ -26,37 +20,41 @@ namespace RocketLaunch.Helper
             ALIAS_ONLY = 0x80000000
         }
 
+        private static readonly Guid CommonDocumentsGuid = new Guid("ED4824AF-DCE4-45A8-81E2-FC7965083634");
+
         [DllImport("shell32.dll")]
-        static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags, IntPtr hToken, out IntPtr pszPath);
+        static extern int SHGetKnownFolderPath([MarshalAs(UnmanagedType.LPStruct)] Guid rfid, uint dwFlags,
+            IntPtr hToken, out IntPtr pszPath);
 
         public static string GetFolderFromKnownFolderGUID(Guid guid)
         {
-            return pinvokePath(guid, KnownFolderFlag.DEFAULT_PATH);
+            return PinvokePath(guid, KnownFolderFlag.DEFAULT_PATH);
         }
 
         public static void EnumerateKnownFolders()
         {
-            KnownFolderFlag[] flags = new KnownFolderFlag[] {
-                    KnownFolderFlag.None,
-                    KnownFolderFlag.ALIAS_ONLY | KnownFolderFlag.DONT_VERFIY,
-                    KnownFolderFlag.DEFAULT_PATH | KnownFolderFlag.NOT_PARENT_RELATIVE,
-                };
+            KnownFolderFlag[] flags = new KnownFolderFlag[]
+            {
+                KnownFolderFlag.None,
+                KnownFolderFlag.ALIAS_ONLY | KnownFolderFlag.DONT_VERFIY,
+                KnownFolderFlag.DEFAULT_PATH | KnownFolderFlag.NOT_PARENT_RELATIVE,
+            };
 
 
             foreach (var flag in flags)
             {
-                Console.WriteLine(string.Format("{0}; P/Invoke==>{1}", flag, pinvokePath(CommonDocumentsGuid, flag)));
+                Console.WriteLine($@"{flag}; P/Invoke==>{PinvokePath(CommonDocumentsGuid, flag)}");
             }
+
             Console.ReadLine();
         }
 
-        private static string pinvokePath(Guid guid, KnownFolderFlag flags)
+        private static string PinvokePath(Guid guid, KnownFolderFlag flags)
         {
-            IntPtr pPath;
-            SHGetKnownFolderPath(guid, (uint)flags, IntPtr.Zero, out pPath); // public documents
+            SHGetKnownFolderPath(guid, (uint) flags, IntPtr.Zero, out var pPath); // public documents
 
-            string path = System.Runtime.InteropServices.Marshal.PtrToStringUni(pPath);
-            System.Runtime.InteropServices.Marshal.FreeCoTaskMem(pPath);
+            string path = Marshal.PtrToStringUni(pPath);
+            Marshal.FreeCoTaskMem(pPath);
             return path;
         }
     }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Input;
-using GalaSoft.MvvmLight;
-using RocketLaunch.Helper;
-
-namespace RocketLaunch.Views
+﻿namespace RocketLaunch.Views
 {
     /// <summary>
     /// Description for TheSecondWindowV.
@@ -18,10 +12,5 @@ namespace RocketLaunch.Views
         {
             InitializeComponent();
         }
-        
-
-
-
-
     }
 }

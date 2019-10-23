@@ -20,11 +20,23 @@ namespace RocketLaunch.Helper
         private static Dictionary<Type, bool> IsStructTypeToDeepCopyDictionary = new Dictionary<Type, bool>();
 
         private static readonly object CompiledCopyFunctionsDictionaryLocker = new object();
-        private static Dictionary<Type, Func<object, Dictionary<object, object>, object>> CompiledCopyFunctionsDictionary =
-            new Dictionary<Type, Func<object, Dictionary<object, object>, object>>();
+
+        private static Dictionary<Type, Func<object, Dictionary<object, object>, object>>
+            CompiledCopyFunctionsDictionary =
+                new Dictionary<Type, Func<object, Dictionary<object, object>, object>>();
 
         private static readonly Type ObjectType = typeof(Object);
         private static readonly Type ObjectDictionaryType = typeof(Dictionary<object, object>);
+
+        private static readonly Type FieldInfoType = typeof(FieldInfo);
+
+        private static readonly MethodInfo SetValueMethod =
+            FieldInfoType.GetMethod("SetValue", new[] {ObjectType, ObjectType});
+
+        private static readonly Type ThisType = typeof(DeepCopyByExpressionTrees);
+
+        private static readonly MethodInfo DeepCopyByExpressionTreeObjMethod =
+            ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
 
         /// <summary>
         /// Creates a deep copy of an object.
@@ -33,12 +45,15 @@ namespace RocketLaunch.Helper
         /// <param name="original">Object to copy.</param>
         /// <param name="copiedReferencesDict">Dictionary of already copied objects (Keys: original objects, Values: their copies).</param>
         /// <returns></returns>
-        public static T DeepCopyByExpressionTree<T>(this T original, Dictionary<object, object> copiedReferencesDict = null)
+        public static T DeepCopyByExpressionTree<T>(this T original,
+            Dictionary<object, object> copiedReferencesDict = null)
         {
-            return (T)DeepCopyByExpressionTreeObj(original, false, copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
+            return (T) DeepCopyByExpressionTreeObj(original, false,
+                copiedReferencesDict ?? new Dictionary<object, object>(new ReferenceEqualityComparer()));
         }
 
-        private static object DeepCopyByExpressionTreeObj(object original, bool forceDeepCopy, Dictionary<object, object> copiedReferencesDict)
+        private static object DeepCopyByExpressionTreeObj(object original, bool forceDeepCopy,
+            Dictionary<object, object> copiedReferencesDict)
         {
             if (original == null)
             {
@@ -95,7 +110,8 @@ namespace RocketLaunch.Helper
 
                         compiledCopyFunction = uncompiledCopyFunction.Compile();
 
-                        var dictionaryCopy = CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                        var dictionaryCopy =
+                            CompiledCopyFunctionsDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
 
                         dictionaryCopy.Add(type, compiledCopyFunction);
 
@@ -107,7 +123,8 @@ namespace RocketLaunch.Helper
             return compiledCopyFunction;
         }
 
-        private static Expression<Func<object, Dictionary<object, object>, object>> CreateCompiledLambdaCopyFunctionForType(Type type)
+        private static Expression<Func<object, Dictionary<object, object>, object>>
+            CreateCompiledLambdaCopyFunctionForType(Type type)
         {
             ParameterExpression inputParameter;
             ParameterExpression inputDictionary;
@@ -120,13 +137,13 @@ namespace RocketLaunch.Helper
             ///// INITIALIZATION OF EXPRESSIONS AND VARIABLES
 
             InitializeExpressions(type,
-                                  out inputParameter,
-                                  out inputDictionary,
-                                  out outputVariable,
-                                  out boxingVariable,
-                                  out endLabel,
-                                  out variables,
-                                  out expressions);
+                out inputParameter,
+                out inputDictionary,
+                out outputVariable,
+                out boxingVariable,
+                out endLabel,
+                out variables,
+                out expressions);
 
             ///// RETURN NULL IF ORIGINAL IS NULL
 
@@ -146,41 +163,41 @@ namespace RocketLaunch.Helper
             ///// COPY ALL NONVALUE OR NONPRIMITIVE FIELDS
 
             FieldsCopyExpressions(type,
-                                  inputParameter,
-                                  inputDictionary,
-                                  outputVariable,
-                                  boxingVariable,
-                                  expressions);
+                inputParameter,
+                inputDictionary,
+                outputVariable,
+                boxingVariable,
+                expressions);
 
             ///// COPY ELEMENTS OF ARRAY
 
             if (IsArray(type) && IsTypeToDeepCopy(type.GetElementType()))
             {
                 CreateArrayCopyLoopExpression(type,
-                                              inputParameter,
-                                              inputDictionary,
-                                              outputVariable,
-                                              variables,
-                                              expressions);
+                    inputParameter,
+                    inputDictionary,
+                    outputVariable,
+                    variables,
+                    expressions);
             }
 
             ///// COMBINE ALL EXPRESSIONS INTO LAMBDA FUNCTION
 
-            var lambda = CombineAllIntoLambdaFunctionExpression(inputParameter, inputDictionary, outputVariable, endLabel, variables, expressions);
+            var lambda = CombineAllIntoLambdaFunctionExpression(inputParameter, inputDictionary, outputVariable,
+                endLabel, variables, expressions);
 
             return lambda;
         }
 
         private static void InitializeExpressions(Type type,
-                                                  out ParameterExpression inputParameter,
-                                                  out ParameterExpression inputDictionary,
-                                                  out ParameterExpression outputVariable,
-                                                  out ParameterExpression boxingVariable,
-                                                  out LabelTarget endLabel,
-                                                  out List<ParameterExpression> variables,
-                                                  out List<Expression> expressions)
+            out ParameterExpression inputParameter,
+            out ParameterExpression inputDictionary,
+            out ParameterExpression outputVariable,
+            out ParameterExpression boxingVariable,
+            out LabelTarget endLabel,
+            out List<ParameterExpression> variables,
+            out List<Expression> expressions)
         {
-
             inputParameter = Expression.Parameter(ObjectType);
 
             inputDictionary = Expression.Parameter(ObjectDictionaryType);
@@ -199,7 +216,8 @@ namespace RocketLaunch.Helper
             variables.Add(boxingVariable);
         }
 
-        private static void IfNullThenReturnNullExpression(ParameterExpression inputParameter, LabelTarget endLabel, List<Expression> expressions)
+        private static void IfNullThenReturnNullExpression(ParameterExpression inputParameter, LabelTarget endLabel,
+            List<Expression> expressions)
         {
             ///// Intended code:
             /////
@@ -228,7 +246,8 @@ namespace RocketLaunch.Helper
             /////
             ///// var output = (<type>)input.MemberwiseClone();
 
-            var memberwiseCloneMethod = ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
+            var memberwiseCloneMethod =
+                ObjectType.GetMethod("MemberwiseClone", BindingFlags.NonPublic | BindingFlags.Instance);
 
             var memberwiseCloneInputExpression =
                 Expression.Assign(
@@ -243,9 +262,9 @@ namespace RocketLaunch.Helper
         }
 
         private static void StoreReferencesIntoDictionaryExpression(ParameterExpression inputParameter,
-                                                                          ParameterExpression inputDictionary,
-                                                                          ParameterExpression outputVariable,
-                                                                          List<Expression> expressions)
+            ParameterExpression inputDictionary,
+            ParameterExpression outputVariable,
+            List<Expression> expressions)
         {
             ///// Intended code:
             /////
@@ -262,13 +281,14 @@ namespace RocketLaunch.Helper
             expressions.Add(storeReferencesExpression);
         }
 
-        private static Expression<Func<object, Dictionary<object, object>, object>> CombineAllIntoLambdaFunctionExpression(
-            ParameterExpression inputParameter,
-            ParameterExpression inputDictionary,
-            ParameterExpression outputVariable,
-            LabelTarget endLabel,
-            List<ParameterExpression> variables,
-            List<Expression> expressions)
+        private static Expression<Func<object, Dictionary<object, object>, object>>
+            CombineAllIntoLambdaFunctionExpression(
+                ParameterExpression inputParameter,
+                ParameterExpression inputDictionary,
+                ParameterExpression outputVariable,
+                LabelTarget endLabel,
+                List<ParameterExpression> variables,
+                List<Expression> expressions)
         {
             expressions.Add(Expression.Label(endLabel));
 
@@ -276,17 +296,19 @@ namespace RocketLaunch.Helper
 
             var finalBody = Expression.Block(variables, expressions);
 
-            var lambda = Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter, inputDictionary);
+            var lambda =
+                Expression.Lambda<Func<object, Dictionary<object, object>, object>>(finalBody, inputParameter,
+                    inputDictionary);
 
             return lambda;
         }
 
         private static void CreateArrayCopyLoopExpression(Type type,
-                                                          ParameterExpression inputParameter,
-                                                          ParameterExpression inputDictionary,
-                                                          ParameterExpression outputVariable,
-                                                          List<ParameterExpression> variables,
-                                                          List<Expression> expressions)
+            ParameterExpression inputParameter,
+            ParameterExpression inputDictionary,
+            ParameterExpression outputVariable,
+            List<ParameterExpression> variables,
+            List<Expression> expressions)
         {
             ///// Intended code:
             /////
@@ -343,7 +365,8 @@ namespace RocketLaunch.Helper
 
             var elementType = type.GetElementType();
 
-            var assignExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary, outputVariable, elementType, type, indices);
+            var assignExpression = ArrayFieldToArrayFieldAssignExpression(inputParameter, inputDictionary,
+                outputVariable, elementType, type, indices);
 
             Expression forExpression = assignExpression;
 
@@ -450,7 +473,7 @@ namespace RocketLaunch.Helper
             var indexAssignment = Expression.Assign(indexVariable, Expression.Constant(0));
 
             return Expression.Block(
-                new[] { lengthVariable },
+                new[] {lengthVariable},
                 lengthAssignment,
                 indexAssignment,
                 newLoop);
@@ -474,15 +497,15 @@ namespace RocketLaunch.Helper
                 Expression.Call(
                     Expression.Convert(inputParameter, typeof(Array)),
                     getLengthMethod,
-                    new[] { dimensionConstant }));
+                    new[] {dimensionConstant}));
         }
 
         private static void FieldsCopyExpressions(Type type,
-                                                  ParameterExpression inputParameter,
-                                                  ParameterExpression inputDictionary,
-                                                  ParameterExpression outputVariable,
-                                                  ParameterExpression boxingVariable,
-                                                  List<Expression> expressions)
+            ParameterExpression inputParameter,
+            ParameterExpression inputDictionary,
+            ParameterExpression outputVariable,
+            ParameterExpression boxingVariable,
+            List<Expression> expressions)
         {
             var fields = GetAllRelevantFields(type);
 
@@ -495,7 +518,8 @@ namespace RocketLaunch.Helper
 
             if (shouldUseBoxing)
             {
-                var boxingExpression = Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
+                var boxingExpression =
+                    Expression.Assign(boxingVariable, Expression.Convert(outputVariable, ObjectType));
 
                 expressions.Add(boxingExpression);
             }
@@ -509,11 +533,11 @@ namespace RocketLaunch.Helper
                 else
                 {
                     ReadonlyFieldCopyExpression(type,
-                                                field,
-                                                inputParameter,
-                                                inputDictionary,
-                                                boxingVariable,
-                                                expressions);
+                        field,
+                        inputParameter,
+                        inputDictionary,
+                        boxingVariable,
+                        expressions);
                 }
             }
 
@@ -535,11 +559,11 @@ namespace RocketLaunch.Helper
                 else
                 {
                     WritableFieldCopyExpression(type,
-                                                field,
-                                                inputParameter,
-                                                inputDictionary,
-                                                outputVariable,
-                                                expressions);
+                        field,
+                        inputParameter,
+                        inputDictionary,
+                        outputVariable,
+                        expressions);
                 }
             }
         }
@@ -554,7 +578,8 @@ namespace RocketLaunch.Helper
             {
                 fieldsList.AddRange(
                     typeCache
-                        .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
+                        .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic |
+                                   BindingFlags.FlattenHierarchy)
                         .Where(field => forceAllFields || IsTypeToDeepCopy(field.FieldType)));
 
                 typeCache = typeCache.BaseType;
@@ -568,10 +593,8 @@ namespace RocketLaunch.Helper
             return GetAllRelevantFields(type, forceAllFields: true);
         }
 
-        private static readonly Type FieldInfoType = typeof(FieldInfo);
-        private static readonly MethodInfo SetValueMethod = FieldInfoType.GetMethod("SetValue", new[] { ObjectType, ObjectType });
-
-        private static void ReadonlyFieldToNullExpression(FieldInfo field, ParameterExpression boxingVariable, List<Expression> expressions)
+        private static void ReadonlyFieldToNullExpression(FieldInfo field, ParameterExpression boxingVariable,
+            List<Expression> expressions)
         {
             // This option must be implemented by Reflection because of the following:
             // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
@@ -581,24 +604,21 @@ namespace RocketLaunch.Helper
             ///// fieldInfo.SetValue(boxing, <fieldtype>null);
 
             var fieldToNullExpression =
-                    Expression.Call(
-                        Expression.Constant(field),
-                        SetValueMethod,
-                        boxingVariable,
-                        Expression.Constant(null, field.FieldType));
+                Expression.Call(
+                    Expression.Constant(field),
+                    SetValueMethod,
+                    boxingVariable,
+                    Expression.Constant(null, field.FieldType));
 
             expressions.Add(fieldToNullExpression);
         }
 
-        private static readonly Type ThisType = typeof(DeepCopyByExpressionTrees);
-        private static readonly MethodInfo DeepCopyByExpressionTreeObjMethod = ThisType.GetMethod("DeepCopyByExpressionTreeObj", BindingFlags.NonPublic | BindingFlags.Static);
-
         private static void ReadonlyFieldCopyExpression(Type type,
-                                                        FieldInfo field,
-                                                        ParameterExpression inputParameter,
-                                                        ParameterExpression inputDictionary,
-                                                        ParameterExpression boxingVariable,
-                                                        List<Expression> expressions)
+            FieldInfo field,
+            ParameterExpression inputParameter,
+            ParameterExpression inputDictionary,
+            ParameterExpression boxingVariable,
+            List<Expression> expressions)
         {
             // This option must be implemented by Reflection (SetValueMethod) because of the following:
             // https://visualstudio.uservoice.com/forums/121579-visual-studio-2015/suggestions/2727812-allow-expression-assign-to-set-readonly-struct-f
@@ -625,7 +645,8 @@ namespace RocketLaunch.Helper
             expressions.Add(fieldDeepCopyExpression);
         }
 
-        private static void WritableFieldToNullExpression(FieldInfo field, ParameterExpression outputVariable, List<Expression> expressions)
+        private static void WritableFieldToNullExpression(FieldInfo field, ParameterExpression outputVariable,
+            List<Expression> expressions)
         {
             ///// Intended code:
             /////
@@ -642,11 +663,11 @@ namespace RocketLaunch.Helper
         }
 
         private static void WritableFieldCopyExpression(Type type,
-                                                        FieldInfo field,
-                                                        ParameterExpression inputParameter,
-                                                        ParameterExpression inputDictionary,
-                                                        ParameterExpression outputVariable,
-                                                        List<Expression> expressions)
+            FieldInfo field,
+            ParameterExpression inputParameter,
+            ParameterExpression inputDictionary,
+            ParameterExpression outputVariable,
+            List<Expression> expressions)
         {
             ///// Intended code:
             /////
@@ -712,7 +733,8 @@ namespace RocketLaunch.Helper
                     {
                         isStructTypeToDeepCopy = IsStructWhichNeedsDeepCopy_NoDictionaryUsed(type);
 
-                        var newDictionary = IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
+                        var newDictionary =
+                            IsStructTypeToDeepCopyDictionary.ToDictionary(pair => pair.Key, pair => pair.Value);
 
                         newDictionary[type] = isStructTypeToDeepCopy;
 
