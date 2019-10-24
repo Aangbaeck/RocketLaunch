@@ -317,7 +317,7 @@ namespace RocketLaunch.Model
                             }
                             else //The normal start
                             {
-                                WindowHelper.BringProcessToFrontOrStartIt(item.URI, item.Arguments, asAdmin: false);
+                                WindowHelper.BringProcessToFrontOrStartIt(item.Command, item.Arguments, asAdmin: false);
                             }
                             break;
                         case ItemType.Directory:
