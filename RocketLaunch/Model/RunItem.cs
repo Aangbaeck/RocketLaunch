@@ -16,7 +16,7 @@ namespace RocketLaunch.Model
         [ProtoMember(1)] public string Name { get; set; } //What we will actually search for
 
         [ProtoMember(2)]
-        public List<string> KeyWords { get; set; } //Add groups, similar words etc. This should be searchable as well
+        public List<string> KeyWords { get; set; } = new List<string>(); //Add groups, similar words etc. This should be searchable as well
 
         [ProtoMember(3)] public ItemType Type { get; set; } //The way we take a decision on what to do with this type
         [ProtoMember(4)] public string Command { get; set; } //The actual command to run for settings
@@ -32,7 +32,8 @@ namespace RocketLaunch.Model
         } //The file path or website or specific text that should be written underneath the Name in the UI.
 
         [ProtoMember(8)] public string Arguments { get; set; } //The arguments to run with the URI
-        [ProtoMember(9)] public int RunNrOfTimes { get; set; } = 0;
+        [ProtoMember(9)] public string Tooltip { get; set; } //Something interesting to show about the file. Links contain descriptions that can be interesting to show here.
+        [ProtoMember(10)] public int RunNrOfTimes { get; set; } = 0;
 
 
         public string FileName
@@ -99,10 +100,39 @@ namespace RocketLaunch.Model
                         }
                     }
 
+                    if (Type == ItemType.Link)
+                    {
+                        var uri = URI;
+                        if (IconName != null)
+                        {
+                            try
+                            {
+                                var split = IconName.Split(',');
+                                var iconName = split[0];
+                                int nr = Convert.ToInt32(split[1]);
+                                if (File.Exists(iconName))
+                                {
+                                    Stream iconStream = new FileStream(iconName, FileMode.Open, FileAccess.Read);
+                                    IconBitmapDecoder decoder = new IconBitmapDecoder(iconStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+
+                                    BitmapFrame frame = decoder.Frames[nr];
+
+                                    return frame;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                //We might at least try. This shouldn't stop us from continuing.
+                            }
+
+
+                        }
+                    }
                     if (File.Exists(URI))
                     {
+                        
                         using System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI);
-                        var handle = (int) sysicon.Handle;
+                        var handle = (int)sysicon.Handle;
                         return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
                             BitmapSizeOptions.FromEmptyOptions());
                     }
@@ -139,6 +169,7 @@ namespace RocketLaunch.Model
         LogOffComputer,
         LockComputer,
         Hibernate,
-        Sleep
+        Sleep,
+        Link
     }
 }

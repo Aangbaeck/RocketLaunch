@@ -97,6 +97,7 @@
     <Compile Include="Model\RunItem.cs" />
     <Compile Include="Model\RunItemFactory.cs" />
     <Compile Include="Helper\WindowHelper.cs" />
+    <Compile Include="Model\Win10AppsSearcher.cs" />
     <Compile Include="Services\AppSettings.cs" />
     <Compile Include="Services\IndexingService.cs" />
     <Compile Include="Services\KeyBoardHandlerService.cs" />

@@ -17,6 +17,7 @@ namespace RocketLaunch.Helper
         public static string SettingsPath { get; set; } = Directory + "Settings/Settings.json";
         public static string WindowPositionsPath { get; set; } = Directory + "WindowPositions/";
         public static string Directory => Path.GetDirectoryName(AppDomain.CurrentDomain.BaseDirectory) + "//";
+        public static string LinksPath => Directory + "Links/";
 
         /// <summary>
         /// Takes a bitmap and converts it to an image that can be handled by WPF ImageBrush

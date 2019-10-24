@@ -304,6 +304,22 @@ namespace RocketLaunch.Model
                             }
 
                             break;
+                        case ItemType.Link:
+                            if (asAdmin)
+                            {
+                                WindowHelper.BringProcessToFrontOrStartIt(item.Command, item.Arguments, asAdmin: true);
+                            }
+                            else if (openContainingFolder)
+                            {
+                                string args = $"/e, /select, \"{item.Command}\"";
+                                ProcessStartInfo info = new ProcessStartInfo { FileName = "explorer", Arguments = args };
+                                Process.Start(info);
+                            }
+                            else //The normal start
+                            {
+                                WindowHelper.BringProcessToFrontOrStartIt(item.URI, item.Arguments, asAdmin: false);
+                            }
+                            break;
                         case ItemType.Directory:
                             Process.Start(item.URI);
                             break;

@@ -8,8 +8,8 @@ using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
-using System.Timers;
 using System.Xml;
 using GalaSoft.MvvmLight;
 using IWshRuntimeLibrary;
@@ -20,9 +20,11 @@ using RocketLaunch.Model;
 using Serilog;
 using Shell32;
 using File = System.IO.File;
+using Timer = System.Timers.Timer;
 
 namespace RocketLaunch.Services
 {
+
     public class IndexingService : ViewModelBase
     {
         private int _generalSearchTime;
@@ -183,19 +185,19 @@ namespace RocketLaunch.Services
                     if (IndexingIsRunning) return;
                     IndexingIsRunning = true;
 
-                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+                    var unorderedFiles = new HashSet<RunItem>();
                     LastIndexed = DateTime.Now;
 
-                    var tempBag = new ConcurrentDictionary<string, RunItem>();
+                    var tempBag = new HashSet<RunItem>();
                     ProcessDirectory(dir, tempBag);
                     dir.NrOfFiles = tempBag.Count;
                     foreach (var item in tempBag)
                     {
-                        unorderedFiles.TryAdd(item.Key, item.Value);
+                        unorderedFiles.Add(item);
                     }
 
-                    RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
-                    tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
+                    RunItem[] tempList = unorderedFiles.ToArray();
+                    tempList = tempList.GroupBy(p => p.URI + p.Arguments + p.Command).Select(p => p.First()).ToArray();
 
                     for (int i = 0; i < tempList.Length; i++)
                     {
@@ -217,216 +219,7 @@ namespace RocketLaunch.Services
             });
         }
 
-        private List<RunItem> AddWindows10Apps()
-        {
-            var list = new List<RunItem>();
-            using (PowerShell PowerShellInstance = PowerShell.Create())
-            {
-                // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
-                // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
-                PowerShellInstance.AddScript("get-appxpackage");
 
-                // invoke execution on the pipeline (collecting output)
-                Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
-                // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
-                //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
-                foreach (PSObject outputItem in PSOutput)
-                {
-                    //TODO: handle/process the output items if required
-                    var item = outputItem.BaseObject;
-
-
-                    var propertyInfo = item.GetType().GetProperty("NonRemovable");
-                    var NonRemovable = (bool) propertyInfo.GetValue(item, null);
-                    propertyInfo = item.GetType().GetProperty("IsFramework");
-                    var IsFramework = (bool) propertyInfo.GetValue(item, null);
-                    //var cast = (Microsoft.Windows.Appx.PackageManager.Commands.AppxPackage)
-
-                    if (!NonRemovable && !IsFramework)
-                    {
-                        var runItem = new RunItem() {Type = ItemType.Win10App};
-
-                        propertyInfo = item.GetType().GetProperty("PackageFamilyName");
-                        var packageFamily = (string) propertyInfo.GetValue(item, null);
-                        runItem.Command = packageFamily+"!App";
-
-                        propertyInfo = item.GetType().GetProperty("Name");
-                        var names = ((string) propertyInfo.GetValue(item, null)).Split('.').ToList();
-                        runItem.Name = names.Last();
-
-                        names.Remove(names.Last());
-                        runItem.URI = string.Join(".", names.ToArray());
-
-                        propertyInfo = item.GetType().GetProperty("InstallLocation");
-                        var installLocation = (string) propertyInfo.GetValue(item, null);
-                        var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
-                        runItem.IconName = icon.icon;
-                        runItem.IconBackGround = icon.background;
-                        list.Add(runItem);
-                        //Console.WriteLine(packageFamily);
-                    }
-                }
-            }
-
-            return list;
-        }
-
-        private List<RunItem> AddWindows10AppsBetterWay()
-        {
-            var win10AppList = AddWindows10Apps();
-
-            var list = new List<RunItem>();
-            using (PowerShell PowerShellInstance = PowerShell.Create())
-            {
-                // use "AddScript" to add the contents of a script file to the end of the execution pipeline.
-                // use "AddCommand" to add individual commands/cmdlets to the end of the execution pipeline.
-                PowerShellInstance.AddScript("Get-StartApps");
-
-                // invoke execution on the pipeline (collecting output)
-                Collection<PSObject> PSOutput = PowerShellInstance.Invoke();
-                // use "AddParameter" to add a single parameter to the last command/script on the pipeline.
-                //PowerShellInstance.AddParameter("param1", "parameter 1 value!");
-
-                var dirs = Directory.GetDirectories("C:\\Program Files\\WindowsApps");
-                foreach (PSObject outputItem in PSOutput)
-                {
-                    //TODO: handle/process the output items if required
-                    var item = outputItem.ToString();
-                    try
-                    {
-                        var runItem = new RunItem() {Type = ItemType.Win10App};
-
-                        var split = item.Split('=');
-                        var name = split[1].Split(';')[0];
-                        var appID = split[2].Substring(0, split[2].Length - 1);
-                        runItem.Command = appID;
-                        runItem.Name = name;
-                        var uri = appID;
-                        int count = uri.Count(f => f == '{');
-
-                        if (count > 0)
-                        {
-                            for (int i = 0; i < count; i++)
-                            {
-                                var startIndex = uri.IndexOf("{", StringComparison.Ordinal);
-                                var endIndex = uri.IndexOf("}", StringComparison.Ordinal);
-                                string guids = uri.Substring(startIndex + 1, endIndex - startIndex - 1);
-                                var guid = new Guid(guids);
-                                var knownFolder = KnownFolderFinder.GetFolderFromKnownFolderGUID(guid);
-                                if (knownFolder != null)
-                                    uri = uri.Replace($"{{{guids}}}", knownFolder);
-                            }
-                        }
-
-                        runItem.URI = uri;
-                        if (!File.Exists(runItem.URI))
-                            runItem.URI = "Win 10 app";
-
-
-                        //propertyInfo = item.GetType().GetProperty("InstallLocation");
-                        //var installLocation = (string)propertyInfo.GetValue(item, null);
-                        //var icon = GetWin10Icon(installLocation + "\\AppxManifest.xml");
-
-
-                        try
-                        {
-                            var hit = win10AppList.FirstOrDefault(p => p.Command.Contains(uri.Split('!')[0]));
-                            if (hit != null)
-                            {
-                                runItem.IconName = hit.IconName;
-                                runItem.IconBackGround = hit.IconBackGround;
-                                win10AppList.Remove(hit);
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            Log.Error("Could not att win 10 icon.");
-                        }
-
-
-                        list.Add(runItem);
-                    }
-                    catch (Exception)
-                    {
-                        Log.Error($"Could not add win 10 app {item}");
-                    }
-                }
-            }
-            list.AddRange(win10AppList);
-
-            return list;
-        }
-
-
-        private (string icon, string background) GetWin10Icon(string installLocation)
-        {
-            XmlDocument doc = new XmlDocument();
-            if (File.Exists(installLocation))
-            {
-                try
-                {
-                    var data = File.ReadAllLines(installLocation).ToList();
-                    data.RemoveAt(0);
-
-                    XmlDocument xml = new XmlDocument();
-                    xml.LoadXml(string.Join("", data.ToArray()));
-
-                    XmlNodeList node = xml.GetElementsByTagName("uap:VisualElements");
-                    if (node.Count == 0)
-                        node = xml.GetElementsByTagName("VisualElements");
-                    if (node.Count > 0)
-                    {
-                        var logoNode = node.Item(0).Attributes["Square44x44Logo"];
-                        if (logoNode == null)
-                        {
-                            logoNode = node.Item(0).Attributes["Logo"];
-                        }
-
-                        if (logoNode != null)
-                        {
-                            var assetDirectory =
-                                Path.GetDirectoryName(installLocation) + "\\" + Path.GetDirectoryName(logoNode.Value);
-                            var extension = Path.GetExtension(logoNode.Value);
-                            var files = new List<string>();
-                            foreach (var file in assetDirectory.GetFiles($"*{extension}"))
-                            {
-                                files.Add(file);
-                            }
-
-
-                            var fileName = Path.GetFileNameWithoutExtension(logoNode.Value);
-
-
-                            var path = files.Where(s => s.ToLower().Contains(fileName.ToLower()));
-
-                            if (path.Any(p => p.Contains("44")))
-                                path = path.Where(p => p.Contains("44"));
-                            if (path.Any(p => p.Contains("light")))
-                                path = path.Where(p => p.Contains("light"));
-
-                            string logoPath = path.First();
-
-                            string background = node.Item(0).Attributes["BackgroundColor"].Value;
-                            return (logoPath, background);
-                        }
-                        else
-                        {
-                            Log.Debug($"Could not find Icon name in {installLocation}");
-                        }
-                    }
-                    else
-                    {
-                        Log.Debug($"Could not find VisualElements for icon in {installLocation}");
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Broken xml file");
-                }
-            }
-
-            return ("", "");
-        }
 
         public void RunIndexing()
         {
@@ -439,6 +232,8 @@ namespace RocketLaunch.Services
 
                     var tempTrie = new Trie<RunItem>();
 
+                   
+
                     foreach (var dir in S.Settings.SearchDirectories)
                     {
                         dir.NrOfFiles = 0;
@@ -446,38 +241,37 @@ namespace RocketLaunch.Services
 
 
                     LastIndexed = DateTime.Now;
-                    //Spread out the search on all directories on different tasks
 
-                    //try
-                    //{
-                    //    var win10List = AddWindows10AppsBetterWay();
-                    //    foreach (var item in win10List)
-                    //    {
-                    //        tempTrie.Insert(item.Name, item);
-                    //        tempTrie.Insert(item.URI, item);
-                    //    }
-                    //}
-                    //catch (Exception e)
-                    //{
-                    //    Log.Error(e, "Could not add Windows10 store apps.");
-                    //}
-
-                    var unorderedFiles = new ConcurrentDictionary<string, RunItem>();
+                    var unorderedFiles = new HashSet<RunItem>();
 
 
                     foreach (FolderSearch dir in S.Settings.SearchDirectories)
                     {
-                        var tempBag = new ConcurrentDictionary<string, RunItem>();
+                        var tempBag = new HashSet<RunItem>();
                         ProcessDirectory(dir, tempBag);
                         dir.NrOfFiles = tempBag.Count;
                         foreach (var item in tempBag)
                         {
-                            unorderedFiles.TryAdd(item.Key, item.Value);
+                            unorderedFiles.Add(item);
                         }
                     }
-
-                    RunItem[] tempList = unorderedFiles.Select(p => p.Value).ToArray();
-                    tempList = tempList.GroupBy(p => p.URI).Select(p => p.First()).ToArray();
+                    try
+                    {
+                        var win10List = Win10AppsSearcher.AddWindows10AppsBetterWay();
+                        foreach (var item in win10List)
+                        {
+                            if (!tempTrie.DataDictionary.ContainsKey(item.Name))
+                            {
+                                tempTrie.Insert(item.Name.ToLower(), item);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Could not add Windows10 store apps.");
+                    }
+                    RunItem[] tempList = unorderedFiles.ToArray();
+                    tempList = tempList.GroupBy(p => p.URI + p.Arguments + p.Command).Select(p => p.First()).ToArray();
 
                     //var sw = new Stopwatch();
                     //sw.Start();
@@ -537,21 +331,7 @@ namespace RocketLaunch.Services
                     AddItem(RunItemFactory.SleepWindows());
                 }
 
-                try
-                {
-                    var win10List = AddWindows10AppsBetterWay();
-                    foreach (var item in win10List)
-                    {
-                        if (!MatcherPrio.DataDictionary.ContainsKey(item.Name))
-                        {
-                            MatcherPrio.Insert(item.Name.ToLower(), item);
-                        }
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e, "Could not add Windows10 store apps.");
-                }
+                
             });
         }
 
@@ -634,7 +414,7 @@ namespace RocketLaunch.Services
             var sw = new Stopwatch();
             sw.Start();
             ICollection<RunItem> generalResult = MatcherGeneral.Search(s.ToLower(), nrOfHits);
-            GeneralSearchTime = (int) sw.ElapsedTicks;
+            GeneralSearchTime = (int)sw.ElapsedTicks;
             sw.Restart();
             //Console.WriteLine($"    ");
 
@@ -652,12 +432,12 @@ namespace RocketLaunch.Services
                 prioResult.ToList().OrderByDescending(p => p.RunNrOfTimes)
                     .ToList(); //sort prioresults since they will always have at least one runtime
 
-            PrioSearchTime = (int) sw.ElapsedTicks;
+            PrioSearchTime = (int)sw.ElapsedTicks;
             TotalSearchTime = GeneralSearchTime + PrioSearchTime;
             return prioResult.Take(10).ToList();
         }
-
-        public void ProcessDirectory(FolderSearch dir, ConcurrentDictionary<string, RunItem> theBag)
+        [STAThread]
+        public void ProcessDirectory(FolderSearch dir, HashSet<RunItem> theBag)
         {
             try
             {
@@ -671,7 +451,7 @@ namespace RocketLaunch.Services
                             URI = new StringBuilder(dir.Path).Replace("/", "\\").Replace("//", "\\").ToString(),
                             Type = ItemType.Directory
                         };
-                        theBag.TryAdd(folder.URI, folder);
+                        theBag.Add(folder);
                     }
                 }
                 else
@@ -698,37 +478,23 @@ namespace RocketLaunch.Services
                     {
                         if (Path.GetExtension(fileName) == ".lnk")
                         {
+                            Directory.CreateDirectory(Common.LinksPath);
+                            File.Copy(fileName, Common.LinksPath + Path.GetFileName(fileName), true);
+
                             var item = new RunItem();
+                            item.Type = ItemType.Link;
+                            item.Command = Common.LinksPath + Path.GetFileName(fileName);
                             WshShell shell = new WshShell(); //Create a new WshShell Interface
-                            IWshShortcut
-                                link = (IWshShortcut) shell
-                                    .CreateShortcut(fileName); //Link the interface to our shortcut
+                            IWshShortcut link = (IWshShortcut)shell.CreateShortcut(item.Command); //Link the interface to our shortcut
                             var uri = link.TargetPath;
-                            item.Arguments = link.Arguments;
-                            var t = link.FullName;
-
-                            if (!File.Exists(uri)) //It sometimes mixes up the program files folder. Lets check both.
-                            {
-                                if (uri.Contains("Program Files (x86)"))
-                                {
-                                    uri = new StringBuilder(uri).Replace("Program Files (x86)", "Program Files")
-                                        .ToString();
-                                }
-
-                                if (!File.Exists(uri) && uri.Contains("Program Files"))
-                                    uri = new StringBuilder(uri).Replace("Program Files", "Program Files (x86)")
-                                        .ToString();
-                            }
-
-                            if (File.Exists(uri) && !uri.Contains("C:\\Windows\\Installer\\")
-                            ) //No reason to add a broken link.
-                            {
-                                item.Type = ItemType.File;
-                                item.URI = new StringBuilder(uri).Replace("/", "\\").Replace("//", "\\").ToString();
-                                item.Name = Path.GetFileNameWithoutExtension(fileName);
-                                item.KeyWords = new List<string>() {Path.GetFileName(uri)};
-                                theBag.TryAdd(item.URI, item);
-                            }
+                            //item.Arguments = link.Arguments;
+                            //var t = link.FullName;
+                            item.IconName = link.IconLocation;
+                            item.URI = link.Description;
+                            
+                            item.Name = Path.GetFileNameWithoutExtension(item.Command);
+                            item.KeyWords = new List<string>() { Path.GetFileName(uri) };
+                            theBag.Add(item);
                         }
                         else
                         {
@@ -738,8 +504,7 @@ namespace RocketLaunch.Services
                                 URI = new StringBuilder(fileName).Replace("/", "\\").Replace("//", "\\").ToString()
                             };
                             item.Name = item.FileName;
-                            if (!theBag.ContainsKey(item.URI))
-                                theBag.TryAdd(item.URI, item);
+                            theBag.Add(item);
                         }
                     }
                     catch (Exception e)
@@ -767,8 +532,10 @@ namespace RocketLaunch.Services
                             ProcessDirectory(
                                 new FolderSearch()
                                 {
-                                    Path = subdirectory, IncludeFoldersInSearch = dir.IncludeFoldersInSearch,
-                                    SearchPattern = dir.SearchPattern, SearchSubFolders = dir.SearchSubFolders
+                                    Path = subdirectory,
+                                    IncludeFoldersInSearch = dir.IncludeFoldersInSearch,
+                                    SearchPattern = dir.SearchPattern,
+                                    SearchSubFolders = dir.SearchSubFolders
                                 }, theBag);
                         }
                         catch (Exception e)
@@ -783,6 +550,9 @@ namespace RocketLaunch.Services
             }
         }
 
+
+        public string IconLink { get; set; }
+
         [STAThread]
         public static string GetShortcutTargetFile(string shortcutFilename)
         {
@@ -794,7 +564,7 @@ namespace RocketLaunch.Services
             FolderItem folderItem = folder.ParseName(filenameOnly);
             if (folderItem != null)
             {
-                ShellLinkObject link = (ShellLinkObject) folderItem.GetLink;
+                ShellLinkObject link = (ShellLinkObject)folderItem.GetLink;
                 return link.Path;
             }
 
