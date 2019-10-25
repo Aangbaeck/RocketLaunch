@@ -232,7 +232,7 @@ namespace RocketLaunch.Services
 
                     var tempTrie = new Trie<RunItem>();
 
-                   
+
 
                     foreach (var dir in S.Settings.SearchDirectories)
                     {
@@ -255,21 +255,7 @@ namespace RocketLaunch.Services
                             unorderedFiles.Add(item);
                         }
                     }
-                    try
-                    {
-                        var win10List = Win10AppsSearcher.AddWindows10AppsBetterWay();
-                        foreach (var item in win10List)
-                        {
-                            if (!tempTrie.DataDictionary.ContainsKey(item.Name))
-                            {
-                                tempTrie.Insert(item.Name.ToLower(), item);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Log.Error(e, "Could not add Windows10 store apps.");
-                    }
+
                     RunItem[] tempList = unorderedFiles.ToArray();
                     tempList = tempList.GroupBy(p => p.URI + p.Arguments + p.Command).Select(p => p.First()).ToArray();
 
@@ -294,6 +280,22 @@ namespace RocketLaunch.Services
                         {
                             Log.Error(e, "Could not add file to trie");
                         }
+                    }
+
+                    try
+                    {
+                        var win10List = Win10AppsSearcher.AddWindows10AppsBetterWay();
+                        foreach (var item in win10List)
+                        {
+                            if (!tempTrie.DataDictionary.ContainsKey(item.Name.ToLower()))
+                            {
+                                tempTrie.Insert(item.Name.ToLower(), item);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Error(e, "Could not add Windows10 store apps.");
                     }
 
                     MatcherGeneral = tempTrie;
@@ -331,7 +333,7 @@ namespace RocketLaunch.Services
                     AddItem(RunItemFactory.SleepWindows());
                 }
 
-                
+
             });
         }
 
@@ -487,11 +489,20 @@ namespace RocketLaunch.Services
                             WshShell shell = new WshShell(); //Create a new WshShell Interface
                             IWshShortcut link = (IWshShortcut)shell.CreateShortcut(item.Command); //Link the interface to our shortcut
                             var uri = link.TargetPath;
+                            item.URI = uri;
                             //item.Arguments = link.Arguments;
                             //var t = link.FullName;
-                            item.IconName = link.IconLocation;
-                            item.URI = link.Description;
+
+                            var split = link.IconLocation.Split(',');
+                            var iconName = split[0];
+                            item.IconNr = Convert.ToInt32(split[1]);
+
+                            if (File.Exists(iconName))
+                            {
+                                item.IconName = iconName;
+                            }
                             
+
                             item.Name = Path.GetFileNameWithoutExtension(item.Command);
                             item.KeyWords = new List<string>() { Path.GetFileName(uri) };
                             theBag.Add(item);

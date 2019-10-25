@@ -20,10 +20,11 @@ namespace RocketLaunch.Model
 
         [ProtoMember(3)] public ItemType Type { get; set; } //The way we take a decision on what to do with this type
         [ProtoMember(4)] public string Command { get; set; } //The actual command to run for settings
-        [ProtoMember(5)] public string IconName { get; set; } //manually customized icons
-        [ProtoMember(6)] public string IconBackGround { get; set; } = "Transparent"; //manually customized icons
+        [ProtoMember(5)] public string IconName { get; set; } //This is either icon names or the icon URI
+        [ProtoMember(6)] public int IconNr { get; set; } = 0; //the number of the icons that are located
+        [ProtoMember(7)] public string IconBackGround { get; set; } = "Transparent"; //manually customized icons
 
-        [ProtoMember(7)]
+        [ProtoMember(8)]
         public string
             URI
         {
@@ -31,9 +32,9 @@ namespace RocketLaunch.Model
             set;
         } //The file path or website or specific text that should be written underneath the Name in the UI.
 
-        [ProtoMember(8)] public string Arguments { get; set; } //The arguments to run with the URI
-        [ProtoMember(9)] public string Tooltip { get; set; } //Something interesting to show about the file. Links contain descriptions that can be interesting to show here.
-        [ProtoMember(10)] public int RunNrOfTimes { get; set; } = 0;
+        [ProtoMember(9)] public string Arguments { get; set; } //The arguments to run with the URI
+        [ProtoMember(10)] public string Tooltip { get; set; } //Something interesting to show about the file. Links contain descriptions that can be interesting to show here.
+        [ProtoMember(11)] public int RunNrOfTimes { get; set; } = 0;
 
 
         public string FileName
@@ -85,7 +86,14 @@ namespace RocketLaunch.Model
                         return new BitmapImage(uri);
                     }
 
-                    if (Type == ItemType.ControlPanelSetting || Type == ItemType.RunDialog)
+                    if (   Type == ItemType.ControlPanelSetting
+                        || Type == ItemType.RunDialog
+                        || Type == ItemType.Hibernate
+                        || Type == ItemType.LockComputer 
+                        || Type == ItemType.RestartComputer 
+                        || Type == ItemType.LogOffComputer 
+                        || Type == ItemType.TurnOffComputer 
+                        || Type == ItemType.Sleep)
                     {
                         var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
                         return new BitmapImage(uri);
@@ -102,27 +110,31 @@ namespace RocketLaunch.Model
 
                     if (Type == ItemType.Link)
                     {
-                        var uri = URI;
                         if (IconName != null)
                         {
                             try
                             {
-                                var split = IconName.Split(',');
-                                var iconName = split[0];
-                                int nr = Convert.ToInt32(split[1]);
-                                if (File.Exists(iconName))
+                                if (File.Exists(IconName))
                                 {
-                                    Stream iconStream = new FileStream(iconName, FileMode.Open, FileAccess.Read);
+                                    using System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI);
+
+                                    if (sysicon != null)
+                                    {
+                                        var handle = (int)sysicon.Handle;
+                                        return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
+                                            BitmapSizeOptions.FromEmptyOptions());
+                                    }
+                                    Stream iconStream = new FileStream(IconName, FileMode.Open, FileAccess.Read);
                                     IconBitmapDecoder decoder = new IconBitmapDecoder(iconStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-
-                                    BitmapFrame frame = decoder.Frames[nr];
-
+                                    BitmapFrame frame = decoder.Frames[IconNr];
                                     return frame;
                                 }
                             }
                             catch (Exception e)
-                            {
-                                //We might at least try. This shouldn't stop us from continuing.
+                            {  //We might at least try. This shouldn't stop us from continuing.
+                                URI = IconName;
+                                IconName = "";  //The icon doesn't work so why try anymore. Hopefully the icon is included in the URI with the icon handle. Will try to extract it in the Icon.ExtractAssociatedIcon(URI)
+
                             }
 
 
@@ -130,7 +142,7 @@ namespace RocketLaunch.Model
                     }
                     if (File.Exists(URI))
                     {
-                        
+
                         using System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI);
                         var handle = (int)sysicon.Handle;
                         return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
