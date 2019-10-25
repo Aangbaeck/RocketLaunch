@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management.Automation;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -287,7 +288,15 @@ namespace RocketLaunch.Services
                         var win10List = Win10AppsSearcher.AddWindows10AppsBetterWay();
                         foreach (var item in win10List)
                         {
-                            if (!tempTrie.DataDictionary.ContainsKey(item.Name.ToLower()))
+                            if (tempTrie.DataDictionary.ContainsKey(item.Name.ToLower()))
+                            {
+                                if (item.IconName != null)
+                                {
+
+                                }
+                                
+                            }
+                            else
                             {
                                 tempTrie.Insert(item.Name.ToLower(), item);
                             }
@@ -490,8 +499,14 @@ namespace RocketLaunch.Services
                             IWshShortcut link = (IWshShortcut)shell.CreateShortcut(item.Command); //Link the interface to our shortcut
                             var uri = link.TargetPath;
                             item.URI = uri;
-                            //item.Arguments = link.Arguments;
+                            item.Arguments = link.Arguments;
+
                             //var t = link.FullName;
+                            //var t2 = link.Description;
+                            //var t3 = link.WorkingDirectory;
+                            //var t4 = link.FullName;
+
+
 
                             var split = link.IconLocation.Split(',');
                             var iconName = split[0];
@@ -504,7 +519,8 @@ namespace RocketLaunch.Services
 
 
                             item.Name = Path.GetFileNameWithoutExtension(item.Command).Replace(" - Shortcut", "");  //get the name of the icon and removing the shortcut ending that sometimes are there, because nice-ness
-                            item.KeyWords = new List<string>() { Path.GetFileName(uri) };
+                            if(uri != "")
+                                item.KeyWords.Add(Path.GetFileName(uri));
                             theBag.Add(item);
                         }
                         else
@@ -558,6 +574,60 @@ namespace RocketLaunch.Services
                 {
                     Log.Error(e.Message);
                 }
+            }
+        }
+
+
+        // Get information about this link.
+        // Return an error message if there's a problem.
+        
+        [STAThread]
+        private static string GetShortcutInfo(string full_name,out string name, out string path, out string descr,out string working_dir, out string args)
+        {
+            name = "";
+            path = "";
+            descr = "";
+            working_dir = "";
+            args = "";
+            try
+            {
+                // Make a Shell object.
+                Shell32.Shell shell = new Shell32.Shell();
+
+                // Get the shortcut's folder and name.
+                string shortcut_path =
+                    full_name.Substring(0, full_name.LastIndexOf("\\"));
+                string shortcut_name =
+                    full_name.Substring(full_name.LastIndexOf("\\") + 1);
+                if (!shortcut_name.EndsWith(".lnk"))
+                    shortcut_name += ".lnk";
+
+                // Get the shortcut's folder.
+                Shell32.Folder shortcut_folder =
+                    shell.NameSpace(shortcut_path);
+
+                // Get the shortcut's file.
+                Shell32.FolderItem folder_item =
+                    shortcut_folder.Items().Item(shortcut_name);
+
+                if (folder_item == null)
+                    return "Cannot find shortcut file '" + full_name + "'";
+                if (!folder_item.IsLink)
+                    return "File '" + full_name + "' isn't a shortcut.";
+
+                // Display the shortcut's information.
+                Shell32.ShellLinkObject lnk =
+                    (Shell32.ShellLinkObject)folder_item.GetLink;
+                name = folder_item.Name;
+                descr = lnk.Description;
+                path = lnk.Path;
+                working_dir = lnk.WorkingDirectory;
+                args = lnk.Arguments;
+                return "";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
             }
         }
 
