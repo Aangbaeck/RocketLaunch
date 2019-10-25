@@ -292,13 +292,27 @@ namespace RocketLaunch.Services
                             {
                                 if (item.IconName != null)
                                 {
-
+                                    if (tempTrie.DataDictionary.TryGetValue(item.Name.ToLower(), out var oldValue))
+                                    {
+                                        if (string.IsNullOrEmpty(oldValue.FirstOrDefault()?.IconName))
+                                        {
+                                            tempTrie.Replace(item.Name.ToLower(),item);
+                                            foreach (var keyWords in item.KeyWords)
+                                            {
+                                                tempTrie.Replace(keyWords, item);
+                                            }
+                                        }
+                                    }
                                 }
                                 
                             }
                             else
                             {
                                 tempTrie.Insert(item.Name.ToLower(), item);
+                                foreach (var keyWords in item.KeyWords)
+                                {
+                                    tempTrie.Insert(keyWords.ToLower(), item);
+                                }
                             }
                         }
                     }

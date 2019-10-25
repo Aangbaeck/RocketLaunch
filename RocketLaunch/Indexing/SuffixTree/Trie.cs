@@ -48,7 +48,7 @@ namespace RocketLaunch.Indexing.SuffixTree
             DataDictionary[key].Add(value);
         }
 
-        /// <summary>
+                /// <summary>
         /// Returns true if we where able to remove item.
         /// </summary>
         /// <param name="key"></param>

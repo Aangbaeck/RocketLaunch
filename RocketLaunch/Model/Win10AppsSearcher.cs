@@ -132,6 +132,7 @@ namespace RocketLaunch.Model
                             {
                                 runItem.IconName = hit.IconName;
                                 runItem.IconBackGround = hit.IconBackGround;
+                                runItem.KeyWords.Add(hit.Name);
                                 win10AppList.Remove(hit);
                             }
                         }
@@ -198,6 +199,8 @@ namespace RocketLaunch.Model
 
                             if (path.Any(p => p.Contains("44")))
                                 path = path.Where(p => p.Contains("44"));
+                            if (path.Any(p => p.Contains("color")))
+                                path = path.Where(p => p.Contains("color"));
                             if (path.Any(p => p.Contains("light")))
                                 path = path.Where(p => p.Contains("light"));
 
