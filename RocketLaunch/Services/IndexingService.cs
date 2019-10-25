@@ -501,9 +501,9 @@ namespace RocketLaunch.Services
                             {
                                 item.IconName = iconName;
                             }
-                            
 
-                            item.Name = Path.GetFileNameWithoutExtension(item.Command);
+
+                            item.Name = Path.GetFileNameWithoutExtension(item.Command).Replace(" - Shortcut", "");  //get the name of the icon and removing the shortcut ending that sometimes are there, because nice-ness
                             item.KeyWords = new List<string>() { Path.GetFileName(uri) };
                             theBag.Add(item);
                         }
