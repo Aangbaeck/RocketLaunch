@@ -321,7 +321,9 @@
                             </Popup>
 
                             <ListView
-                                Margin="10,0,10,10"
+                                Margin="10,0,10,10"  
+                                VirtualizingPanel.ScrollUnit="Item"
+                                VirtualizingPanel.VirtualizationMode="Recycling"
                                 ItemsSource="{Binding SearchSuggestions}"
                                 SelectedIndex="{Binding SelectedIndex}"
                                 SizeChanged="ListView_SizeChanged">
@@ -367,12 +369,12 @@
                                                 <DataTemplate>
                                                     <Grid HorizontalAlignment="Stretch" ToolTip="{Binding URI}">
 
-                                                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                                        <StackPanel Grid.Column="0" Height="32" Orientation="Horizontal">
                                                             <Grid
-                                                                Width="32"
+                                                                Width="32" Height="32"
                                                                 Margin="0,0,20,0"
                                                                 Background="{Binding IconBackGround}">
-                                                                <Image Width="32" Source="{Binding Icon}" />
+                                                                <Image Width="32" Height="32" Source="{Binding Icon}" />
                                                             </Grid>
                                                             <StackPanel>
 
@@ -386,20 +388,13 @@
 
                                         </rich:RichTextEditor>-->
                                                                 <TextBlock FontSize="14" Text="{Binding Name}" />
-                                                                <StackPanel Orientation="Horizontal">
-                                                                    <TextBlock
-                                                                        FontSize="9"
-                                                                        Foreground="LightGray"
-                                                                        Text="{Binding URI}" />
-                                                                    <TextBlock
-                                                                        FontSize="9"
-                                                                        Foreground="LightGray"
-                                                                        Text=" " />
-                                                                    <TextBlock
-                                                                        FontSize="9"
-                                                                        Foreground="LightGray"
-                                                                        Text="{Binding Arguments}" />
-                                                                </StackPanel>
+                                                                <ContentControl FontSize="9">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <TextBlock Text="{Binding URI}" />
+                                                                        <TextBlock Text=" " />
+                                                                        <TextBlock Text="{Binding Arguments}" />
+                                                                    </StackPanel>
+                                                                </ContentControl>
 
                                                             </StackPanel>
                                                         </StackPanel>

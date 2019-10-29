@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 using System.Xml;
 using GalaSoft.MvvmLight;
 using IWshRuntimeLibrary;
@@ -296,7 +297,7 @@ namespace RocketLaunch.Services
                                     {
                                         if (string.IsNullOrEmpty(oldValue.FirstOrDefault()?.IconName))
                                         {
-                                            tempTrie.Replace(item.Name.ToLower(),item);
+                                            tempTrie.Replace(item.Name.ToLower(), item);
                                             foreach (var keyWords in item.KeyWords)
                                             {
                                                 tempTrie.Replace(keyWords, item);
@@ -304,7 +305,7 @@ namespace RocketLaunch.Services
                                         }
                                     }
                                 }
-                                
+
                             }
                             else
                             {
@@ -528,12 +529,24 @@ namespace RocketLaunch.Services
 
                             if (File.Exists(iconName))
                             {
-                                item.IconName = iconName;
+                                try
+                                {
+                                    Stream iconStream = new FileStream(iconName, FileMode.Open, FileAccess.Read);
+                                    IconBitmapDecoder decoder = new IconBitmapDecoder(iconStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                                    BitmapFrame frame = decoder.Frames[item.IconNr];
+                                    item.IconName = iconName;
+                                }
+                                catch
+                                {
+                                    if (S.Settings.DebugMode)
+                                    {
+                                        Log.Error($"Could not add icon for {iconName} nr: {item.IconNr}");
+                                    }
+                                }
+
                             }
-
-
                             item.Name = Path.GetFileNameWithoutExtension(item.Command).Replace(" - Shortcut", "");  //get the name of the icon and removing the shortcut ending that sometimes are there, because nice-ness
-                            if(uri != "")
+                            if (uri != "")
                                 item.KeyWords.Add(Path.GetFileName(uri));
                             theBag.Add(item);
                         }
@@ -594,9 +607,9 @@ namespace RocketLaunch.Services
 
         // Get information about this link.
         // Return an error message if there's a problem.
-        
+
         [STAThread]
-        private static string GetShortcutInfo(string full_name,out string name, out string path, out string descr,out string working_dir, out string args)
+        private static string GetShortcutInfo(string full_name, out string name, out string path, out string descr, out string working_dir, out string args)
         {
             name = "";
             path = "";

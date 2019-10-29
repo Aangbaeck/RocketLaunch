@@ -1,12 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using CommonServiceLocator;
 using ProtoBuf;
+using RocketLaunch.Services;
+using RocketLaunch.Views;
 using Serilog;
+using PixelFormat = System.Windows.Media.PixelFormat;
 
 namespace RocketLaunch.Model
 {
@@ -80,85 +86,81 @@ namespace RocketLaunch.Model
                 BitmapSource icon = null;
                 try
                 {
-                    if (Type == ItemType.Directory)
+                    switch (Type)
                     {
-                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/folder.png");
-                        return new BitmapImage(uri);
-                    }
-
-                    if (   Type == ItemType.ControlPanelSetting
-                        || Type == ItemType.RunDialog
-                        || Type == ItemType.Hibernate
-                        || Type == ItemType.LockComputer 
-                        || Type == ItemType.RestartComputer 
-                        || Type == ItemType.LogOffComputer 
-                        || Type == ItemType.TurnOffComputer 
-                        || Type == ItemType.Sleep)
-                    {
-                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
-                        return new BitmapImage(uri);
-                    }
-
-                    if (Type == ItemType.Win10App)
-                    {
-                        if (IconName != null)
+                        case ItemType.Directory:
+                        {
+                            var uri = new Uri("pack://application:,,,/Assets/CustomIcons/folder.png");
+                            return new BitmapImage(uri);
+                        }
+                        case ItemType.ControlPanelSetting:
+                        case ItemType.RunDialog:
+                        case ItemType.Hibernate:
+                        case ItemType.LockComputer:
+                        case ItemType.RestartComputer:
+                        case ItemType.LogOffComputer:
+                        case ItemType.TurnOffComputer:
+                        case ItemType.Sleep:
+                        {
+                            var uri = new Uri("pack://application:,,,/Assets/CustomIcons/" + IconName);
+                            var service = ServiceLocator.Current.GetInstance<SettingsService>();
+                            var bmp = new BitmapImage(uri);
+                            if (!service.Settings.DarkTheme)
+                            {
+                                var bmpTemp = Invert(bmp);
+                                return bmpTemp;
+                            }
+                            return bmp ;
+                        }
+                        case ItemType.Win10App when IconName != null:
                         {
                             var uri = new Uri(IconName);
                             return new BitmapImage(uri);
                         }
-                    }
-
-                    if (Type == ItemType.Link)
-                    {
-                        if (IconName != null)
+                        case ItemType.Link:
                         {
-                            try
+                            if (IconName != null)
                             {
-                                if (File.Exists(IconName))
+                                try
                                 {
-                                    using System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI);
-
-                                    if (sysicon != null)
+                                    if (File.Exists(IconName))
                                     {
-                                        var handle = (int)sysicon.Handle;
-                                        return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
-                                            BitmapSizeOptions.FromEmptyOptions());
+                                        Stream iconStream = new FileStream(IconName, FileMode.Open, FileAccess.Read);
+                                        IconBitmapDecoder decoder = new IconBitmapDecoder(iconStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
+                                        BitmapFrame frame = decoder.Frames[IconNr];
+                                        return frame;
                                     }
-                                    Stream iconStream = new FileStream(IconName, FileMode.Open, FileAccess.Read);
-                                    IconBitmapDecoder decoder = new IconBitmapDecoder(iconStream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.None);
-                                    BitmapFrame frame = decoder.Frames[IconNr];
-                                    return frame;
                                 }
-                            }
-                            catch (Exception e)
-                            {  //We might at least try. This shouldn't stop us from continuing.
-                                URI = IconName;
-                                IconName = "";  //The icon doesn't work so why try anymore. Hopefully the icon is included in the URI with the icon handle. Will try to extract it in the Icon.ExtractAssociatedIcon(URI)
+                                catch (Exception e)
+                                {  //We might at least try. This shouldn't stop us from continuing.
+                                    URI = IconName;
+                                    IconName = "";  //The icon doesn't work so why try anymore. Hopefully the icon is included in the URI with the icon handle. Will try to extract it in the Icon.ExtractAssociatedIcon(URI)
+
+                                }
+
 
                             }
 
-
+                            break;
                         }
                     }
-                    if (File.Exists(URI))
+
+                    if (File.Exists(URI))  //else
                     {
 
                         using System.Drawing.Icon sysicon = System.Drawing.Icon.ExtractAssociatedIcon(URI);
-                        var handle = (int)sysicon.Handle;
-                        return icon = Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
+                        if (sysicon != null)
+                        {
+                            var handle = (int)sysicon.Handle;
+                        }
+                        return Imaging.CreateBitmapSourceFromHIcon(sysicon.Handle, Int32Rect.Empty,
                             BitmapSizeOptions.FromEmptyOptions());
-                    }
-                    else
-                    {
-                        var uri = new Uri("pack://application:,,,/Assets/CustomIcons/file.png");
-                        return new BitmapImage(uri);
                     }
                 }
                 catch (Exception e)
                 {
                     Log.Error(e, "This should not happen since we check this before...");
                 }
-
                 return icon;
             }
         }
@@ -166,6 +168,44 @@ namespace RocketLaunch.Model
         public override string ToString()
         {
             return $"{Name}, {URI}, {Type}, {Command}";
+        }
+
+
+        public static BitmapSource Invert(BitmapSource source)
+        {
+            // Calculate stride of source
+            int stride = (source.PixelWidth * source.Format.BitsPerPixel + 7) / 8;
+
+            // Create data array to hold source pixel data
+            int length = stride * source.PixelHeight;
+            byte[] data = new byte[length];
+
+            // Copy source image pixels to the data array
+            source.CopyPixels(data, stride, 0);
+
+            // Change this loop for other formats
+            for (int i = 0; i < length; i += 4)
+            {
+                data[i] = (byte)(255 - data[i]); //R
+                data[i + 1] = (byte)(255 - data[i + 1]); //G
+                data[i + 2] = (byte)(255 - data[i + 2]); //B
+                //data[i + 3] = (byte)(255 - data[i + 3]); //A
+            }
+
+            // Create a new BitmapSource from the inverted pixel buffer
+            return BitmapSource.Create(
+                source.PixelWidth, source.PixelHeight,
+                source.DpiX, source.DpiY, source.Format,
+                null, data, stride);
+        }
+        private unsafe void InvertImage(Bitmap bmp)
+        {
+            int w = bmp.Width, h = bmp.Height;
+            BitmapData data = bmp.LockBits(new Rectangle(0, 0, w, h), ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            int* bytes = (int*)data.Scan0;
+            for (int i = w * h - 1; i >= 0; i--)
+                bytes[i] = ~bytes[i];
+            bmp.UnlockBits(data);
         }
     }
 
@@ -184,4 +224,7 @@ namespace RocketLaunch.Model
         Sleep,
         Link
     }
+
+    
+
 }

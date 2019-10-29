@@ -45,7 +45,7 @@
                 IsEnabled="{convertersWpf:SwitchBinding IndexService.IndexingIsRunning,
                                                         False,
                                                         True}"
-                ToolTip="Resets all history of the popularity of choices. All counters will be reseted to zero" />
+                ToolTip="WARNING! Removes all history and reindexes everything. Program will revert back to default." />
             <CheckBox
                 Margin="10"
                 Content="Autostart"

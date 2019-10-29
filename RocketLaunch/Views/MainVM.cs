@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Timers;
 using System.Windows;
+using System.Windows.Threading;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Messaging;
@@ -229,7 +230,7 @@ namespace RocketLaunch.Views
 
                     SearchSuggestions.RaiseListChangedEvents = true;
                     SearchSuggestions.ResetBindings();
-                });
+                }, DispatcherPriority.Background);
 
                 sw.Stop();
                 RenderingTime = (int) sw.ElapsedMilliseconds;

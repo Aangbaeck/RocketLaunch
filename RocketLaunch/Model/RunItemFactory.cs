@@ -311,7 +311,7 @@ namespace RocketLaunch.Model
                             }
                             else if (openContainingFolder)
                             {
-                                string args = $"/e, /select, \"{item.Command}\"";
+                                string args = $"/e, /select, \"{item.URI}\"";
                                 ProcessStartInfo info = new ProcessStartInfo { FileName = "explorer", Arguments = args };
                                 Process.Start(info);
                             }
